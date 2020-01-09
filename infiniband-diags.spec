@@ -1,12 +1,13 @@
 Summary: OpenFabrics Alliance InfiniBand Diagnostic Tools
 Name: infiniband-diags 
 Version: 1.5.12
-Release: 3%{?dist}
+Release: 5%{?dist}
 License: GPLv2 or BSD
 Group: System Environment/Libraries
 Url: http://openfabrics.org/
 Source0: http://www.openfabrics.org/downloads/management/%{name}-%{version}.tar.gz
 Patch0: infiniband-diags-1.5.8-all_hcas.patch
+Patch1: infiniband-diags-1.5.12-help.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: opensm-devel >= 3.3.13, libibumad-devel, libibmad-devel, perl
 Provides: perl(IBswcountlimits)
@@ -39,6 +40,7 @@ Static libraries for the infiniband-diags library.
 %prep
 %setup -q
 %patch0 -p1 -b .hcas
+%patch1 -p1 -b .help
 
 %build
 %configure --with-perl-installdir=%{_perldir}
@@ -184,6 +186,16 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/*.a
 
 %changelog
+* Mon Oct 15 2012 Doug Ledford <dledford@redhat.com> - 1.5.12-5
+- Bump and rebuild against latest opensm
+- Pick up fixes done for rhel5.9
+- Related: bz756396
+
+* Thu Aug 23 2012 Doug Ledford <dledford@redhat.com> - 1.5.12-4
+- Update the all_hcas patch to resolve several problems
+- Give a simple help message to the ibnodes script
+- Resolves: bz818606, bz847129
+
 * Thu Apr 26 2012 Jay Fenlason <fenlason@redhat.com> - 1.5.12-3
 - Reorganize this spec file to include /usr/sbin/ibswportwatch.pl
   and remove man pages for programs that aren't included.

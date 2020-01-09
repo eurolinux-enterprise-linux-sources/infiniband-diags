@@ -1,6 +1,6 @@
 diff -up infiniband-diags-1.5.12/src/perfquery.c.hcas infiniband-diags-1.5.12/src/perfquery.c
 --- infiniband-diags-1.5.12/src/perfquery.c.hcas	2011-11-02 01:31:40.000000000 -0400
-+++ infiniband-diags-1.5.12/src/perfquery.c	2012-01-06 12:01:21.793791521 -0500
++++ infiniband-diags-1.5.12/src/perfquery.c	2012-08-22 15:29:50.838358011 -0400
 @@ -368,9 +368,10 @@ static void reset_counters(int extended,
  }
  
@@ -64,7 +64,7 @@ diff -up infiniband-diags-1.5.12/src/perfquery.c.hcas infiniband-diags-1.5.12/sr
  		"-x -r 32 1\t# read extended performance counters and reset",
  		"-R 0x20 1\t# reset performance counters of port 1 only",
  		"-x -R 0x20 1\t# reset extended performance counters of port 1 only",
-@@ -673,186 +685,237 @@ int main(int argc, char **argv)
+@@ -673,186 +685,244 @@ int main(int argc, char **argv)
  	argc -= optind;
  	argv += optind;
  
@@ -105,6 +105,10 @@ diff -up infiniband-diags-1.5.12/src/perfquery.c.hcas infiniband-diags-1.5.12/sr
 +	}
 +
 +	do {
++		if (all_hcas && strncmp(ca.ports[ibd_ca_port]->link_layer,
++					"InfiniBand", 10))
++			goto skip_port;
++
 +		srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port,
 +					    mgmt_classes, 4);
 +		if (!srcport) {
@@ -429,10 +433,12 @@ diff -up infiniband-diags-1.5.12/src/perfquery.c.hcas infiniband-diags-1.5.12/sr
  done:
 -	mad_rpc_close_port(srcport);
 +		mad_rpc_close_port(srcport);
++skip_port:
 +		if (all_hcas) {
 +			if (ibd_ca_port < ca.numports)
 +				ibd_ca_port++;
 +			else {
++				umad_release_ca(&ca);
 +				if (umad_get_ca(name_list[cur_name], &ca))
 +					/*
 +					 * We're done, the next name in the
@@ -442,7 +448,8 @@ diff -up infiniband-diags-1.5.12/src/perfquery.c.hcas infiniband-diags-1.5.12/sr
 +				ibd_ca = name_list[cur_name++];
 +				ibd_ca_port = start_port;
 +			}
-+		}
++		} else
++			ibd_ca = NULL;
 +	} while (ibd_ca);
  	exit(0);
  }

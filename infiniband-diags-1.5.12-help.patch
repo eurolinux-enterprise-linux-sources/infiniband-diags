@@ -1,0 +1,15 @@
+diff -up infiniband-diags-1.5.12/scripts/ibnodes.in.help infiniband-diags-1.5.12/scripts/ibnodes.in
+--- infiniband-diags-1.5.12/scripts/ibnodes.in.help	2012-08-23 16:26:26.208424784 -0400
++++ infiniband-diags-1.5.12/scripts/ibnodes.in	2012-08-23 16:28:06.527609002 -0400
+@@ -2,4 +2,11 @@
+ 
+ IBPATH=${IBPATH:-@IBSCRIPTPATH@}
+ 
++if [ "$1" = "-h" ]; then
++	echo "Usage:"
++	echo ""
++	echo "	ibnodes [-h] [<topology-file> | -C ca_name -P ca_port -t(imeout) timeout_ms]"
++	exit 0
++fi
++
+ $IBPATH/ibhosts $@; $IBPATH/ibswitches $@
