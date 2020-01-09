@@ -46,7 +46,7 @@ applicable), link speed setting, remote GUID, remote port, remote external port
 Include the optional transmit and receive data counters.
 .TP
 \fB\-\-threshold-file\fR
-Specify an alternate threshold file.  The default is /usr/local/etc/infiniband-diags/error_thresholds
+Specify an alternate threshold file.  The default is @IBDIAG_CONFIG_PATH@/error_thresholds
 .TP
 \fB\-\-switch\fR  print data for switches only
 .TP
@@ -105,7 +105,7 @@ thresholds return 1.
 
 .SH FILES
 
-/usr/local/etc/infiniband-diags/error_thresholds
+@IBDIAG_CONFIG_PATH@/error_thresholds
 
 Define threshold values for errors.  File format is simple "name=val".
 Comments begin with '#'

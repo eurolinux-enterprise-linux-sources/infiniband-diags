@@ -44,7 +44,11 @@ subdir = libibnetdisc
 DIST_COMMON = $(libibnetdiscinclude_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.in
+am__aclocal_m4_deps = $(top_srcdir)/config/libtool.m4 \
+	$(top_srcdir)/config/ltoptions.m4 \
+	$(top_srcdir)/config/ltsugar.m4 \
+	$(top_srcdir)/config/ltversion.m4 \
+	$(top_srcdir)/config/lt~obsolete.m4 $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -138,6 +142,7 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GREP = @GREP@
+IBDIAG_CONFIG_PATH = @IBDIAG_CONFIG_PATH@
 IBSCRIPTPATH = @IBSCRIPTPATH@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -165,7 +170,6 @@ PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
-PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PERL = @PERL@
@@ -250,7 +254,9 @@ libibnetdiscincludedir = $(includedir)/infiniband
 test_testleaks_SOURCES = test/testleaks.c
 test_testleaks_CFLAGS = -Wall $(DBGFLAGS)
 test_testleaks_LDFLAGS = -libnetdisc
-libibnetdiscinclude_HEADERS = $(srcdir)/include/infiniband/ibnetdisc.h
+libibnetdiscinclude_HEADERS = $(srcdir)/include/infiniband/ibnetdisc.h \
+				$(srcdir)/include/infiniband/ibnetdisc_osd.h
+
 man_MANS = man/ibnd_debug.3 \
 	man/ibnd_destroy_fabric.3 \
 	man/ibnd_discover_fabric.3 \

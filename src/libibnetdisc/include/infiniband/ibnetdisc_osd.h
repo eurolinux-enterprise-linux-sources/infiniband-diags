@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Voltaire Inc.  All rights reserved.
+ * Copyright (c) 2011 Lawrence Livermore National Security.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -31,9 +31,12 @@
  *
  */
 
-#ifndef _IBDIAG_VERSION_H_
-#define _IBDIAG_VERSION_H_
+#ifndef _IBNETDISC_OSD_H_
+#define _IBNETDISC_OSD_H_
 
-#define IBDIAG_VERSION "1.5.12"
+/* Define OS specific bits */
 
-#endif	/* _IBDIAG_VERSION_H_ */
+/* Linux */
+#define IBND_EXPORT
+
+#endif				/* _IBNETDISC_OSD_H_ */

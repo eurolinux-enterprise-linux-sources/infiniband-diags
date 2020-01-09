@@ -1,0 +1,10 @@
+--- scripts/check_lft_balance.pl
++++ scripts/check_lft_balance.pl
+@@ -172,6 +172,7 @@
+ 	my $iblinkinfo_output;
+ 	my $is_unbalanced =3D 0;
+ 	my $ports_on_switch =3D 0;
++	my $all_zero_flag =3D 1;
+ 	my $ret;
+ 20
+         $iblinkinfo_output =3D `iblinkinfo --load-cache $ibnetdiscover_cac=

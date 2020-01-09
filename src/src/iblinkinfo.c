@@ -2,7 +2,7 @@
  * Copyright (c) 2004-2009 Voltaire Inc.  All rights reserved.
  * Copyright (c) 2007 Xsigo Systems Inc.  All rights reserved.
  * Copyright (c) 2008 Lawrence Livermore National Lab.  All rights reserved.
- * Copyright (c) 2010 Mellanox Technologies LTD.  All rights reserved.
+ * Copyright (c) 2010,2011 Mellanox Technologies LTD.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -77,47 +77,6 @@ static int all = 0;
 static int down_links_only = 0;
 static int line_mode = 0;
 static int add_sw_settings = 0;
-static int print_port_guids = 0;
-
-static unsigned int get_max(unsigned int num)
-{
-	unsigned r = 0;		// r will be lg(num)
-
-	while (num >>= 1)	// unroll for more speed...
-		r++;
-
-	return (1 << r);
-}
-
-void get_msg(char *width_msg, char *speed_msg, int msg_size, ibnd_port_t * port)
-{
-	char buf[64];
-	uint32_t max_speed = 0;
-
-	uint32_t max_width = get_max(mad_get_field(port->info, 0,
-						   IB_PORT_LINK_WIDTH_SUPPORTED_F)
-				     & mad_get_field(port->remoteport->info, 0,
-						     IB_PORT_LINK_WIDTH_SUPPORTED_F));
-	if ((max_width & mad_get_field(port->info, 0,
-				       IB_PORT_LINK_WIDTH_ACTIVE_F)) == 0)
-		// we are not at the max supported width
-		// print what we could be at.
-		snprintf(width_msg, msg_size, "Could be %s",
-			 mad_dump_val(IB_PORT_LINK_WIDTH_ACTIVE_F,
-				      buf, 64, &max_width));
-
-	max_speed = get_max(mad_get_field(port->info, 0,
-					  IB_PORT_LINK_SPEED_SUPPORTED_F)
-			    & mad_get_field(port->remoteport->info, 0,
-					    IB_PORT_LINK_SPEED_SUPPORTED_F));
-	if ((max_speed & mad_get_field(port->info, 0,
-				       IB_PORT_LINK_SPEED_ACTIVE_F)) == 0)
-		// we are not at the max supported speed
-		// print what we could be at.
-		snprintf(speed_msg, msg_size, "Could be %s",
-			 mad_dump_val(IB_PORT_LINK_SPEED_ACTIVE_F,
-				      buf, 64, &max_speed));
-}
 
 int filterdownport_check(ibnd_node_t * node, ibnd_port_t * port)
 {
@@ -152,14 +111,29 @@ void print_port(ibnd_node_t * node, ibnd_port_t * port, char *out_prefix)
 	char width_msg[256];
 	char speed_msg[256];
 	char ext_port_str[256];
-	int iwidth, ispeed, istate, iphystate;
+	int iwidth, ispeed, fdr10, espeed, istate, iphystate, cap_mask;
 	int n = 0;
+	uint8_t *info;
 
 	if (!port)
 		return;
 
 	iwidth = mad_get_field(port->info, 0, IB_PORT_LINK_WIDTH_ACTIVE_F);
 	ispeed = mad_get_field(port->info, 0, IB_PORT_LINK_SPEED_ACTIVE_F);
+	fdr10 = mad_get_field(port->ext_info, 0,
+			      IB_MLNX_EXT_PORT_LINK_SPEED_ACTIVE_F) & FDR10;
+
+	if (port->node->type == IB_NODE_SWITCH)
+		info = (uint8_t *)&port->node->ports[0]->info;
+	else
+		info = (uint8_t *)&port->info;
+	cap_mask = mad_get_field(info, 0, IB_PORT_CAPMASK_F);
+	if (cap_mask & CL_NTOH32(IB_PORT_CAP_HAS_EXT_SPEEDS))
+		espeed = mad_get_field(port->info, 0,
+				       IB_PORT_LINK_SPEED_EXT_ACTIVE_F);
+	else
+		espeed = 0;
+
 	istate = mad_get_field(port->info, 0, IB_PORT_STATE_F);
 	iphystate = mad_get_field(port->info, 0, IB_PORT_PHYS_STATE_F);
 
@@ -177,12 +151,21 @@ void print_port(ibnd_node_t * node, ibnd_port_t * port, char *out_prefix)
 	/* C14-24.2.1 states that a down port allows for invalid data to be
 	 * returned for all PortInfo components except PortState and
 	 * PortPhysicalState */
+	if (!espeed) {
+		if (fdr10)
+			sprintf(speed, "10.0 Gbps (FDR10)");
+		else
+			mad_dump_val(IB_PORT_LINK_SPEED_ACTIVE_F, speed,
+				     64, &ispeed);
+	} else
+		mad_dump_val(IB_PORT_LINK_SPEED_EXT_ACTIVE_F, speed,
+			     64, &espeed);
+
 	if (istate != IB_LINK_DOWN) {
-		n = snprintf(link_str, 256, "(%3s %9s %6s/%8s)",
+		n = snprintf(link_str, 256, "(%3s %18s %6s/%8s)",
 		     mad_dump_val(IB_PORT_LINK_WIDTH_ACTIVE_F, width, 64,
 				  &iwidth),
-		     mad_dump_val(IB_PORT_LINK_SPEED_ACTIVE_F, speed, 64,
-				  &ispeed),
+		     speed,
 		     mad_dump_val(IB_PORT_STATE_F, state, 64, &istate),
 		     mad_dump_val(IB_PORT_PHYS_STATE_F, physstate, 64,
 				  &iphystate));
@@ -214,17 +197,12 @@ void print_port(ibnd_node_t * node, ibnd_port_t * port, char *out_prefix)
 		else
 			ext_port_str[0] = '\0';
 
-		get_msg(width_msg, speed_msg, 256, port);
+		get_max_msg(width_msg, speed_msg, 256, port);
 
 		if (line_mode) {
-			if (print_port_guids)
-				snprintf(remote_guid_str, 256,
-					 "0x%016" PRIx64 " ",
-					 port->remoteport->guid);
-			else
-				snprintf(remote_guid_str, 256,
-					 "0x%016" PRIx64 " ",
-					 port->remoteport->node->guid);
+			snprintf(remote_guid_str, 256,
+				 "0x%016" PRIx64 " ",
+				 port->remoteport->guid);
 		}
 
 		snprintf(remote_str, 256, "%s%6d %4d[%2s] \"%s\" (%s %s)\n",
@@ -234,8 +212,12 @@ void print_port(ibnd_node_t * node, ibnd_port_t * port, char *out_prefix)
 			 port->remoteport->portnum, ext_port_str, remap,
 			 width_msg, speed_msg);
 		free(remap);
-	} else
-		snprintf(remote_str, 256, "           [  ] \"\" ( )\n");
+	} else {
+		if (istate == IB_LINK_DOWN)
+			snprintf(remote_str, 256, "           [  ] \"\" ( )\n");
+		else
+			snprintf(remote_str, 256, "    \"Port not available\"\n");
+	}
 
 	if (port->ext_portnum)
 		snprintf(ext_port_str, 256, "%d", port->ext_portnum);
@@ -247,29 +229,58 @@ void print_port(ibnd_node_t * node, ibnd_port_t * port, char *out_prefix)
 					      node->nodedesc);
 		printf("%s0x%016" PRIx64 " \"%30s\" ",
 		       out_prefix ? out_prefix : "",
-		       node->guid, remap);
+		       port->guid, remap);
 		free(remap);
 	} else
 		printf("%s      ", out_prefix ? out_prefix : "");
 
-	printf("%6d %4d[%2s] ==%s==>  %s",
-	       node->smalid, port->portnum, ext_port_str, link_str, remote_str);
+	if (port->node->type != IB_NODE_SWITCH) {
+		if (!line_mode)
+			printf("0x%016" PRIx64 " ", port->guid);
+
+		printf("%6d %4d[%2s] ==%s==>  %s",
+			port->base_lid,
+			port->portnum, ext_port_str, link_str, remote_str);
+	} else
+		printf("%6d %4d[%2s] ==%s==>  %s",
+			node->smalid, port->portnum, ext_port_str,
+			link_str, remote_str);
 }
 
-void print_switch_header(ibnd_node_t *node, int *out_header_flag, char *out_prefix)
+static inline const char *nodetype_str(ibnd_node_t * node)
+{
+	switch (node->type) {
+	case IB_NODE_SWITCH:
+		return "Switch";
+	case IB_NODE_CA:
+		return "CA";
+	case IB_NODE_ROUTER:
+		return "Router";
+	}
+	return "??";
+}
+
+void print_node_header(ibnd_node_t *node, int *out_header_flag,
+			char *out_prefix)
 {
 	if ((!out_header_flag || !(*out_header_flag)) && !line_mode) {
 		char *remap =
 			remap_node_name(node_name_map, node->guid, node->nodedesc);
-		printf("%sSwitch 0x%016" PRIx64 " %s:\n",
-		       out_prefix ? out_prefix : "",
-		       node->guid, remap);
+		if (node->type == IB_NODE_SWITCH)
+			printf("%s%s: 0x%016" PRIx64 " %s:\n",
+				out_prefix ? out_prefix : "",
+				nodetype_str(node),
+				node->ports[0]->guid, remap);
+		else
+			printf("%s%s: %s:\n",
+				out_prefix ? out_prefix : "",
+				nodetype_str(node), remap);
 		(*out_header_flag)++;
 		free(remap);
 	}
 }
 
-void print_switch(ibnd_node_t * node, void *user_data)
+void print_node(ibnd_node_t * node, void *user_data)
 {
 	int i = 0;
 	int head_print = 0;
@@ -282,7 +293,7 @@ void print_switch(ibnd_node_t * node, void *user_data)
 		if (!down_links_only ||
 		    mad_get_field(port->info, 0,
 				  IB_PORT_STATE_F) == IB_LINK_DOWN) {
-			print_switch_header(node, &head_print, out_prefix);
+			print_node_header(node, &head_print, out_prefix);
 			print_port(node, port, out_prefix);
 		}
 	}
@@ -296,7 +307,7 @@ struct iter_diff_data {
         char *fabric2_prefix;
 };
 
-void diff_switch_ports(ibnd_node_t * fabric1_node, ibnd_node_t * fabric2_node,
+void diff_node_ports(ibnd_node_t * fabric1_node, ibnd_node_t * fabric2_node,
 		       int *head_print, struct iter_diff_data *data)
 {
 	int i = 0;
@@ -359,7 +370,7 @@ void diff_switch_ports(ibnd_node_t * fabric1_node, ibnd_node_t * fabric2_node,
 			output_diff++;
 
 		if (output_diff && fabric1_port) {
-			print_switch_header(fabric1_node,
+			print_node_header(fabric1_node,
 					    head_print,
 					    NULL);
 			print_port(fabric1_node,
@@ -368,7 +379,7 @@ void diff_switch_ports(ibnd_node_t * fabric1_node, ibnd_node_t * fabric2_node,
 		}
 
 		if (output_diff && fabric2_port) {
-			print_switch_header(fabric1_node,
+			print_node_header(fabric1_node,
 					    head_print,
 					    NULL);
 			print_port(fabric2_node,
@@ -378,7 +389,7 @@ void diff_switch_ports(ibnd_node_t * fabric1_node, ibnd_node_t * fabric2_node,
 	}
 }
 
-void diff_switch_iter(ibnd_node_t * fabric1_node, void *iter_user_data)
+void diff_node_iter(ibnd_node_t * fabric1_node, void *iter_user_data)
 {
 	struct iter_diff_data *data = iter_user_data;
 	ibnd_node_t *fabric2_node;
@@ -388,27 +399,28 @@ void diff_switch_iter(ibnd_node_t * fabric1_node, void *iter_user_data)
 
 	fabric2_node = ibnd_find_node_guid(data->fabric2, fabric1_node->guid);
 	if (!fabric2_node)
-		print_switch(fabric1_node, data->fabric1_prefix);
+		print_node(fabric1_node, data->fabric1_prefix);
 	else if (data->diff_flags &
 		 (DIFF_FLAG_PORT_CONNECTION | DIFF_FLAG_PORT_STATE
 		  | DIFF_FLAG_LID | DIFF_FLAG_NODE_DESCRIPTION)) {
 
-		if ((data->diff_flags & DIFF_FLAG_LID
+		if ((fabric1_node->type == IB_NODE_SWITCH
+		     && data->diff_flags & DIFF_FLAG_LID
 		     && fabric1_node->smalid != fabric2_node->smalid) ||
 		    (data->diff_flags & DIFF_FLAG_NODE_DESCRIPTION
 		     && memcmp(fabric1_node->nodedesc, fabric2_node->nodedesc,
 			       IB_SMP_DATA_SIZE))) {
-			print_switch_header(fabric1_node,
+			print_node_header(fabric1_node,
 					    NULL,
 					    data->fabric1_prefix);
-			print_switch_header(fabric2_node,
+			print_node_header(fabric2_node,
 					    NULL,
 					    data->fabric2_prefix);
 			head_print++;
 		}
 
 		if (fabric1_node->numports != fabric2_node->numports) {
-			print_switch_header(fabric1_node,
+			print_node_header(fabric1_node,
 					    &head_print,
 					    NULL);
 			printf("%snumports = %d\n", data->fabric1_prefix,
@@ -418,12 +430,12 @@ void diff_switch_iter(ibnd_node_t * fabric1_node, void *iter_user_data)
 			return;
 		}
 
-		diff_switch_ports(fabric1_node, fabric2_node,
+		diff_node_ports(fabric1_node, fabric2_node,
 				  &head_print, data);
 	}
 }
 
-int diff_switch(ibnd_node_t * node, ibnd_fabric_t * orig_fabric,
+int diff_node(ibnd_node_t * node, ibnd_fabric_t * orig_fabric,
 		ibnd_fabric_t * new_fabric)
 {
 	struct iter_diff_data iter_diff_data;
@@ -434,10 +446,9 @@ int diff_switch(ibnd_node_t * node, ibnd_fabric_t * orig_fabric,
 	iter_diff_data.fabric1_prefix = "< ";
 	iter_diff_data.fabric2_prefix = "> ";
 	if (node)
-		diff_switch_iter(node, &iter_diff_data);
+		diff_node_iter(node, &iter_diff_data);
 	else
-		ibnd_iter_nodes_type(orig_fabric, diff_switch_iter,
-				     IB_NODE_SWITCH, &iter_diff_data);
+		ibnd_iter_nodes(orig_fabric, diff_node_iter, &iter_diff_data);
 
 	/* Do opposite diff to find existence of node types
 	 * in new_fabric but not in orig_fabric.
@@ -456,10 +467,9 @@ int diff_switch(ibnd_node_t * node, ibnd_fabric_t * orig_fabric,
 	iter_diff_data.fabric1_prefix = "> ";
 	iter_diff_data.fabric2_prefix = "< ";
 	if (node)
-		diff_switch_iter(node, &iter_diff_data);
+		diff_node_iter(node, &iter_diff_data);
 	else
-		ibnd_iter_nodes_type(new_fabric, diff_switch_iter,
-				     IB_NODE_SWITCH, &iter_diff_data);
+		ibnd_iter_nodes(new_fabric, diff_node_iter, &iter_diff_data);
 
 	return 0;
 }
@@ -503,6 +513,7 @@ static int process_opt(void *context, int ch, char *optarg)
 		filterdownports_cache_file = strdup(optarg);
 		break;
 	case 'S':
+	case 'G':
 		guid_str = optarg;
 		guid = (uint64_t) strtoull(guid_str, 0, 0);
 		break;
@@ -523,9 +534,6 @@ static int process_opt(void *context, int ch, char *optarg)
 		break;
 	case 'p':
 		add_sw_settings = 1;
-		break;
-	case 'g':
-		print_port_guids = 1;
 		break;
 	case 'R':		/* nop */
 		break;
@@ -553,21 +561,21 @@ int main(int argc, char **argv)
 
 	const struct ibdiag_opt opts[] = {
 		{"node-name-map", 1, 1, "<file>", "node name map file"},
-		{"switch", 'S', 1, "<switch_guid>",
-		 "query only <switch_guid> (hex format)"},
+		{"switch", 'S', 1, "<port_guid>",
+		 "start partial scan at the port specified by <port_guid> (hex format)"},
+		{"port-guid", 'G', 1, "<port_guid>",
+		 "(same as -S)"},
 		{"Direct", 'D', 1, "<dr_path>",
-		 "query only node specified by <dr_path>"},
+		 "start partial scan at the port specified by <dr_path>"},
 		{"all", 'a', 0, NULL,
-		 "print all switches found in a partial fabric scan"},
+		 "print all nodes found in a partial fabric scan"},
 		{"hops", 'n', 1, "<hops>",
 		 "Number of hops to include away from specified node"},
 		{"down", 'd', 0, NULL, "print only down links"},
 		{"line", 'l', 0, NULL,
 		 "(line mode) print all information for each link on a single line"},
 		{"additional", 'p', 0, NULL,
-		 "print additional switch settings (PktLifeTime, HoqLife, VLStallCount)"},
-		{"portguids", 'g', 0, NULL,
-		 "print port guids instead of node guids"},
+		 "print additional port settings (PktLifeTime, HoqLife, VLStallCount)"},
 		{"load-cache", 2, 1, "<file>",
 		 "filename of ibnetdiscover cache to load"},
 		{"diff", 3, 1, "<file>",
@@ -593,7 +601,7 @@ int main(int argc, char **argv)
 
 	ibmad_port = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 3);
 	if (!ibmad_port) {
-		fprintf(stderr, "Failed to open %s port %d", ibd_ca,
+		fprintf(stderr, "Failed to open %s port %d\n", ibd_ca,
 			ibd_ca_port);
 		exit(1);
 	}
@@ -616,7 +624,7 @@ int main(int argc, char **argv)
 		     ib_resolve_portid_str_via(&port_id, dr_path,
 					       IB_DEST_DRPATH, NULL,
 					       ibmad_port)) < 0)
-			IBWARN("Failed to resolve %s; attempting full scan\n",
+			IBWARN("Failed to resolve %s; attempting full scan",
 			       dr_path);
 	} else if (guid_str) {
 		if ((resolved =
@@ -645,7 +653,7 @@ int main(int argc, char **argv)
 				config.max_hops = 1;
 			if (!(fabric =
 			    ibnd_discover_fabric(ibd_ca, ibd_ca_port, &port_id, &config)))
-				IBWARN("Single node discover failed;"
+				IBWARN("Partial fabric scan failed;"
 				       " attempting full scan\n");
 		}
 
@@ -658,40 +666,40 @@ int main(int argc, char **argv)
 	}
 
 	if (!all && guid_str) {
-		ibnd_node_t *sw = ibnd_find_node_guid(fabric, guid);
-		if (sw && sw->type == IB_NODE_TYPE_SWITCH) {
+		ibnd_port_t *p = ibnd_find_port_guid(fabric, guid);
+		if (p) {
+			ibnd_node_t *n = p->node;
 			if (diff_fabric)
-				diff_switch(sw, diff_fabric, fabric);
+				diff_node(n, diff_fabric, fabric);
 			else
-				print_switch(sw, NULL);
+				print_node(n, NULL);
 		}
 		else
-			fprintf(stderr, "Failed to find switch: %s\n",
-				guid_str);
+			fprintf(stderr, "Failed to find port: %s\n", guid_str);
 	} else if (!all && dr_path) {
-		ibnd_node_t *sw = NULL;
-		uint8_t ni[IB_SMP_DATA_SIZE];
+		ibnd_port_t *p = NULL;
+		uint8_t ni[IB_SMP_DATA_SIZE] = { 0 };
 
 		if (!smp_query_via(ni, &port_id, IB_ATTR_NODE_INFO, 0,
 				   ibd_timeout, ibmad_port))
 			return -1;
-		mad_decode_field(ni, IB_NODE_GUID_F, &(guid));
+		mad_decode_field(ni, IB_NODE_PORT_GUID_F, &(guid));
 
-		sw = ibnd_find_node_guid(fabric, guid);
-		if (sw && sw->type == IB_NODE_TYPE_SWITCH) {
+		p = ibnd_find_port_guid(fabric, guid);
+		if (p) {
+			ibnd_node_t *n = p->node;
 			if (diff_fabric)
-				diff_switch(sw, diff_fabric, fabric);
+				diff_node(n, diff_fabric, fabric);
 			else
-				print_switch(sw, NULL);
+				print_node(n, NULL);
 		}
 		else
-			fprintf(stderr, "Failed to find switch: %s\n", dr_path);
+			fprintf(stderr, "Failed to find port: %s\n", dr_path);
 	} else {
 		if (diff_fabric)
-			diff_switch(NULL, diff_fabric, fabric);
+			diff_node(NULL, diff_fabric, fabric);
 		else
-			ibnd_iter_nodes_type(fabric, print_switch,
-					     IB_NODE_SWITCH, NULL);
+			ibnd_iter_nodes(fabric, print_node, NULL);
 	}
 
 	ibnd_destroy_fabric(fabric);

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2006,2007 The Regents of the University of California.
  * Copyright (c) 2004-2009 Voltaire, Inc. All rights reserved.
- * Copyright (c) 2002-2010 Mellanox Technologies LTD. All rights reserved.
+ * Copyright (c) 2002-2011 Mellanox Technologies LTD. All rights reserved.
  * Copyright (c) 1996-2003 Intel Corporation. All rights reserved.
  * Copyright (c) 2009 HNR Consulting. All rights reserved.
  *
@@ -48,7 +48,6 @@
 #include <ctype.h>
 #include <string.h>
 #include <errno.h>
-#include <assert.h>
 
 #define _GNU_SOURCE
 #include <getopt.h>
@@ -59,19 +58,6 @@
 #include <complib/cl_nodenamemap.h>
 
 #include "ibdiag_common.h"
-
-struct bind_handle {
-	int fd, agent;
-	ib_portid_t dport;
-};
-
-struct query_res {
-	int status;
-	unsigned result_cnt;
-	void *p_result_madw;
-};
-
-typedef struct bind_handle *bind_handle_t;
 
 struct query_params {
 	ib_gid_t sgid, dgid, gid, mgid;
@@ -106,7 +92,6 @@ static uint64_t smkey = 1;
  */
 #define MAX_PORTS (8)
 #define DEFAULT_SA_TIMEOUT_MS (1000)
-static struct query_res result;
 
 enum {
 	ALL,
@@ -123,119 +108,6 @@ uint16_t requested_lid = 0;
 int requested_lid_flag = 0;
 uint64_t requested_guid = 0;
 int requested_guid_flag = 0;
-
-#define SA_ERR_UNKNOWN IB_SA_MAD_STATUS_PRIO_SUGGESTED
-
-const char *ib_sa_error_str[] = {
-	"SA_NO_ERROR",
-	"SA_ERR_NO_RESOURCES",
-	"SA_ERR_REQ_INVALID",
-	"SA_ERR_NO_RECORDS",
-	"SA_ERR_TOO_MANY_RECORDS",
-	"SA_ERR_REQ_INVALID_GID",
-	"SA_ERR_REQ_INSUFFICIENT_COMPONENTS",
-	"SA_ERR_REQ_DENIED",
-	"SA_ERR_STATUS_PRIO_SUGGESTED",
-	"SA_ERR_UNKNOWN"
-};
-
-static inline const char *ib_sa_err_str(IN uint8_t status)
-{
-	if (status > SA_ERR_UNKNOWN)
-		status = SA_ERR_UNKNOWN;
-	return (ib_sa_error_str[status]);
-}
-
-static inline void report_err(int status)
-{
-	int st = status & 0xff;
-	char sm_err_str[64] = { 0 };
-	char sa_err_str[64] = { 0 };
-
-	if (st)
-		sprintf(sm_err_str, " SM(%s)", ib_get_err_str(st));
-
-	st = status >> 8;
-	if (st)
-		sprintf(sa_err_str, " SA(%s)", ib_sa_err_str((uint8_t) st));
-
-	fprintf(stderr, "ERROR: Query result returned 0x%04x, %s%s\n",
-		status, sm_err_str, sa_err_str);
-}
-
-static int sa_query(struct bind_handle *h, uint8_t method,
-		    uint16_t attr, uint32_t mod, uint64_t comp_mask,
-		    uint64_t sm_key, void *data)
-{
-	ib_rpc_t rpc;
-	void *umad, *mad;
-	int ret, offset, len = 256;
-
-	memset(&rpc, 0, sizeof(rpc));
-	rpc.mgtclass = IB_SA_CLASS;
-	rpc.method = method;
-	rpc.attr.id = attr;
-	rpc.attr.mod = mod;
-	rpc.mask = comp_mask;
-	rpc.datasz = IB_SA_DATA_SIZE;
-	rpc.dataoffs = IB_SA_DATA_OFFS;
-
-	umad = calloc(1, len + umad_size());
-	if (!umad)
-		IBPANIC("cannot alloc mem for umad: %s\n", strerror(errno));
-
-	mad_build_pkt(umad, &rpc, &h->dport, NULL, data);
-
-	mad_set_field64(umad_get_mad(umad), 0, IB_SA_MKEY_F, sm_key);
-
-	if (ibdebug > 1)
-		xdump(stdout, "SA Request:\n", umad_get_mad(umad), len);
-
-	ret = umad_send(h->fd, h->agent, umad, len, ibd_timeout, 0);
-	if (ret < 0)
-		IBPANIC("umad_send failed: attr %u: %s\n",
-			attr, strerror(errno));
-
-recv_mad:
-	ret = umad_recv(h->fd, umad, &len, ibd_timeout);
-	if (ret < 0) {
-		if (errno == ENOSPC) {
-			umad = realloc(umad, umad_size() + len);
-			goto recv_mad;
-		}
-		IBPANIC("umad_recv failed: attr 0x%x: %s\n", attr,
-			strerror(errno));
-	}
-
-	if ((ret = umad_status(umad)))
-		return ret;
-
-	mad = umad_get_mad(umad);
-
-	if (ibdebug > 1)
-		xdump(stdout, "SA Response:\n", mad, len);
-
-	method = (uint8_t) mad_get_field(mad, 0, IB_MAD_METHOD_F);
-	offset = mad_get_field(mad, 0, IB_SA_ATTROFFS_F);
-	result.status = mad_get_field(mad, 0, IB_MAD_STATUS_F);
-	result.p_result_madw = mad;
-	if (result.status)
-		result.result_cnt = 0;
-	else if (method != IB_MAD_METHOD_GET_TABLE)
-		result.result_cnt = 1;
-	else if (!offset)
-		result.result_cnt = 0;
-	else
-		result.result_cnt = (len - IB_SA_DATA_OFFS) / (offset << 3);
-
-	return 0;
-}
-
-static void *get_query_rec(void *mad, unsigned i)
-{
-	int offset = mad_get_field(mad, 0, IB_SA_ATTROFFS_F);
-	return (uint8_t *) mad + IB_SA_DATA_OFFS + i * (offset << 3);
-}
 
 static unsigned valid_gid(ib_gid_t * gid)
 {
@@ -262,16 +134,24 @@ static void print_node_desc(ib_node_record_t * node_record)
 {
 	ib_node_info_t *p_ni = &(node_record->node_info);
 	ib_node_desc_t *p_nd = &(node_record->node_desc);
+	char *name;
 
-	if (p_ni->node_type == IB_NODE_TYPE_CA)
-		printf("%6d  \"%s\"\n", cl_ntoh16(node_record->lid),
-		       clean_nodedesc((char *)p_nd->description));
+	if (p_ni->node_type == IB_NODE_TYPE_CA) {
+		name = remap_node_name(node_name_map,
+					node_record->node_info.node_guid,
+					(char *)p_nd->description);
+		printf("%6d  \"%s\"\n", cl_ntoh16(node_record->lid), name);
+		free(name);
+	}
 }
 
 static void dump_node_record(void *data)
 {
 	ib_node_record_t *nr = data;
 	ib_node_info_t *ni = &nr->node_info;
+	char *name = remap_node_name(node_name_map,
+				       cl_ntoh64(ni->node_guid),
+				       (char *)nr->node_desc.description);
 
 	printf("NodeRecord dump:\n"
 	       "\t\tlid.....................0x%X\n"
@@ -297,7 +177,9 @@ static void dump_node_record(void *data)
 	       cl_ntoh16(ni->device_id), cl_ntoh32(ni->revision),
 	       ib_node_info_get_local_port_num(ni),
 	       cl_ntoh32(ib_node_info_get_vendor_id(ni)),
-	       clean_nodedesc((char *)nr->node_desc.description));
+	       name);
+
+	free(name);
 }
 
 static void print_node_record(ib_node_record_t * node_record)
@@ -418,7 +300,7 @@ static void dump_portinfo_record(void *data)
 
 static void dump_one_portinfo_record(void *data)
 {
-	char buf[2048], buf2[4096];
+	char buf[2300], buf2[4096];
 	ib_portinfo_record_t *pir = data;
 	ib_port_info_t *pi = &pir->port_info;
 
@@ -428,9 +310,9 @@ static void dump_one_portinfo_record(void *data)
 	       "\tRID:\n"
 	       "\t\tEndPortLid..............%u\n"
 	       "\t\tPortNum.................%u\n"
-	       "\t\tReserved................0x%x\n"
+	       "\t\tOptions.................0x%x\n"
 	       "\tPortInfo dump:\n\t\t%s",
-	       cl_ntoh16(pir->lid), pir->port_num, pir->resv, buf2);
+	       cl_ntoh16(pir->lid), pir->port_num, pir->options, buf2);
 }
 
 static void dump_one_mcmember_record(void *data)
@@ -482,25 +364,26 @@ static void dump_multicast_group_record(void *data)
 	       p_mcmr->mtu, cl_ntoh16(p_mcmr->pkey), p_mcmr->rate, sl);
 }
 
-static void dump_multicast_member_record(void *data)
+static void dump_multicast_member_record(ib_member_rec_t *p_mcmr,
+					 struct sa_query_result *nr_result)
 {
 	char gid_str[INET6_ADDRSTRLEN];
 	char gid_str2[INET6_ADDRSTRLEN];
-	ib_member_rec_t *p_mcmr = data;
 	uint16_t mlid = cl_ntoh16(p_mcmr->mlid);
 	unsigned i = 0;
-	char *node_name = "<unknown>";
+	char *node_name = strdup("<unknown>");
 
 	/* go through the node records searching for a port guid which matches
 	 * this port gid interface id.
 	 * This gives us a node name to print, if available.
 	 */
-	for (i = 0; i < result.result_cnt; i++) {
-		ib_node_record_t *nr = get_query_rec(result.p_result_madw, i);
+	for (i = 0; i < nr_result->result_cnt; i++) {
+		ib_node_record_t *nr = sa_get_query_rec(nr_result->p_result_madw, i);
 		if (nr->node_info.port_guid ==
 		    p_mcmr->port_gid.unicast.interface_id) {
-			node_name =
-			    clean_nodedesc((char *)nr->node_desc.description);
+			node_name = remap_node_name(node_name_map,
+						nr->node_info.node_guid,
+						(char *)nr->node_desc.description);
 			break;
 		}
 	}
@@ -525,6 +408,7 @@ static void dump_multicast_member_record(void *data)
 				 gid_str2, sizeof gid_str2),
 		       p_mcmr->scope_state, p_mcmr->proxy_join, node_name);
 	}
+	free(node_name);
 }
 
 static void dump_service_record(void *data)
@@ -781,6 +665,31 @@ static void dump_one_lft_record(void *data)
 	printf("\n");
 }
 
+static void dump_one_guidinfo_record(void *data)
+{
+	ib_guidinfo_record_t *gir = data;
+	printf("GUIDInfo Record dump:\n"
+	       "\t\tLID........................%u\n"
+	       "\t\tBlock......................%u\n"
+	       "\t\tGUID 0.....................0x%016" PRIx64 "\n"
+	       "\t\tGUID 1.....................0x%016" PRIx64 "\n"
+	       "\t\tGUID 2.....................0x%016" PRIx64 "\n"
+	       "\t\tGUID 3.....................0x%016" PRIx64 "\n"
+	       "\t\tGUID 4.....................0x%016" PRIx64 "\n"
+	       "\t\tGUID 5.....................0x%016" PRIx64 "\n"
+	       "\t\tGUID 6.....................0x%016" PRIx64 "\n"
+	       "\t\tGUID 7.....................0x%016" PRIx64 "\n",
+	       cl_ntoh16(gir->lid), gir->block_num,
+	       cl_ntoh64(gir->guid_info.guid[0]),
+	       cl_ntoh64(gir->guid_info.guid[1]),
+	       cl_ntoh64(gir->guid_info.guid[2]),
+	       cl_ntoh64(gir->guid_info.guid[3]),
+	       cl_ntoh64(gir->guid_info.guid[4]),
+	       cl_ntoh64(gir->guid_info.guid[5]),
+	       cl_ntoh64(gir->guid_info.guid[6]),
+	       cl_ntoh64(gir->guid_info.guid[7]));
+}
+
 static void dump_one_mft_record(void *data)
 {
 	ib_mft_record_t *mftr = data;
@@ -803,20 +712,12 @@ static void dump_one_mft_record(void *data)
 	printf("\n");
 }
 
-static void dump_results(struct query_res *r, void (*dump_func) (void *))
+static void dump_results(struct sa_query_result *r, void (*dump_func) (void *))
 {
 	unsigned i;
 	for (i = 0; i < r->result_cnt; i++) {
-		void *data = get_query_rec(r->p_result_madw, i);
+		void *data = sa_get_query_rec(r->p_result_madw, i);
 		dump_func(data);
-	}
-}
-
-static void return_mad(void)
-{
-	if (result.p_result_madw) {
-		free((uint8_t *) result.p_result_madw - umad_size());
-		result.p_result_madw = NULL;
 	}
 }
 
@@ -825,18 +726,19 @@ static void return_mad(void)
  */
 static int get_any_records(bind_handle_t h,
 			   uint16_t attr_id, uint32_t attr_mod,
-			   ib_net64_t comp_mask, void *attr, uint64_t sm_key)
+			   ib_net64_t comp_mask, void *attr, uint64_t sm_key,
+			   struct sa_query_result *result)
 {
 	int ret = sa_query(h, IB_MAD_METHOD_GET_TABLE, attr_id, attr_mod,
-			   cl_ntoh64(comp_mask), sm_key, attr);
+			   cl_ntoh64(comp_mask), sm_key, attr, result);
 	if (ret) {
 		fprintf(stderr, "Query SA failed: %s\n", ib_get_err_str(ret));
 		return ret;
 	}
 
-	if (result.status != IB_SUCCESS) {
-		report_err(result.status);
-		return result.status;
+	if (result->status != IB_SA_MAD_STATUS_SUCCESS) {
+		sa_report_err(result->status);
+		return EIO;
 	}
 
 	return ret;
@@ -847,33 +749,37 @@ static int get_and_dump_any_records(bind_handle_t h, uint16_t attr_id,
 				    void *attr, uint64_t sm_key,
 				    void (*dump_func) (void *))
 {
+	struct sa_query_result result;
 	int ret = get_any_records(h, attr_id, attr_mod, comp_mask, attr,
-				  sm_key);
+				  sm_key, &result);
 	if (ret)
 		return ret;
 
 	dump_results(&result, dump_func);
-
+	sa_free_result_mad(&result);
 	return 0;
 }
 
 /**
  * Get all the records available for requested query type.
  */
-static int get_all_records(bind_handle_t h, uint16_t attr_id, int trusted)
+static int get_all_records(bind_handle_t h, uint16_t attr_id, int trusted,
+			   struct sa_query_result *result)
 {
-	return get_any_records(h, attr_id, 0, 0, NULL, trusted ? smkey : 0);
+	return get_any_records(h, attr_id, 0, 0, NULL, trusted ? smkey : 0,
+			       result);
 }
 
 static int get_and_dump_all_records(bind_handle_t h, uint16_t attr_id,
 				    int trusted, void (*dump_func) (void *))
 {
-	int ret = get_all_records(h, attr_id, 0);
+	struct sa_query_result result;
+	int ret = get_all_records(h, attr_id, 0, &result);
 	if (ret)
 		return ret;
 
 	dump_results(&result, dump_func);
-	return_mad();
+	sa_free_result_mad(&result);
 	return ret;
 }
 
@@ -886,24 +792,27 @@ static int get_lid_from_name(bind_handle_t h, const char *name, uint16_t * lid)
 	ib_node_info_t *p_ni = NULL;
 	unsigned i;
 	int ret;
+	struct sa_query_result result;
 
-	ret = get_all_records(h, IB_SA_ATTR_NODERECORD, 0);
+	ret = get_all_records(h, IB_SA_ATTR_NODERECORD, 0, &result);
 	if (ret)
 		return ret;
 
+	ret = IB_NOT_FOUND;
 	for (i = 0; i < result.result_cnt; i++) {
-		node_record = get_query_rec(result.p_result_madw, i);
+		node_record = sa_get_query_rec(result.p_result_madw, i);
 		p_ni = &(node_record->node_info);
 		if (name
 		    && strncmp(name, (char *)node_record->node_desc.description,
 			       sizeof(node_record->node_desc.description)) ==
 		    0) {
 			*lid = cl_ntoh16(node_record->lid);
+			ret = IB_SUCCESS;
 			break;
 		}
 	}
-	return_mad();
-	return 0;
+	sa_free_result_mad(&result);
+	return ret;
 }
 
 static uint16_t get_lid(bind_handle_t h, const char *name)
@@ -912,12 +821,22 @@ static uint16_t get_lid(bind_handle_t h, const char *name)
 
 	if (!name)
 		return 0;
-	if (isalpha(name[0]))
-		assert(get_lid_from_name(h, name, &rc_lid) == IB_SUCCESS);
-	else
-		rc_lid = (uint16_t) atoi(name);
-	if (rc_lid == 0)
-		fprintf(stderr, "Failed to find lid for \"%s\"\n", name);
+	if (isalpha(name[0])) {
+		if (get_lid_from_name(h, name, &rc_lid) != IB_SUCCESS) {
+			fprintf(stderr, "Failed to find lid for \"%s\"\n", name);
+			exit(EINVAL);
+		}
+	} else {
+		long val;
+		errno = 0;
+		val = strtol(name, NULL, 0);
+		if (errno != 0 || val <= 0 || val > UINT16_MAX) {
+			fprintf(stderr, "Invalid lid specified: \"%s\"\n", name);
+			exit(EINVAL);
+		}
+		rc_lid = (uint16_t)val;
+	}
+
 	return rc_lid;
 }
 
@@ -961,30 +880,11 @@ static int parse_lid_and_ports(bind_handle_t h,
 	return 0;
 }
 
-#define cl_hton8(x) (x)
-#define CHECK_AND_SET_VAL(val, size, comp_with, target, name, mask) \
-	if ((int##size##_t) val != (int##size##_t) comp_with) { \
-		target = cl_hton##size((uint##size##_t) val); \
-		comp_mask |= IB_##name##_COMPMASK_##mask; \
-	}
-
-#define CHECK_AND_SET_GID(val, target, name, mask) \
-	if (valid_gid(&(val))) { \
-		memcpy(&(target), &(val), sizeof(val)); \
-		comp_mask |= IB_##name##_COMPMASK_##mask; \
-	}
-
-#define CHECK_AND_SET_VAL_AND_SEL(val, target, name, mask, sel) \
-	if (val) { \
-		target = val; \
-		comp_mask |= IB_##name##_COMPMASK_##mask##sel; \
-		comp_mask |= IB_##name##_COMPMASK_##mask; \
-	}
-
 /*
  * Get the portinfo records available with IsSM or IsSMdisabled CapabilityMask bit on.
  */
-static int get_issm_records(bind_handle_t h, ib_net32_t capability_mask)
+static int get_issm_records(bind_handle_t h, ib_net32_t capability_mask,
+			    struct sa_query_result *result)
 {
 	ib_portinfo_record_t attr;
 
@@ -992,15 +892,16 @@ static int get_issm_records(bind_handle_t h, ib_net32_t capability_mask)
 	attr.port_info.capability_mask = capability_mask;
 
 	return get_any_records(h, IB_SA_ATTR_PORTINFORECORD, 1 << 31,
-			       IB_PIR_COMPMASK_CAPMASK, &attr, 0);
+			       IB_PIR_COMPMASK_CAPMASK, &attr, 0, result);
 }
 
 static int print_node_records(bind_handle_t h)
 {
 	unsigned i;
 	int ret;
+	struct sa_query_result result;
 
-	ret = get_all_records(h, IB_SA_ATTR_NODERECORD, 0);
+	ret = get_all_records(h, IB_SA_ATTR_NODERECORD, 0, &result);
 	if (ret)
 		return ret;
 
@@ -1010,7 +911,7 @@ static int print_node_records(bind_handle_t h)
 	}
 	for (i = 0; i < result.result_cnt; i++) {
 		ib_node_record_t *node_record;
-		node_record = get_query_rec(result.p_result_madw, i);
+		node_record = sa_get_query_rec(result.p_result_madw, i);
 		if (node_print_desc == ALL_DESC) {
 			print_node_desc(node_record);
 		} else if (node_print_desc == NAME_OF_LID) {
@@ -1029,31 +930,34 @@ static int print_node_records(bind_handle_t h)
 					    node_desc.description)) == 0)) {
 				print_node_record(node_record);
 				if (node_print_desc == UNIQUE_LID_ONLY) {
-					return_mad();
+					sa_free_result_mad(&result);
 					exit(0);
 				}
 			}
 		}
 	}
-	return_mad();
+	sa_free_result_mad(&result);
 	return ret;
 }
 
 static int get_print_class_port_info(bind_handle_t h)
 {
+	struct sa_query_result result;
 	int ret = sa_query(h, IB_MAD_METHOD_GET, CLASS_PORT_INFO, 0, 0,
-			   0, NULL);
+			   0, NULL, &result);
 	if (ret) {
 		fprintf(stderr, "ERROR: Query SA failed: %s\n",
 			ib_get_err_str(ret));
 		return ret;
 	}
-	if (result.status != IB_SUCCESS) {
-		report_err(result.status);
-		return (result.status);
+	if (result.status != IB_SA_MAD_STATUS_SUCCESS) {
+		sa_report_err(result.status);
+		ret = EIO;
+		goto Exit;
 	}
 	dump_results(&result, dump_class_port_info);
-	return_mad();
+Exit:
+	sa_free_result_mad(&result);
 	return ret;
 }
 
@@ -1091,52 +995,58 @@ static int query_path_records(const struct query_cmd *q, bind_handle_t h,
 					&pr, 0, dump_path_record);
 }
 
-static ib_api_status_t print_issm_records(bind_handle_t h)
+static int print_issm_records(bind_handle_t h)
 {
-	ib_api_status_t status;
+	struct sa_query_result result;
+	int ret = 0;
 
 	/* First, get IsSM records */
-	status = get_issm_records(h, IB_PORT_CAP_IS_SM);
-	if (status != IB_SUCCESS)
-		return (status);
+	ret = get_issm_records(h, IB_PORT_CAP_IS_SM, &result);
+	if (ret != 0)
+		return (ret);
 
 	printf("IsSM ports\n");
 	dump_results(&result, dump_portinfo_record);
-	return_mad();
+	sa_free_result_mad(&result);
 
 	/* Now, get IsSMdisabled records */
-	status = get_issm_records(h, IB_PORT_CAP_SM_DISAB);
-	if (status != IB_SUCCESS)
-		return (status);
+	ret = get_issm_records(h, IB_PORT_CAP_SM_DISAB, &result);
+	if (ret != 0)
+		return (ret);
 
 	printf("\nIsSMdisabled ports\n");
 	dump_results(&result, dump_portinfo_record);
-	return_mad();
+	sa_free_result_mad(&result);
 
-	return (status);
+	return (ret);
 }
 
 static int print_multicast_member_records(bind_handle_t h)
 {
-	struct query_res mc_group_result;
+	struct sa_query_result mc_group_result;
+	struct sa_query_result nr_result;
 	int ret;
+	unsigned i;
 
-	ret = get_all_records(h, IB_SA_ATTR_MCRECORD, 1);
+	ret = get_all_records(h, IB_SA_ATTR_MCRECORD, 1, &mc_group_result);
 	if (ret)
 		return ret;
 
-	mc_group_result = result;
-
-	ret = get_all_records(h, IB_SA_ATTR_NODERECORD, 0);
+	ret = get_all_records(h, IB_SA_ATTR_NODERECORD, 0, &nr_result);
 	if (ret)
 		goto return_mc;
 
-	dump_results(&mc_group_result, dump_multicast_member_record);
-	return_mad();
+	for (i = 0; i < mc_group_result.result_cnt; i++) {
+		ib_member_rec_t *rec = (ib_member_rec_t *)
+				sa_get_query_rec(mc_group_result.p_result_madw,
+					      i);
+		dump_multicast_member_record(rec, &nr_result);
+	}
+
+	sa_free_result_mad(&nr_result);
 
 return_mc:
-	if (mc_group_result.p_result_madw)
-		free((uint8_t *) mc_group_result.p_result_madw - umad_size());
+	sa_free_result_mad(&mc_group_result);
 
 	return ret;
 }
@@ -1176,14 +1086,15 @@ static int query_portinfo_records(const struct query_cmd *q,
 {
 	ib_portinfo_record_t pir;
 	ib_net64_t comp_mask = 0;
-	int lid = 0, port = -1;
+	int lid = 0, port = -1, options = -1;
 
 	if (argc > 0)
-		parse_lid_and_ports(h, argv[0], &lid, &port, NULL);
+		parse_lid_and_ports(h, argv[0], &lid, &port, &options);
 
 	memset(&pir, 0, sizeof(pir));
 	CHECK_AND_SET_VAL(lid, 16, 0, pir.lid, PIR, LID);
 	CHECK_AND_SET_VAL(port, 8, -1, pir.port_num, PIR, PORTNUM);
+	CHECK_AND_SET_VAL(options, 8, -1, pir.options, PIR, OPTIONS);
 
 	return get_and_dump_any_records(h, IB_SA_ATTR_PORTINFORECORD, 0,
 					comp_mask, &pir, 0,
@@ -1339,6 +1250,25 @@ static int query_lft_records(const struct query_cmd *q, bind_handle_t h,
 					&lftr, 0, dump_one_lft_record);
 }
 
+static int query_guidinfo_records(const struct query_cmd *q, bind_handle_t h,
+				  struct query_params *p, int argc, char *argv[])
+{
+	ib_guidinfo_record_t gir;
+	ib_net64_t comp_mask = 0;
+	int lid = 0, block = -1;
+
+	if (argc > 0)
+		parse_lid_and_ports(h, argv[0], &lid, &block, NULL);
+
+	memset(&gir, 0, sizeof(gir));
+	CHECK_AND_SET_VAL(lid, 16, 0, gir.lid, GIR, LID);
+	CHECK_AND_SET_VAL(block, 8, -1, gir.block_num, GIR, BLOCKNUM);
+
+	return get_and_dump_any_records(h, IB_SA_ATTR_GUIDINFORECORD, 0,
+					comp_mask, &gir, 0,
+					dump_one_guidinfo_record);
+}
+
 static int query_mft_records(const struct query_cmd *q, bind_handle_t h,
 			     struct query_params *p, int argc, char *argv[])
 {
@@ -1361,44 +1291,13 @@ static int query_mft_records(const struct query_cmd *q, bind_handle_t h,
 					&mftr, 0, dump_one_mft_record);
 }
 
-static bind_handle_t get_bind_handle(void)
-{
-	static struct ibmad_port *srcport;
-	static struct bind_handle handle;
-	int mgmt_classes[2] = { IB_SMI_CLASS, IB_SMI_DIRECT_CLASS };
-
-	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 2);
-	if (!srcport)
-		IBERROR("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
-
-	ib_resolve_smlid_via(&handle.dport, ibd_timeout, srcport);
-	if (!handle.dport.lid)
-		IBPANIC("No SM found.");
-
-	handle.dport.qp = 1;
-	if (!handle.dport.qkey)
-		handle.dport.qkey = IB_DEFAULT_QP1_QKEY;
-
-	handle.fd = mad_rpc_portid(srcport);
-	handle.agent = umad_register(handle.fd, IB_SA_CLASS, 2, 1, NULL);
-
-	return &handle;
-}
-
-static void clean_up(struct bind_handle *h)
-{
-	umad_unregister(h->fd, h->agent);
-	umad_close_port(h->fd);
-	umad_done();
-}
-
 static const struct query_cmd query_cmds[] = {
 	{"ClassPortInfo", "CPI", CLASS_PORT_INFO,
 	 NULL, query_class_port_info},
 	{"NodeRecord", "NR", IB_SA_ATTR_NODERECORD,
 	 "[lid]", query_node_records},
 	{"PortInfoRecord", "PIR", IB_SA_ATTR_PORTINFORECORD,
-	 "[[lid]/[port]]", query_portinfo_records},
+	 "[[lid]/[port]/[options]]", query_portinfo_records},
 	{"SL2VLTableRecord", "SL2VL", IB_SA_ATTR_SL2VLTABLERECORD,
 	 "[[lid]/[in_port]/[out_port]]", query_sl2vl_records},
 	{"PKeyTableRecord", "PKTR", IB_SA_ATTR_PKEYTABLERECORD,
@@ -1419,6 +1318,8 @@ static const struct query_cmd query_cmds[] = {
 	 "[[lid]/[block]]", query_lft_records},
 	{"MFTRecord", "MFTR", IB_SA_ATTR_MFTRECORD,
 	 "[[mlid]/[position]/[block]]", query_mft_records},
+	{"GUIDInfoRecord", "GIR", IB_SA_ATTR_GUIDINFORECORD,
+	 "[[lid]/[block]]", query_guidinfo_records},
 	{0}
 };
 
@@ -1641,7 +1542,7 @@ int main(int argc, char **argv)
 	bind_handle_t h;
 	struct query_params params;
 	const struct query_cmd *q;
-	ib_api_status_t status;
+	int status;
 	int n;
 
 	const struct ibdiag_opt opts[] = {
@@ -1786,7 +1687,10 @@ int main(int argc, char **argv)
 		ibdiag_show_usage();
 	}
 
-	h = get_bind_handle();
+	h = sa_get_bind_handle();
+	if (!h)
+		IBPANIC("Failed to bind to the SA");
+
 	node_name_map = open_node_name_map(node_name_map_file);
 
 	if (src_lid && *src_lid)
@@ -1823,7 +1727,7 @@ int main(int argc, char **argv)
 
 	if (src_lid)
 		free(src_lid);
-	clean_up(h);
+	sa_free_bind_handle(h);
 	close_node_name_map(node_name_map);
 	return (status);
 }

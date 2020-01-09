@@ -4,14 +4,15 @@
 
 Summary: OpenFabrics Alliance InfiniBand Diagnostic Tools
 Name: infiniband-diags
-Version: 1.5.8
+Version: 1.5.12
 Release: %rel%{?dist}
 License: GPLv2 or BSD
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Source: http://www.openfabrics.org/downloads/management/infiniband-diags-1.5.8.tar.gz
+Source: http://www.openfabrics.org/downloads/management/infiniband-diags-1.5.12.tar.gz
 Url: http://openfabrics.org/
 BuildRequires: libibmad-devel, opensm-devel, libibumad-devel
+Requires: libibmad, opensm-libs, libibumad
 Provides: perl(IBswcountlimits)
 Obsoletes: openib-diags
 
@@ -37,7 +38,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%{_sbindir}/ibdiscover.pl
 %{_sbindir}/ib*
 %{_sbindir}/perfquery
 %{_sbindir}/saquery
@@ -50,10 +50,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/*.a
 %{_libdir}/*.so*
 %{_includedir}/infiniband/*.h
-%define _perldir %(perl -e 'use Config; $T=$Config{installsitearch}; $T=~/(.*)\\/site_perl.*/; print $1;')
+%define _perldir %(perl -e 'use Config; $T=$Config{installvendorlib}; print $T;')
 %{_perldir}/*
 %{_mandir}/man8/*
 %{_mandir}/man3/*
+%{_sysconfdir}/*
 %doc README COPYING ChangeLog
 
 %changelog

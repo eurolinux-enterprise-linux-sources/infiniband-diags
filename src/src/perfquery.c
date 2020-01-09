@@ -2,6 +2,7 @@
  * Copyright (c) 2004-2009 Voltaire Inc.  All rights reserved.
  * Copyright (c) 2007 Xsigo Systems Inc.  All rights reserved.
  * Copyright (c) 2009 HNR Consulting.  All rights reserved.
+ * Copyright (c) 2011 Mellanox Technologies LTD.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -45,6 +46,7 @@
 
 #include <infiniband/umad.h>
 #include <infiniband/mad.h>
+#include <infiniband/iba/ib_types.h>
 
 #include "ibdiag_common.h"
 
@@ -186,7 +188,8 @@ static void aggregate_perfcounters(void)
 	aggregate_32bit(&perf_count.xmtwait, val);
 }
 
-static void output_aggregate_perfcounters(ib_portid_t * portid)
+static void output_aggregate_perfcounters(ib_portid_t * portid,
+					  uint16_t cap_mask)
 {
 	char buf[1024];
 	uint32_t val = ALL_PORTS;
@@ -220,11 +223,11 @@ static void output_aggregate_perfcounters(ib_portid_t * portid)
 
 	mad_dump_perfcounters(buf, sizeof buf, pc, sizeof pc);
 
-	printf("# Port counters: %s port %d\n%s", portid2str(portid), ALL_PORTS,
-	       buf);
+	printf("# Port counters: %s port %d (CapMask: 0x%02X)\n%s",
+	       portid2str(portid), ALL_PORTS, ntohs(cap_mask), buf);
 }
 
-static void aggregate_perfcounters_ext(void)
+static void aggregate_perfcounters_ext(uint16_t cap_mask)
 {
 	uint32_t val;
 	uint64_t val64;
@@ -241,20 +244,26 @@ static void aggregate_perfcounters_ext(void)
 	aggregate_64bit(&perf_count_ext.portxmitpkts, val64);
 	mad_decode_field(pc, IB_PC_EXT_RCV_PKTS_F, &val64);
 	aggregate_64bit(&perf_count_ext.portrcvpkts, val64);
-	mad_decode_field(pc, IB_PC_EXT_XMT_UPKTS_F, &val64);
-	aggregate_64bit(&perf_count_ext.portunicastxmitpkts, val64);
-	mad_decode_field(pc, IB_PC_EXT_RCV_UPKTS_F, &val64);
-	aggregate_64bit(&perf_count_ext.portunicastrcvpkts, val64);
-	mad_decode_field(pc, IB_PC_EXT_XMT_MPKTS_F, &val64);
-	aggregate_64bit(&perf_count_ext.portmulticastxmitpkits, val64);
-	mad_decode_field(pc, IB_PC_EXT_RCV_MPKTS_F, &val64);
-	aggregate_64bit(&perf_count_ext.portmulticastrcvpkts, val64);
+
+	if (cap_mask & IB_PM_EXT_WIDTH_SUPPORTED) {
+		mad_decode_field(pc, IB_PC_EXT_XMT_UPKTS_F, &val64);
+		aggregate_64bit(&perf_count_ext.portunicastxmitpkts, val64);
+		mad_decode_field(pc, IB_PC_EXT_RCV_UPKTS_F, &val64);
+		aggregate_64bit(&perf_count_ext.portunicastrcvpkts, val64);
+		mad_decode_field(pc, IB_PC_EXT_XMT_MPKTS_F, &val64);
+		aggregate_64bit(&perf_count_ext.portmulticastxmitpkits, val64);
+		mad_decode_field(pc, IB_PC_EXT_RCV_MPKTS_F, &val64);
+		aggregate_64bit(&perf_count_ext.portmulticastrcvpkts, val64);
+	}
 }
 
-static void output_aggregate_perfcounters_ext(ib_portid_t * portid)
+static void output_aggregate_perfcounters_ext(ib_portid_t * portid,
+					      uint16_t cap_mask)
 {
 	char buf[1024];
 	uint32_t val = ALL_PORTS;
+
+	memset(buf, 0, 1024);
 
 	/* set port_select to 255 to emulate AllPortSelect */
 	mad_encode_field(pc, IB_PC_EXT_PORT_SELECT_F, &val);
@@ -267,19 +276,22 @@ static void output_aggregate_perfcounters_ext(ib_portid_t * portid)
 	mad_encode_field(pc, IB_PC_EXT_XMT_PKTS_F,
 			 &perf_count_ext.portxmitpkts);
 	mad_encode_field(pc, IB_PC_EXT_RCV_PKTS_F, &perf_count_ext.portrcvpkts);
-	mad_encode_field(pc, IB_PC_EXT_XMT_UPKTS_F,
-			 &perf_count_ext.portunicastxmitpkts);
-	mad_encode_field(pc, IB_PC_EXT_RCV_UPKTS_F,
-			 &perf_count_ext.portunicastrcvpkts);
-	mad_encode_field(pc, IB_PC_EXT_XMT_MPKTS_F,
-			 &perf_count_ext.portmulticastxmitpkits);
-	mad_encode_field(pc, IB_PC_EXT_RCV_MPKTS_F,
-			 &perf_count_ext.portmulticastrcvpkts);
+
+	if (cap_mask & IB_PM_EXT_WIDTH_SUPPORTED) {
+		mad_encode_field(pc, IB_PC_EXT_XMT_UPKTS_F,
+				 &perf_count_ext.portunicastxmitpkts);
+		mad_encode_field(pc, IB_PC_EXT_RCV_UPKTS_F,
+				 &perf_count_ext.portunicastrcvpkts);
+		mad_encode_field(pc, IB_PC_EXT_XMT_MPKTS_F,
+				 &perf_count_ext.portmulticastxmitpkits);
+		mad_encode_field(pc, IB_PC_EXT_RCV_MPKTS_F,
+				 &perf_count_ext.portmulticastrcvpkts);
+	}
 
 	mad_dump_perfcounters_ext(buf, sizeof buf, pc, sizeof pc);
 
-	printf("# Port extended counters: %s port %d\n%s", portid2str(portid),
-	       ALL_PORTS, buf);
+	printf("# Port extended counters: %s port %d (CapMask: 0x%02X)\n%s",
+	       portid2str(portid), ALL_PORTS, ntohs(cap_mask), buf);
 }
 
 static void dump_perfcounters(int extended, int timeout, uint16_t cap_mask,
@@ -288,10 +300,11 @@ static void dump_perfcounters(int extended, int timeout, uint16_t cap_mask,
 	char buf[1024];
 
 	if (extended != 1) {
+		memset(pc, 0, sizeof(pc));
 		if (!pma_query_via(pc, portid, port, timeout,
 				   IB_GSI_PORT_COUNTERS, srcport))
 			IBERROR("perfquery");
-		if (!(cap_mask & 0x1000)) {
+		if (!(cap_mask & IB_PM_PC_XMIT_WAIT_SUP)) {
 			/* if PortCounters:PortXmitWait not supported clear this counter */
 			VERBOSE("PortXmitWait not indicated"
 				" so ignore this counter");
@@ -304,19 +317,24 @@ static void dump_perfcounters(int extended, int timeout, uint16_t cap_mask,
 		else
 			mad_dump_fields(buf, sizeof buf, pc, sizeof pc,
 							IB_PC_FIRST_F,
-							(cap_mask & 0x1000)?IB_PC_LAST_F:(IB_PC_RCV_PKTS_F+1));
+							(cap_mask & IB_PM_PC_XMIT_WAIT_SUP)?IB_PC_LAST_F:(IB_PC_RCV_PKTS_F+1));
 
 	} else {
-		if (!(cap_mask & 0x200))	/* 1.2 errata: bit 9 is extended counter support */
+		/* 1.2 errata: bit 9 is extended counter support
+		 * bit 10 is extended counter NoIETF
+		 */
+		if (!(cap_mask & IB_PM_EXT_WIDTH_SUPPORTED) &&
+		    !(cap_mask & IB_PM_EXT_WIDTH_NOIETF_SUP))
 			IBWARN
-			    ("PerfMgt ClassPortInfo 0x%x extended counters not indicated\n",
-			     cap_mask);
+			    ("PerfMgt ClassPortInfo 0x%x; No extended counter support indicated\n",
+			     ntohs(cap_mask));
 
+		memset(pc, 0, sizeof(pc));
 		if (!pma_query_via(pc, portid, port, timeout,
 				   IB_GSI_PORT_COUNTERS_EXT, srcport))
 			IBERROR("perfextquery");
 		if (aggregate)
-			aggregate_perfcounters_ext();
+			aggregate_perfcounters_ext(cap_mask);
 		else
 			mad_dump_perfcounters_ext(buf, sizeof buf, pc,
 						  sizeof pc);
@@ -324,17 +342,20 @@ static void dump_perfcounters(int extended, int timeout, uint16_t cap_mask,
 
 	if (!aggregate) {
 		if (extended)
-			printf("# Port extended counters: %s port %d\n%s",
-			       portid2str(portid), port, buf);
+			printf("# Port extended counters: %s port %d "
+			       "(CapMask: 0x%02X)\n%s",
+			       portid2str(portid), port, ntohs(cap_mask), buf);
 		else
-			printf("# Port counters: %s port %d\n%s",
-			       portid2str(portid), port, buf);
+			printf("# Port counters: %s port %d "
+			       "(CapMask: 0x%02X)\n%s",
+			       portid2str(portid), port, ntohs(cap_mask), buf);
 	}
 }
 
 static void reset_counters(int extended, int timeout, int mask,
 			   ib_portid_t * portid, int port)
 {
+	memset(pc, 0, sizeof(pc));
 	if (extended != 1) {
 		if (!performance_reset_via(pc, portid, port, mask, timeout,
 					   IB_GSI_PORT_COUNTERS, srcport))
@@ -347,7 +368,9 @@ static void reset_counters(int extended, int timeout, int mask,
 }
 
 static int reset, reset_only, all_ports, loop_ports, port, extended, xmt_sl,
-    rcv_sl, xmt_disc, rcv_err, smpl_ctl;
+    rcv_sl, xmt_disc, rcv_err, extended_speeds, smpl_ctl, oprcvcounters, flowctlcounters,
+    vloppackets, vlopdata, vlxmitflowctlerrors, vlxmitcounters, swportvlcong,
+    rcvcc, slrcvfecn, slrcvbecn, xmitcc, vlxmittimecc;
 
 static void common_func(ib_portid_t * portid, int port_num, int mask,
 			unsigned query, unsigned reset,
@@ -357,6 +380,7 @@ static void common_func(ib_portid_t * portid, int port_num, int mask,
 	char buf[1024];
 
 	if (query) {
+		memset(pc, 0, sizeof(pc));
 		if (!pma_query_via(pc, portid, port_num, ibd_timeout, attr,
 				   srcport))
 			IBERROR("cannot query %s", name);
@@ -367,6 +391,7 @@ static void common_func(ib_portid_t * portid, int port_num, int mask,
 		       portid2str(portid), port_num, buf);
 	}
 
+	memset(pc, 0, sizeof(pc));
 	if (reset && !performance_reset_via(pc, portid, port, mask, ibd_timeout,
 					    attr, srcport))
 		IBERROR("cannot reset %s", name);
@@ -400,10 +425,103 @@ static void rcv_err_query(ib_portid_t * portid, int port, int mask)
 		    mad_dump_perfcounters_rcv_err);
 }
 
+static void extended_speeds_query(ib_portid_t * portid, int port, int mask)
+{
+	common_func(portid, port, mask, !reset_only, (reset_only || reset),
+		    "PortExtendedSpeedsCounters",
+		    IB_GSI_PORT_EXT_SPEEDS_COUNTERS,
+		    mad_dump_port_ext_speeds_counters);
+}
+
+static void oprcvcounters_query(ib_portid_t * portid, int port, int mask)
+{
+	common_func(portid, port, mask, !reset_only, (reset_only || reset),
+		    "PortOpRcvCounters", IB_GSI_PORT_PORT_OP_RCV_COUNTERS,
+		    mad_dump_perfcounters_port_op_rcv_counters);
+}
+
+static void flowctlcounters_query(ib_portid_t * portid, int port, int mask)
+{
+	common_func(portid, port, mask, !reset_only, (reset_only || reset),
+		    "PortFlowCtlCounters", IB_GSI_PORT_PORT_FLOW_CTL_COUNTERS,
+		    mad_dump_perfcounters_port_flow_ctl_counters);
+}
+
+static void vloppackets_query(ib_portid_t * portid, int port, int mask)
+{
+	common_func(portid, port, mask, !reset_only, (reset_only || reset),
+		    "PortVLOpPackets", IB_GSI_PORT_PORT_VL_OP_PACKETS,
+		    mad_dump_perfcounters_port_vl_op_packet);
+}
+
+static void vlopdata_query(ib_portid_t * portid, int port, int mask)
+{
+	common_func(portid, port, mask, !reset_only, (reset_only || reset),
+		    "PortVLOpData", IB_GSI_PORT_PORT_VL_OP_DATA,
+		    mad_dump_perfcounters_port_vl_op_data);
+}
+
+static void vlxmitflowctlerrors_query(ib_portid_t * portid, int port, int mask)
+{
+	common_func(portid, port, mask, !reset_only, (reset_only || reset),
+		    "PortVLXmitFlowCtlUpdateErrors", IB_GSI_PORT_PORT_VL_XMIT_FLOW_CTL_UPDATE_ERRORS,
+		    mad_dump_perfcounters_port_vl_xmit_flow_ctl_update_errors);
+}
+
+static void vlxmitcounters_query(ib_portid_t * portid, int port, int mask)
+{
+	common_func(portid, port, mask, !reset_only, (reset_only || reset),
+		    "PortVLXmitWaitCounters", IB_GSI_PORT_PORT_VL_XMIT_WAIT_COUNTERS,
+		    mad_dump_perfcounters_port_vl_xmit_wait_counters);
+}
+
+static void swportvlcong_query(ib_portid_t * portid, int port, int mask)
+{
+	common_func(portid, port, mask, !reset_only, (reset_only || reset),
+		    "SwPortVLCongestion", IB_GSI_SW_PORT_VL_CONGESTION,
+		    mad_dump_perfcounters_sw_port_vl_congestion);
+}
+
+static void rcvcc_query(ib_portid_t * portid, int port, int mask)
+{
+	common_func(portid, port, mask, !reset_only, (reset_only || reset),
+		    "PortRcvConCtrl", IB_GSI_PORT_RCV_CON_CTRL,
+		    mad_dump_perfcounters_rcv_con_ctrl);
+}
+
+static void slrcvfecn_query(ib_portid_t * portid, int port, int mask)
+{
+	common_func(portid, port, mask, !reset_only, (reset_only || reset),
+		    "PortSLRcvFECN", IB_GSI_PORT_SL_RCV_FECN,
+		    mad_dump_perfcounters_sl_rcv_fecn);
+}
+
+static void slrcvbecn_query(ib_portid_t * portid, int port, int mask)
+{
+	common_func(portid, port, mask, !reset_only, (reset_only || reset),
+		    "PortSLRcvBECN", IB_GSI_PORT_SL_RCV_BECN,
+		    mad_dump_perfcounters_sl_rcv_becn);
+}
+
+static void xmitcc_query(ib_portid_t * portid, int port, int mask)
+{
+	common_func(portid, port, mask, !reset_only, (reset_only || reset),
+		    "PortXmitConCtrl", IB_GSI_PORT_XMIT_CON_CTRL,
+		    mad_dump_perfcounters_xmit_con_ctrl);
+}
+
+static void vlxmittimecc_query(ib_portid_t * portid, int port, int mask)
+{
+	common_func(portid, port, mask, !reset_only, (reset_only || reset),
+		    "PortVLXmitTimeCong", IB_GSI_PORT_VL_XMIT_TIME_CONG,
+		    mad_dump_perfcounters_vl_xmit_time_cong);
+}
+
 void dump_portsamples_control(ib_portid_t * portid, int port)
 {
 	char buf[1024];
 
+	memset(pc, 0, sizeof(pc));
 	if (!pma_query_via(pc, portid, port, ibd_timeout,
 			   IB_GSI_PORT_SAMPLES_CONTROL, srcport))
 		IBERROR("sampctlquery");
@@ -431,8 +549,47 @@ static int process_opt(void *context, int ch, char *optarg)
 	case 'E':
 		rcv_err = 1;
 		break;
+	case 'T':
+		extended_speeds = 1;
+		break;
 	case 'c':
 		smpl_ctl = 1;
+		break;
+	case 1:
+		oprcvcounters = 1;
+		break;
+	case 2:
+		flowctlcounters = 1;
+		break;
+	case 3:
+		vloppackets = 1;
+		break;
+	case 4:
+		vlopdata = 1;
+		break;
+	case 5:
+		vlxmitflowctlerrors = 1;
+		break;
+	case 6:
+		vlxmitcounters = 1;
+		break;
+	case 7:
+		swportvlcong = 1;
+		break;
+	case 8:
+		rcvcc = 1;
+		break;
+	case 9:
+		slrcvfecn = 1;
+		break;
+	case 10:
+		slrcvbecn = 1;
+		break;
+	case 11:
+		xmitcc = 1;
+		break;
+	case 12:
+		vlxmittimecc = 1;
 		break;
 	case 'a':
 		all_ports++;
@@ -463,7 +620,7 @@ int main(int argc, char **argv)
 	uint16_t cap_mask;
 	int all_ports_loop = 0;
 	int node_type, num_ports = 0;
-	uint8_t data[IB_SMP_DATA_SIZE];
+	uint8_t data[IB_SMP_DATA_SIZE] = { 0 };
 	int start_port = 1;
 	int enhancedport0;
 	int i;
@@ -474,6 +631,19 @@ int main(int argc, char **argv)
 		{"rcvsl", 'S', 0, NULL, "show Rcv SL port counters"},
 		{"xmtdisc", 'D', 0, NULL, "show Xmt Discard Details"},
 		{"rcverr", 'E', 0, NULL, "show Rcv Error Details"},
+		{"extended_speeds", 'T', 0, NULL, "show port extended speeds counters"},
+		{"oprcvcounters", 1, 0, NULL, "show Rcv Counters per Op code"},
+		{"flowctlcounters", 2, 0, NULL, "show flow control counters"},
+		{"vloppackets", 3, 0, NULL, "show packets received per Op code per VL"},
+		{"vlopdata", 4, 0, NULL, "show data received per Op code per VL"},
+		{"vlxmitflowctlerrors", 5, 0, NULL, "show flow control update errors per VL"},
+		{"vlxmitcounters", 6, 0, NULL, "show ticks waiting to transmit counters per VL"},
+		{"swportvlcong", 7, 0, NULL, "show sw port VL congestion"},
+		{"rcvcc", 8, 0, NULL, "show Rcv congestion control counters"},
+		{"slrcvfecn", 9, 0, NULL, "show SL Rcv FECN counters"},
+		{"slrcvbecn", 10, 0, NULL, "show SL Rcv BECN counters"},
+		{"xmitcc", 11, 0, NULL, "show Xmit congestion control counters"},
+		{"vlxmittimecc", 12, 0, NULL, "show VL Xmit Time congestion control counters"},
 		{"smplctl", 'c', 0, NULL, "show samples control"},
 		{"all_ports", 'a', 0, NULL, "show aggregated counters"},
 		{"loop_ports", 'l', 0, NULL, "iterate through each port"},
@@ -522,13 +692,13 @@ int main(int argc, char **argv)
 	}
 
 	/* PerfMgt ClassPortInfo is a required attribute */
+	memset(pc, 0, sizeof(pc));
 	if (!pma_query_via(pc, &portid, port, ibd_timeout, CLASS_PORT_INFO,
 			   srcport))
 		IBERROR("classportinfo query");
 	/* ClassPortInfo should be supported as part of libibmad */
 	memcpy(&cap_mask, pc + 2, sizeof(cap_mask));	/* CapabilityMask */
-	cap_mask = ntohs(cap_mask);
-	if (!(cap_mask & 0x100)) {	/* bit 8 is AllPortSelect */
+	if (!(cap_mask & IB_PM_ALL_PORT_SELECT)) {	/* bit 8 is AllPortSelect */
 		if (!all_ports && port == ALL_PORTS)
 			IBERROR("AllPortSelect not supported");
 		if (all_ports)
@@ -555,10 +725,76 @@ int main(int argc, char **argv)
 		goto done;
 	}
 
+	if (extended_speeds) {
+		extended_speeds_query(&portid, port, mask);
+		goto done;
+	}
+
+	if (oprcvcounters) {
+		oprcvcounters_query(&portid, port, mask);
+		goto done;
+	}
+
+	if (flowctlcounters) {
+		flowctlcounters_query(&portid, port, mask);
+		goto done;
+	}
+
+	if (vloppackets) {
+		vloppackets_query(&portid, port, mask);
+		goto done;
+	}
+
+	if (vlopdata) {
+		vlopdata_query(&portid, port, mask);
+		goto done;
+	}
+
+	if (vlxmitflowctlerrors) {
+		vlxmitflowctlerrors_query(&portid, port, mask);
+		goto done;
+	}
+
+	if (vlxmitcounters) {
+		vlxmitcounters_query(&portid, port, mask);
+		goto done;
+	}
+
+	if (swportvlcong) {
+		swportvlcong_query(&portid, port, mask);
+		goto done;
+	}
+
+	if (rcvcc) {
+		rcvcc_query(&portid, port, mask);
+		goto done;
+	}
+
+	if (slrcvfecn) {
+		slrcvfecn_query(&portid, port, mask);
+		goto done;
+	}
+
+	if (slrcvbecn) {
+		slrcvbecn_query(&portid, port, mask);
+		goto done;
+	}
+
+	if (xmitcc) {
+		xmitcc_query(&portid, port, mask);
+		goto done;
+	}
+
+	if (vlxmittimecc) {
+		vlxmittimecc_query(&portid, port, mask);
+		goto done;
+	}
+
 	if (smpl_ctl) {
 		dump_portsamples_control(&portid, port);
 		goto done;
 	}
+
 
 	if (all_ports_loop || (loop_ports && (all_ports || port == ALL_PORTS))) {
 		if (smp_query_via(data, &portid, IB_ATTR_NODE_INFO, 0, 0,
@@ -593,9 +829,11 @@ int main(int argc, char **argv)
 						       && !loop_ports));
 		if (all_ports_loop && !loop_ports) {
 			if (extended != 1)
-				output_aggregate_perfcounters(&portid);
+				output_aggregate_perfcounters(&portid,
+							      cap_mask);
 			else
-				output_aggregate_perfcounters_ext(&portid);
+				output_aggregate_perfcounters_ext(&portid,
+								  cap_mask);
 		}
 	} else
 		dump_perfcounters(extended, ibd_timeout, cap_mask, &portid,
@@ -605,7 +843,7 @@ int main(int argc, char **argv)
 		goto done;
 
 do_reset:
-	if (argc <= 2 && !extended && (cap_mask & 0x1000))
+	if (argc <= 2 && !extended && (cap_mask & IB_PM_PC_XMIT_WAIT_SUP))
 		mask |= (1 << 16);	/* reset portxmitwait */
 
 	if (all_ports_loop || (loop_ports && (all_ports || port == ALL_PORTS))) {

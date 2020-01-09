@@ -45,7 +45,6 @@ use Getopt::Std;
 my $ibnetdiscover_cache = "";
 my $dump_lft_file       = "";
 my $verbose             = 0;
-my $query_opt           = "";
 
 my $switch_lid                            = undef;
 my $switch_guid                           = undef;
@@ -73,8 +72,6 @@ sub usage
 	print "  Generate ibnetdiscover-cache via \"ibnetdiscover --cache ibnetdiscover-cache\"\n";
 	print "  -e turn on heuristic(s) to look at switch balances deeper\n";
 	print "  -v verbose output, output all switches\n";
-	print "  -C <ca_name> use selected Channel Adaptor name for queries\n";
-	print "  -P <ca_port> use selected channel adaptor port for queries\n";
 	exit 2;
 }
 
@@ -175,10 +172,9 @@ sub output_switch_port_usage
 	my $iblinkinfo_output;
 	my $is_unbalanced = 0;
 	my $ports_on_switch = 0;
-	my $all_zero_flag = 1;
 	my $ret;
 
-        $iblinkinfo_output = `iblinkinfo $query_opt --load-cache $ibnetdiscover_cache -S $switch_guid`;
+        $iblinkinfo_output = `iblinkinfo --load-cache $ibnetdiscover_cache -S $switch_guid`;
 
 	for $port (@ports) {
 		if (!defined($switch_port_count{$port})) {
@@ -228,9 +224,6 @@ sub output_switch_port_usage
 	if ($heuristic_flag == 1
 	    && $is_unbalanced == 1
 	    && $ports_on_switch > 12) {
-
-		@double_check_ports = ();
-
 		for $port (@output_ports) {
 			if ($switch_port_count{$port} == $max_usage
 			    || $switch_port_count{$port} == ($max_usage - 1)
@@ -257,36 +250,6 @@ sub output_switch_port_usage
 			if (!($max_usage2 > ($min_usage2 + 1))) {
 				$is_unbalanced = 0;
 			}
-		}
-	}
-
-	# Another special case is when you have a non-fully-populated switch
-	# Many ports will be zero.  So if all active ports != max or max-1 are = 0
-	# we will also consider this balanced.
-	if ($heuristic_flag == 1
-	    && $is_unbalanced == 1
-	    && $ports_on_switch > 12) {
-
-		@double_check_ports = ();
-
-		for $port (@output_ports) {
-			if ($switch_port_count{$port} == $max_usage
-			    || $switch_port_count{$port} == ($max_usage - 1)) {
-				next;
-			}
-
-			push(@double_check_ports, $port);
-		}
-
-		for $port (@double_check_ports) {
-			if ($switch_port_count{$port} != 0) {
-				$all_zero_flag = 0;
-				last;
-			}
-		}
-
-		if ($all_zero_flag == 1) {
-			$is_unbalanced = 0;
 		}
 	}
 
@@ -327,7 +290,7 @@ sub process_host_ports
 	}
 }
 
-if (!getopts("hl:i:evC:P:")) {
+if (!getopts("hl:i:ev")) {
 	usage();
 }
 
@@ -357,14 +320,6 @@ if (defined($main::opt_v)) {
 
 if (defined($main::opt_e)) {
 	$heuristic_flag = 1;
-}
-
-if (defined $Getopt::Std::opt_C) {
-	$query_opt = "$query_opt -C $Getopt::Std::opt_C";
-}
-
-if (defined $Getopt::Std::opt_P) {
-	$query_opt = "$query_opt -P $Getopt::Std::opt_P";
 }
 
 if (!open(FH, "< $dump_lft_file")) {

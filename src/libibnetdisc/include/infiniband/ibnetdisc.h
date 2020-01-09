@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2009 Voltaire, Inc. All rights reserved.
  * Copyright (c) 2008 Lawrence Livermore National Lab.  All rights reserved.
- * Copyright (c) 2010 Mellanox Technologies LTD.  All rights reserved.
+ * Copyright (c) 2010-2011 Mellanox Technologies LTD.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -40,8 +40,12 @@
 #include <infiniband/mad.h>
 #include <iba/ib_types.h>
 
+#include <infiniband/ibnetdisc_osd.h>
+
 struct ibnd_chassis;		/* forward declare */
 struct ibnd_port;		/* forward declare */
+
+#define CHASSIS_TYPE_SIZE 20
 
 /** =========================================================================
  * Node
@@ -80,6 +84,7 @@ typedef struct ibnd_node {
 	struct ibnd_node *next_chassis_node;	/* next node in ibnd_chassis_t->nodes */
 	struct ibnd_chassis *chassis;	/* if != NULL the chassis this node belongs to */
 	unsigned char ch_type;
+	char ch_type_str[CHASSIS_TYPE_SIZE];
 	unsigned char ch_anafanum;
 	unsigned char ch_slotnum;
 	unsigned char ch_slot;
@@ -104,6 +109,7 @@ typedef struct ibnd_port {
 	uint8_t lmc;
 	/* use libibmad decoder functions for info */
 	uint8_t info[IB_SMP_DATA_SIZE];
+	uint8_t ext_info[IB_SMP_DATA_SIZE];
 
 	/* internal use only */
 	struct ibnd_port *htnext;
@@ -206,6 +212,17 @@ IBND_EXPORT void ibnd_iter_nodes(ibnd_fabric_t * fabric,
 IBND_EXPORT void ibnd_iter_nodes_type(ibnd_fabric_t * fabric,
 				     ibnd_iter_node_func_t func,
 				     int node_type, void *user_data);
+
+/** =========================================================================
+ * Port operations
+ */
+IBND_EXPORT ibnd_port_t *ibnd_find_port_guid(ibnd_fabric_t * fabric,
+					uint64_t guid);
+IBND_EXPORT ibnd_port_t *ibnd_find_port_dr(ibnd_fabric_t * fabric,
+					char *dr_str);
+typedef void (*ibnd_iter_port_func_t) (ibnd_port_t * port, void *user_data);
+IBND_EXPORT void ibnd_iter_ports(ibnd_fabric_t * fabric,
+				ibnd_iter_port_func_t func, void *user_data);
 
 /** =========================================================================
  * Chassis queries

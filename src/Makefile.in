@@ -51,6 +51,7 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/infiniband-diags.spec.in $(top_srcdir)/configure \
 	$(top_srcdir)/include/ibdiag_version.h.in \
+	$(top_srcdir)/man/ibqueryerrors.8.in \
 	$(top_srcdir)/scripts/ibcheckerrors.in \
 	$(top_srcdir)/scripts/ibcheckerrs.in \
 	$(top_srcdir)/scripts/ibchecknet.in \
@@ -69,11 +70,16 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(top_srcdir)/scripts/ibnodes.in \
 	$(top_srcdir)/scripts/ibqueryerrors.pl.in \
 	$(top_srcdir)/scripts/ibrouters.in \
-	$(top_srcdir)/scripts/ibswitches.in COPYING ChangeLog \
-	config/config.guess config/config.sub config/depcomp \
-	config/install-sh config/ltmain.sh config/missing
+	$(top_srcdir)/scripts/ibswitches.in AUTHORS COPYING ChangeLog \
+	config/compile config/config.guess config/config.sub \
+	config/depcomp config/install-sh config/ltmain.sh \
+	config/missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.in
+am__aclocal_m4_deps = $(top_srcdir)/config/libtool.m4 \
+	$(top_srcdir)/config/ltoptions.m4 \
+	$(top_srcdir)/config/ltsugar.m4 \
+	$(top_srcdir)/config/ltversion.m4 \
+	$(top_srcdir)/config/lt~obsolete.m4 $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -88,7 +94,8 @@ CONFIG_CLEAN_FILES = infiniband-diags.spec include/ibdiag_version.h \
 	scripts/ibclearcounters scripts/ibclearerrors \
 	scripts/ibdatacounts scripts/ibdatacounters scripts/ibhosts \
 	scripts/ibnodes scripts/ibswitches scripts/ibrouters \
-	scripts/iblinkinfo.pl scripts/ibqueryerrors.pl
+	scripts/iblinkinfo.pl scripts/ibqueryerrors.pl \
+	man/ibqueryerrors.8
 CONFIG_CLEAN_VPATH_FILES =
 LIBRARIES = $(noinst_LIBRARIES)
 ARFLAGS = cru
@@ -323,6 +330,7 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GREP = @GREP@
+IBDIAG_CONFIG_PATH = @IBDIAG_CONFIG_PATH@
 IBSCRIPTPATH = @IBSCRIPTPATH@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -350,7 +358,6 @@ PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
-PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PERL = @PERL@
@@ -479,11 +486,12 @@ man_MANS = man/ibaddr.8 man/ibcheckerrors.8 man/ibcheckerrs.8 \
 	man/ibprintswitch.8 man/ibprintca.8 man/ibfindnodesusing.8 \
 	man/ibdatacounts.8 man/ibdatacounters.8 \
 	man/ibrouters.8 man/ibprintrt.8 man/ibidsverify.8 \
-	man/check_lft_balance.8 man/ibcacheedit.8
+	man/check_lft_balance.8 man/ibcacheedit.8 \
+	man/infiniband-diags.8
 
 BUILT_SOURCES = ibdiag_version
 EXTRA_DIST = scripts include infiniband-diags.spec.in infiniband-diags.spec \
-	$(man_MANS) autogen.sh
+	$(man_MANS) autogen.sh etc/error_thresholds
 
 all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -582,6 +590,8 @@ scripts/ibrouters: $(top_builddir)/config.status $(top_srcdir)/scripts/ibrouters
 scripts/iblinkinfo.pl: $(top_builddir)/config.status $(top_srcdir)/scripts/iblinkinfo.pl.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 scripts/ibqueryerrors.pl: $(top_builddir)/config.status $(top_srcdir)/scripts/ibqueryerrors.pl.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+man/ibqueryerrors.8: $(top_builddir)/config.status $(top_srcdir)/man/ibqueryerrors.8.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 clean-noinstLIBRARIES:
@@ -1587,7 +1597,11 @@ dist-hook:
 
 # install this to a default location.
 install-data-hook:
+	if test ! -d $(DESTDIR)/$(sysconfdir)/infiniband-diags; then \
+		$(top_srcdir)/config/install-sh -m 755 -d $(DESTDIR)/$(sysconfdir)/infiniband-diags; \
+	fi
 	$(top_srcdir)/config/install-sh -c -m 444 $(top_srcdir)/scripts/IBswcountlimits.pm $(DESTDIR)/$(PERL_INSTALLDIR)/IBswcountlimits.pm
+	$(top_srcdir)/config/install-sh -c -m 444 $(top_srcdir)/etc/error_thresholds $(DESTDIR)/$(sysconfdir)/infiniband-diags
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

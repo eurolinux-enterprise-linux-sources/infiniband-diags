@@ -3,6 +3,7 @@
  * Copyright (c) 2007 Xsigo Systems Inc.  All rights reserved.
  * Copyright (c) 2008 Lawrence Livermore National Lab.  All rights reserved.
  * Copyright (c) 2009 HNR Consulting.  All rights reserved.
+ * Copyright (c) 2010,2011 Mellanox Technologies LTD.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -61,9 +62,10 @@ static nn_map_t *node_name_map = NULL;
 static char *load_cache_file = NULL;
 
 int data_counters = 0;
+int data_counters_only = 0;
 int port_config = 0;
-uint64_t node_guid = 0;
-char *node_guid_str = NULL;
+uint64_t port_guid = 0;
+char *port_guid_str = NULL;
 #define SUP_MAX 64
 int sup_total = 0;
 enum MAD_FIELDS suppressed_fields[SUP_MAX];
@@ -76,45 +78,86 @@ unsigned clear_errors = 0, clear_counts = 0, details = 0;
 #define PRINT_ROUTER 0x4
 #define PRINT_ALL 0xFF		/* all nodes default flag */
 
-static unsigned int get_max(unsigned int num)
+struct {
+	int nodes_checked;
+	int bad_nodes;
+	int ports_checked;
+	int bad_ports;
+} summary = { 0 };
+
+#define DEF_THRES_FILE IBDIAG_CONFIG_PATH"/error_thresholds"
+static char *threshold_file = DEF_THRES_FILE;
+
+/* define a "packet" with threshold values in it */
+uint8_t thresholds[1204] = { 0 };
+char * threshold_str = "";
+
+static void set_thres(char *name, uint32_t val)
 {
-	unsigned r = 0;		// r will be lg(num)
-
-	while (num >>= 1)	// unroll for more speed...
-		r++;
-
-	return (1 << r);
+	int f;
+	int n;
+	char tmp[256];
+	for (f = IB_PC_FIRST_F; f <= IB_PC_LAST_F; f++) {
+		if (strcmp(name, mad_field_name(f)) == 0) {
+			mad_encode_field(thresholds, f, &val);
+			snprintf(tmp, 255, "[%s = %u]", name, val);
+			threshold_str = realloc(threshold_str,
+					strlen(threshold_str)+strlen(tmp)+1);
+			if (!threshold_str) {
+				fprintf(stderr, "Failed to allocate memory: "
+					"%s\n", strerror(errno));
+				exit(1);
+			}
+			n = strlen(threshold_str);
+			strcpy(threshold_str+n, tmp);
+		}
+	}
 }
 
-static void get_msg(char *width_msg, char *speed_msg, int msg_size,
-		    ibnd_port_t * port)
+static void set_thresholds(char *threshold_file)
 {
-	char buf[64];
-	uint32_t max_speed = 0;
+	char buf[1024];
+	int val = 0;
+	FILE *thresf = fopen(threshold_file, "r");
+	char *p_prefix, *p_last;
+	char *name;
+	char *val_str;
+	char str[64];
 
-	uint32_t max_width = get_max(mad_get_field(port->info, 0,
-						   IB_PORT_LINK_WIDTH_SUPPORTED_F)
-				     & mad_get_field(port->remoteport->info, 0,
-						     IB_PORT_LINK_WIDTH_SUPPORTED_F));
-	if ((max_width & mad_get_field(port->info, 0,
-				       IB_PORT_LINK_WIDTH_ACTIVE_F)) == 0)
-		// we are not at the max supported width
-		// print what we could be at.
-		snprintf(width_msg, msg_size, "Could be %s",
-			 mad_dump_val(IB_PORT_LINK_WIDTH_ACTIVE_F,
-				      buf, 64, &max_width));
+	if (!thresf)
+		return;
 
-	max_speed = get_max(mad_get_field(port->info, 0,
-					  IB_PORT_LINK_SPEED_SUPPORTED_F)
-			    & mad_get_field(port->remoteport->info, 0,
-					    IB_PORT_LINK_SPEED_SUPPORTED_F));
-	if ((max_speed & mad_get_field(port->info, 0,
-				       IB_PORT_LINK_SPEED_ACTIVE_F)) == 0)
-		// we are not at the max supported speed
-		// print what we could be at.
-		snprintf(speed_msg, msg_size, "Could be %s",
-			 mad_dump_val(IB_PORT_LINK_SPEED_ACTIVE_F,
-				      buf, 64, &max_speed));
+	snprintf(str, 63, "Thresholds: ");
+	threshold_str = malloc(strlen(str)+1);
+	if (!threshold_str) {
+		fprintf(stderr, "Failed to allocate memory: %s\n",
+			strerror(errno));
+		exit(1);
+	}
+	strcpy(threshold_str, str);
+	while (fgets(buf, sizeof buf, thresf) != NULL) {
+		p_prefix = strtok_r(buf, "\n", &p_last);
+		if (!p_prefix)
+			continue; /* ignore blank lines */
+
+		if (*p_prefix == '#')
+			continue; /* ignore comment lines */
+
+		name = strtok_r(p_prefix, "=", &p_last);
+		val_str = strtok_r(NULL, "\n", &p_last);
+
+		val = strtoul(val_str, NULL, 0);
+		set_thres(name, val);
+	}
+
+	fclose(thresf);
+}
+
+static int exceeds_threshold(int field, unsigned val)
+{
+	uint32_t thres = 0;
+	mad_decode_field(thresholds, field, &thres);
+	return (val > thres);
 }
 
 static void print_port_config(char *node_name, ibnd_node_t * node, int portnum)
@@ -125,7 +168,8 @@ static void print_port_config(char *node_name, ibnd_node_t * node, int portnum)
 	char width_msg[256];
 	char speed_msg[256];
 	char ext_port_str[256];
-	int iwidth, ispeed, istate, iphystate;
+	int iwidth, ispeed, fdr10, espeed, istate, iphystate, cap_mask;
+	uint8_t *info;
 
 	ibnd_port_t *port = node->ports[portnum];
 
@@ -134,6 +178,19 @@ static void print_port_config(char *node_name, ibnd_node_t * node, int portnum)
 
 	iwidth = mad_get_field(port->info, 0, IB_PORT_LINK_WIDTH_ACTIVE_F);
 	ispeed = mad_get_field(port->info, 0, IB_PORT_LINK_SPEED_ACTIVE_F);
+	fdr10 = mad_get_field(port->ext_info, 0,
+			      IB_MLNX_EXT_PORT_LINK_SPEED_ACTIVE_F) & FDR10;
+
+	if (port->node->type == IB_NODE_SWITCH)
+		info = (uint8_t *)&port->node->ports[0]->info;
+	else
+		info = (uint8_t *)&port->info;
+	cap_mask = mad_get_field(info, 0, IB_PORT_CAPMASK_F);
+	if (cap_mask & CL_NTOH32(IB_PORT_CAP_HAS_EXT_SPEEDS))
+		espeed = mad_get_field(port->info, 0,
+				       IB_PORT_LINK_SPEED_EXT_ACTIVE_F);
+	else
+		espeed = 0;
 	istate = mad_get_field(port->info, 0, IB_PORT_STATE_F);
 	iphystate = mad_get_field(port->info, 0, IB_PORT_PHYS_STATE_F);
 
@@ -145,10 +202,20 @@ static void print_port_config(char *node_name, ibnd_node_t * node, int portnum)
 	/* C14-24.2.1 states that a down port allows for invalid data to be
 	 * returned for all PortInfo components except PortState and
 	 * PortPhysicalState */
+	if (!espeed) {
+		if (fdr10)
+			sprintf(speed, "10.0 Gbps (FDR10)");
+		else
+			mad_dump_val(IB_PORT_LINK_SPEED_ACTIVE_F, speed,
+				     64, &ispeed);
+	} else
+		mad_dump_val(IB_PORT_LINK_SPEED_EXT_ACTIVE_F, speed,
+			     64, &espeed);
+
 	if (istate != IB_LINK_DOWN) {
-		snprintf(link_str, 256, "(%3s %9s %6s/%8s)",
+		snprintf(link_str, 256, "(%3s %18s %6s/%8s)",
 			 mad_dump_val(IB_PORT_LINK_WIDTH_ACTIVE_F, width, 64, &iwidth),
-			 mad_dump_val(IB_PORT_LINK_SPEED_ACTIVE_F, speed, 64, &ispeed),
+			 speed,
 			 mad_dump_val(IB_PORT_STATE_F, state, 64, &istate),
 			 mad_dump_val(IB_PORT_PHYS_STATE_F, physstate, 64, &iphystate));
 	} else {
@@ -166,7 +233,7 @@ static void print_port_config(char *node_name, ibnd_node_t * node, int portnum)
 		else
 			ext_port_str[0] = '\0';
 
-		get_msg(width_msg, speed_msg, 256, port);
+		get_max_msg(width_msg, speed_msg, 256, port);
 
 		rem_node_name = remap_node_name(node_name_map,
 						port->remoteport->node->guid,
@@ -175,7 +242,7 @@ static void print_port_config(char *node_name, ibnd_node_t * node, int portnum)
 
 		snprintf(remote_str, 256,
 			 "0x%016" PRIx64 " %6d %4d[%2s] \"%s\" (%s %s)\n",
-			 port->remoteport->node->guid,
+			 port->remoteport->guid,
 			 port->remoteport->base_lid ? port->remoteport->
 			 base_lid : port->remoteport->node->smalid,
 			 port->remoteport->portnum, ext_port_str, rem_node_name,
@@ -211,10 +278,21 @@ static int suppress(enum MAD_FIELDS field)
 static void report_suppressed(void)
 {
 	int i = 0;
-	printf("Suppressing:");
+	printf("## Suppressed:");
 	for (i = 0; i < sup_total; i++)
 		printf(" %s", mad_field_name(suppressed_fields[i]));
 	printf("\n");
+}
+
+static int print_summary(void)
+{
+	printf("\n## Summary: %d nodes checked, %d bad nodes found\n",
+		summary.nodes_checked, summary.bad_nodes);
+	printf("##          %d ports checked, %d ports have errors beyond threshold\n",
+		summary.ports_checked, summary.bad_ports);
+	printf("## %s\n", threshold_str);
+	report_suppressed();
+	return (summary.bad_ports);
 }
 
 static int query_and_dump(char *buf, size_t size, ib_portid_t * portid,
@@ -245,9 +323,10 @@ static int query_and_dump(char *buf, size_t size, ib_portid_t * portid,
 	return n;
 }
 
+
 static int print_results(ib_portid_t * portid, char *node_name,
 			 ibnd_node_t * node, uint8_t * pc, int portnum,
-			 int *header_printed)
+			 int *header_printed, uint8_t *pce, uint16_t cap_mask)
 {
 	char buf[1024];
 	char *str = buf;
@@ -263,62 +342,97 @@ static int print_results(ib_portid_t * portid, char *node_name,
 			continue;
 
 		mad_decode_field(pc, i, (void *)&val);
-		if (val)
+		if (exceeds_threshold(i, val)) {
 			n += snprintf(str + n, 1024 - n, " [%s == %u]",
 				      mad_field_name(i), val);
 
-		/* If there are PortXmitDiscards, get details (if supported) */
-		if (i == IB_PC_XMT_DISCARDS_F && details && val) {
-			n += query_and_dump(str + n, sizeof(buf) - n, portid,
-					    node, node_name, portnum,
-					    "PortXmitDiscardDetails",
-					    IB_GSI_PORT_XMIT_DISCARD_DETAILS,
-					    IB_PC_RCV_LOCAL_PHY_ERR_F,
-					    IB_PC_RCV_ERR_LAST_F);
-			/* If there are PortRcvErrors, get details (if supported) */
-		} else if (i == IB_PC_ERR_RCV_F && details && val) {
-			n += query_and_dump(str + n, sizeof(buf) - n, portid,
-					    node, node_name, portnum,
-					    "PortRcvErrorDetails",
-					    IB_GSI_PORT_RCV_ERROR_DETAILS,
-					    IB_PC_XMT_INACT_DISC_F,
-					    IB_PC_XMT_DISC_LAST_F);
+			/* If there are PortXmitDiscards, get details (if supported) */
+			if (i == IB_PC_XMT_DISCARDS_F && details) {
+				n += query_and_dump(str + n, sizeof(buf) - n, portid,
+						    node, node_name, portnum,
+						    "PortXmitDiscardDetails",
+						    IB_GSI_PORT_XMIT_DISCARD_DETAILS,
+						    IB_PC_RCV_LOCAL_PHY_ERR_F,
+						    IB_PC_RCV_ERR_LAST_F);
+				/* If there are PortRcvErrors, get details (if supported) */
+			} else if (i == IB_PC_ERR_RCV_F && details) {
+				n += query_and_dump(str + n, sizeof(buf) - n, portid,
+						    node, node_name, portnum,
+						    "PortRcvErrorDetails",
+						    IB_GSI_PORT_RCV_ERROR_DETAILS,
+						    IB_PC_XMT_INACT_DISC_F,
+						    IB_PC_XMT_DISC_LAST_F);
+			}
 		}
 	}
 
 	if (!suppress(IB_PC_XMT_WAIT_F)) {
 		mad_decode_field(pc, IB_PC_XMT_WAIT_F, (void *)&val);
-		if (val)
+		if (exceeds_threshold(IB_PC_XMT_WAIT_F, val))
 			n += snprintf(str + n, 1024 - n, " [%s == %u]",
 				      mad_field_name(IB_PC_XMT_WAIT_F), val);
 	}
 
 	/* if we found errors. */
 	if (n != 0) {
-		if (data_counters)
-			for (i = IB_PC_XMT_BYTES_F; i <= IB_PC_RCV_PKTS_F; i++) {
-				uint64_t val64 = 0;
-				mad_decode_field(pc, i, (void *)&val64);
-				if (val64)
-					n += snprintf(str + n, 1024 - n,
-						      " [%s == %" PRIu64 "]",
-						      mad_field_name(i), val64);
+		if (data_counters) {
+			uint8_t *pkt = pc;
+			int start_field = IB_PC_XMT_BYTES_F;
+			int end_field = IB_PC_RCV_PKTS_F;
+
+			if (pce) {
+				pkt = pce;
+				start_field = IB_PC_EXT_XMT_BYTES_F;
+				if (cap_mask & IB_PM_EXT_WIDTH_SUPPORTED)
+					end_field = IB_PC_EXT_RCV_MPKTS_F;
+				else
+					end_field = IB_PC_EXT_RCV_PKTS_F;
 			}
 
-		if (!*header_printed) {
-			printf("Errors for 0x%" PRIx64 " \"%s\"\n", node->guid,
-			       node_name);
-			*header_printed = 1;
+			for (i = start_field; i <= end_field; i++) {
+				uint64_t val64 = 0;
+				float val = 0;
+				char *unit = "";
+				mad_decode_field(pkt, i, (void *)&val64);
+				if (val64) {
+					int data = 0;
+					if (i == IB_PC_EXT_XMT_BYTES_F ||
+					    i == IB_PC_EXT_RCV_BYTES_F ||
+					    i == IB_PC_XMT_BYTES_F ||
+					    i == IB_PC_RCV_BYTES_F)
+						data = 1;
+					unit = conv_cnt_human_readable(val64,
+								&val, data);
+					n += snprintf(str + n, 1024 - n,
+						" [%s == %" PRIu64
+						" (%5.3f%s)]",
+						mad_field_name(i), val64, val,
+						unit);
+				}
+			}
 		}
 
-		if (portnum == 0xFF)
-			printf("   GUID 0x%" PRIx64 " port ALL:%s\n",
-			       node->guid, str);
-		else
+		if (!*header_printed) {
+			if (node->type == IB_NODE_SWITCH)
+				printf("Errors for 0x%" PRIx64 " \"%s\"\n",
+					node->ports[0]->guid, node_name);
+			else
+				printf("Errors for \"%s\"\n", node_name);
+			*header_printed = 1;
+			summary.bad_nodes++;
+		}
+
+		if (portnum == 0xFF) {
+			if (node->type == IB_NODE_SWITCH)
+				printf("   GUID 0x%" PRIx64 " port ALL:%s\n",
+				       node->ports[0]->guid, str);
+		} else {
 			printf("   GUID 0x%" PRIx64 " port %d:%s\n",
-			       node->guid, portnum, str);
-		if (portnum != 0xFF && port_config)
-			print_port_config(node_name, node, portnum);
+			       node->ports[portnum]->guid, portnum, str);
+			if (port_config)
+				print_port_config(node_name, node, portnum);
+			summary.bad_ports++;
+		}
 	}
 	return (n);
 }
@@ -326,7 +440,7 @@ static int print_results(ib_portid_t * portid, char *node_name,
 static int query_cap_mask(ib_portid_t * portid, char *node_name, int portnum,
 			  uint16_t * cap_mask)
 {
-	uint8_t pc[1024];
+	uint8_t pc[1024] = { 0 };
 	uint16_t rc_cap_mask;
 
 	/* PerfMgt ClassPortInfo is a required attribute */
@@ -340,16 +454,87 @@ static int query_cap_mask(ib_portid_t * portid, char *node_name, int portnum,
 	/* ClassPortInfo should be supported as part of libibmad */
 	memcpy(&rc_cap_mask, pc + 2, sizeof(rc_cap_mask));	/* CapabilityMask */
 
-	*cap_mask = ntohs(rc_cap_mask);
+	*cap_mask = rc_cap_mask;
 	return 0;
 }
 
-static int print_port(ib_portid_t * portid, uint16_t cap_mask, char *node_name,
-		      ibnd_node_t * node, int portnum, int *header_printed)
+static int print_data_cnts(ib_portid_t * portid, uint16_t cap_mask,
+			   char *node_name, ibnd_node_t * node, int portnum,
+			   int *header_printed)
 {
 	uint8_t pc[1024];
+	int i;
+	int start_field = IB_PC_XMT_BYTES_F;
+	int end_field = IB_PC_RCV_PKTS_F;
 
 	memset(pc, 0, 1024);
+
+	if (cap_mask & (IB_PM_EXT_WIDTH_SUPPORTED | IB_PM_EXT_WIDTH_NOIETF_SUP)) {
+		if (!pma_query_via(pc, portid, portnum, ibd_timeout,
+				   IB_GSI_PORT_COUNTERS_EXT, ibmad_port)) {
+			IBWARN("IB_GSI_PORT_COUNTERS_EXT query failed on %s, %s port %d",
+			       node_name, portid2str(portid), portnum);
+			return (1);
+		}
+		start_field = IB_PC_EXT_XMT_BYTES_F;
+		if (cap_mask & IB_PM_EXT_WIDTH_SUPPORTED)
+			end_field = IB_PC_EXT_RCV_MPKTS_F;
+		else
+			end_field = IB_PC_EXT_RCV_PKTS_F;
+	} else {
+		if (!pma_query_via(pc, portid, portnum, ibd_timeout,
+				   IB_GSI_PORT_COUNTERS, ibmad_port)) {
+			IBWARN("IB_GSI_PORT_COUNTERS query failed on %s, %s port %d",
+			       node_name, portid2str(portid), portnum);
+			return (1);
+		}
+		start_field = IB_PC_XMT_BYTES_F;
+		end_field = IB_PC_RCV_PKTS_F;
+	}
+
+	if (!*header_printed) {
+		printf("Data Counters for 0x%" PRIx64 " \"%s\"\n", node->guid,
+		       node_name);
+		*header_printed = 1;
+	}
+
+	if (portnum == 0xFF)
+		printf("   GUID 0x%" PRIx64 " port ALL:", node->guid);
+	else
+		printf("   GUID 0x%" PRIx64 " port %d:",
+		       node->guid, portnum);
+
+	for (i = start_field; i <= end_field; i++) {
+		uint64_t val64 = 0;
+		float val = 0;
+		char *unit = "";
+		int data = 0;
+		mad_decode_field(pc, i, (void *)&val64);
+		if (i == IB_PC_EXT_XMT_BYTES_F || i == IB_PC_EXT_RCV_BYTES_F ||
+		    i == IB_PC_XMT_BYTES_F || i == IB_PC_RCV_BYTES_F)
+			data = 1;
+		unit = conv_cnt_human_readable(val64, &val, data);
+		printf(" [%s == %" PRIu64 " (%5.3f%s)]", mad_field_name(i),
+			val64, val, unit);
+	}
+	printf("\n");
+
+	if (portnum != 0xFF && port_config)
+		print_port_config(node_name, node, portnum);
+
+	return (0);
+}
+
+static int print_errors(ib_portid_t * portid, uint16_t cap_mask,
+			char *node_name, ibnd_node_t * node, int portnum,
+			int *header_printed)
+{
+	uint8_t pc[1024];
+	uint8_t pce[1024];
+	uint8_t *pc_ext = NULL;
+
+	memset(pc, 0, 1024);
+	memset(pce, 0, 1024);
 
 	if (!pma_query_via(pc, portid, portnum, ibd_timeout,
 			   IB_GSI_PORT_COUNTERS, ibmad_port)) {
@@ -357,46 +542,111 @@ static int print_port(ib_portid_t * portid, uint16_t cap_mask, char *node_name,
 		       node_name, portid2str(portid), portnum);
 		return (0);
 	}
-	if (!(cap_mask & 0x1000)) {
+
+	if (cap_mask & (IB_PM_EXT_WIDTH_SUPPORTED | IB_PM_EXT_WIDTH_NOIETF_SUP)) {
+		if (!pma_query_via(pce, portid, portnum, ibd_timeout,
+		    IB_GSI_PORT_COUNTERS_EXT, ibmad_port)) {
+			IBWARN("IB_GSI_PORT_COUNTERS_EXT query failed on %s, %s port %d",
+			       node_name, portid2str(portid), portnum);
+			return (0);
+		}
+		pc_ext = pce;
+	}
+
+	if (!(cap_mask & IB_PM_PC_XMIT_WAIT_SUP)) {
 		/* if PortCounters:PortXmitWait not supported clear this counter */
 		uint32_t foo = 0;
 		mad_encode_field(pc, IB_PC_XMT_WAIT_F, &foo);
 	}
 	return (print_results(portid, node_name, node, pc, portnum,
-			      header_printed));
+			      header_printed, pc_ext, cap_mask));
+}
+
+uint8_t *reset_pc_ext(void *rcvbuf, ib_portid_t * dest,
+		      int port, unsigned mask, unsigned timeout,
+		      const struct ibmad_port * srcport)
+{
+	ib_rpc_t rpc = { 0 };
+	int lid = dest->lid;
+
+	DEBUG("lid %u port %d mask 0x%x", lid, port, mask);
+
+	if (lid == -1) {
+		IBWARN("only lid routed is supported");
+		return NULL;
+	}
+
+	if (!mask)
+		mask = ~0;
+
+	rpc.mgtclass = IB_PERFORMANCE_CLASS;
+	rpc.method = IB_MAD_METHOD_SET;
+	rpc.attr.id = IB_GSI_PORT_COUNTERS_EXT;
+
+	memset(rcvbuf, 0, IB_MAD_SIZE);
+
+	/* Same for attribute IDs */
+	mad_set_field(rcvbuf, 0, IB_PC_EXT_PORT_SELECT_F, port);
+	mad_set_field(rcvbuf, 0, IB_PC_EXT_COUNTER_SELECT_F, mask);
+	rpc.attr.mod = 0;
+	rpc.timeout = timeout;
+	rpc.datasz = IB_PC_DATA_SZ;
+	rpc.dataoffs = IB_PC_DATA_OFFS;
+	if (!dest->qp)
+		dest->qp = 1;
+	if (!dest->qkey)
+		dest->qkey = IB_DEFAULT_QP1_QKEY;
+
+	return mad_rpc(srcport, &rpc, dest, rcvbuf, rcvbuf);
 }
 
 static void clear_port(ib_portid_t * portid, uint16_t cap_mask,
 		       char *node_name, int port)
 {
-	uint8_t pc[1024];
+	uint8_t pc[1024] = { 0 };
 	/* bits defined in Table 228 PortCounters CounterSelect and
 	 * CounterSelect2
 	 */
 	uint32_t mask = 0;
 
-	if (!clear_errors && !clear_counts)
-		return;
-
 	if (clear_errors) {
 		mask |= 0xFFF;
-		if (cap_mask & 0x1000)
+		if (cap_mask & IB_PM_PC_XMIT_WAIT_SUP)
 			mask |= 0x10000;
 	}
 	if (clear_counts)
 		mask |= 0xF000;
 
-	if (!performance_reset_via(pc, portid, port, mask, ibd_timeout,
-				   IB_GSI_PORT_COUNTERS, ibmad_port))
-		IBERROR("Failed to reset errors %s port %d", node_name, port);
+	if (mask)
+		if (!performance_reset_via(pc, portid, port, mask, ibd_timeout,
+					   IB_GSI_PORT_COUNTERS, ibmad_port))
+			fprintf(stderr, "Failed to reset errors %s port %d\n", node_name,
+				port);
 
-	if (details && clear_errors) {
+	if (clear_errors && details) {
+		memset(pc, 0, 1024);
 		performance_reset_via(pc, portid, port, 0xf, ibd_timeout,
 				      IB_GSI_PORT_XMIT_DISCARD_DETAILS,
 				      ibmad_port);
+		memset(pc, 0, 1024);
 		performance_reset_via(pc, portid, port, 0x3f, ibd_timeout,
 				      IB_GSI_PORT_RCV_ERROR_DETAILS,
 				      ibmad_port);
+	}
+
+	if (clear_counts &&
+	    (cap_mask &
+	     (IB_PM_EXT_WIDTH_SUPPORTED | IB_PM_EXT_WIDTH_NOIETF_SUP))) {
+		if (cap_mask & IB_PM_EXT_WIDTH_SUPPORTED)
+			mask = 0xFF;
+		else
+			mask = 0x0F;
+
+		if (!reset_pc_ext(pc, portid, port, mask, ibd_timeout,
+		    ibmad_port))
+			fprintf(stderr, "Failed to reset extended data counters %s, "
+				"%s port %d\n", node_name, portid2str(portid),
+				port);
 	}
 }
 
@@ -444,30 +694,54 @@ void print_node(ibnd_node_t * node, void *user_data)
 			}
 		}
 	}
+
 	if ((query_cap_mask(&portid, node_name, p, &cap_mask) == 0) &&
-	    (cap_mask & 0x100)) {
+	    (cap_mask & IB_PM_ALL_PORT_SELECT))
 		all_port_sup = 1;
-		if (!print_port(&portid, cap_mask, node_name, node,
-				0xFF, &header_printed))
-			goto clear;
-	}
 
-	for (p = startport; p <= node->numports; p++) {
-		if (node->ports[p]) {
-			if (node->type == IB_NODE_SWITCH)
-				ib_portid_set(&portid, node->smalid, 0, 0);
-			else
-				ib_portid_set(&portid, node->ports[p]->base_lid,
-					      0, 0);
+	if (data_counters_only) {
+		for (p = startport; p <= node->numports; p++) {
+			if (node->ports[p]) {
+				if (node->type == IB_NODE_SWITCH)
+					ib_portid_set(&portid, node->smalid, 0, 0);
+				else
+					ib_portid_set(&portid, node->ports[p]->base_lid,
+						      0, 0);
 
-			print_port(&portid, cap_mask, node_name, node, p,
-				   &header_printed);
-			if (!all_port_sup)
-				clear_port(&portid, cap_mask, node_name, p);
+				print_data_cnts(&portid, cap_mask, node_name, node, p,
+						&header_printed);
+				summary.ports_checked++;
+				if (!all_port_sup)
+					clear_port(&portid, cap_mask, node_name, p);
+			}
+		}
+	} else {
+		if (all_port_sup)
+			if (!print_errors(&portid, cap_mask, node_name, node,
+					  0xFF, &header_printed)) {
+				summary.ports_checked += node->numports;
+				goto clear;
+			}
+
+		for (p = startport; p <= node->numports; p++) {
+			if (node->ports[p]) {
+				if (node->type == IB_NODE_SWITCH)
+					ib_portid_set(&portid, node->smalid, 0, 0);
+				else
+					ib_portid_set(&portid, node->ports[p]->base_lid,
+						      0, 0);
+
+				print_errors(&portid, cap_mask, node_name, node, p,
+					     &header_printed);
+				summary.ports_checked++;
+				if (!all_port_sup)
+					clear_port(&portid, cap_mask, node_name, p);
+			}
 		}
 	}
 
 clear:
+	summary.nodes_checked++;
 	if (all_port_sup)
 		clear_port(&portid, cap_mask, node_name, 0xFF);
 
@@ -533,10 +807,16 @@ static int process_opt(void *context, int ch, char *optarg)
 	case 7:
 		load_cache_file = strdup(optarg);
 		break;
+	case 8:
+		threshold_file = strdup(optarg);
+		break;
+	case 9:
+		data_counters_only = 1;
+		break;
 	case 'G':
 	case 'S':
-		node_guid_str = optarg;
-		node_guid = strtoull(optarg, 0, 0);
+		port_guid_str = optarg;
+		port_guid = strtoull(optarg, 0, 0);
 		break;
 	case 'D':
 		dr_path = strdup(optarg);
@@ -580,20 +860,24 @@ int main(int argc, char **argv)
 		{"suppress-common", 'c', 0, NULL,
 		 "suppress some of the common counters"},
 		{"node-name-map", 1, 1, "<file>", "node name map file"},
-		{"node-guid", 'G', 1, "<node_guid>", "query only <node_guid>"},
-		{"", 'S', 1, "<node_guid>",
+		{"port-guid", 'G', 1, "<port_guid>",
+		 "report the node containing the port specified by <port_guid>"},
+		{"", 'S', 1, "<port_guid>",
 		 "Same as \"-G\" for backward compatibility"},
 		{"Direct", 'D', 1, "<dr_path>",
-		 "query only switch specified by <dr_path>"},
+		 "report the node containing the port specified by <dr_path>"},
 		{"report-port", 'r', 0, NULL,
-		 "report port configuration information"},
+		 "report port link information"},
+		{"threshold-file", 8, 1, NULL,
+		 "specify an alternate threshold file, default: " DEF_THRES_FILE},
 		{"GNDN", 'R', 0, NULL,
 		 "(This option is obsolete and does nothing)"},
-		{"data", 2, 0, NULL, "include the data counters in the output"},
+		{"data", 2, 0, NULL, "include data counters for ports with errors"},
 		{"switch", 3, 0, NULL, "print data for switches only"},
 		{"ca", 4, 0, NULL, "print data for CA's only"},
 		{"router", 5, 0, NULL, "print data for routers only"},
 		{"details", 6, 0, NULL, "include transmit discard details"},
+		{"counters", 9, 0, NULL, "print data counters only"},
 		{"clear-errors", 'k', 0, NULL,
 		 "Clear error counters after read"},
 		{"clear-counts", 'K', 0, NULL,
@@ -630,7 +914,7 @@ int main(int argc, char **argv)
 
 	if (dr_path && load_cache_file) {
 		fprintf(stderr, "Cannot specify cache and direct route path\n");
-		exit(1);
+		exit(-1);
 	}
 
 	/* limit the scan the fabric around the target */
@@ -640,19 +924,19 @@ int main(int argc, char **argv)
 					       NULL, ibmad_port)) < 0)
 			IBWARN("Failed to resolve %s; attempting full scan",
 			       dr_path);
-	} else if (node_guid_str) {
+	} else if (port_guid_str) {
 		if ((resolved =
-		     ib_resolve_portid_str_via(&portid, node_guid_str,
+		     ib_resolve_portid_str_via(&portid, port_guid_str,
 					       IB_DEST_GUID, ibd_sm_id,
 					       ibmad_port)) < 0)
 			IBWARN("Failed to resolve %s; attempting full scan",
-			       node_guid_str);
+			       port_guid_str);
 	}
 
 	if (load_cache_file) {
 		if ((fabric = ibnd_load_fabric(load_cache_file, 0)) == NULL) {
 			fprintf(stderr, "loading cached fabric failed\n");
-			exit(1);
+			exit(-1);
 		}
 	} else {
 		if (resolved >= 0) {
@@ -669,38 +953,42 @@ int main(int argc, char **argv)
 							       NULL,
 							       &config))) {
 			fprintf(stderr, "discover failed\n");
-			rc = 1;
+			rc = -1;
 			goto close_port;
 		}
 	}
 
-	report_suppressed();
+	set_thresholds(threshold_file);
 
-	if (node_guid_str) {
-		ibnd_node_t *node = ibnd_find_node_guid(fabric, node_guid);
-		if (node)
-			print_node(node, NULL);
+	if (port_guid_str) {
+		ibnd_port_t *port = ibnd_find_port_guid(fabric, port_guid);
+		if (port)
+			print_node(port->node, NULL);
 		else
 			fprintf(stderr, "Failed to find node: %s\n",
-				node_guid_str);
+				port_guid_str);
 	} else if (dr_path) {
-		ibnd_node_t *node = ibnd_find_node_dr(fabric, dr_path);
-		uint8_t ni[IB_SMP_DATA_SIZE];
+		ibnd_port_t *port = ibnd_find_port_dr(fabric, dr_path);
+		uint8_t ni[IB_SMP_DATA_SIZE] = { 0 };
 
 		if (!smp_query_via(ni, &portid, IB_ATTR_NODE_INFO, 0,
 				   ibd_timeout, ibmad_port)) {
 			rc = -1;
 			goto destroy_fabric;
 		}
-		mad_decode_field(ni, IB_NODE_GUID_F, &(node_guid));
+		mad_decode_field(ni, IB_NODE_PORT_GUID_F, &(port_guid));
 
-		node = ibnd_find_node_guid(fabric, node_guid);
-		if (node)
-			print_node(node, NULL);
-		else
+		port = ibnd_find_port_guid(fabric, port_guid);
+		if (port) {
+			print_node(port->node, NULL);
+		} else
 			fprintf(stderr, "Failed to find node: %s\n", dr_path);
 	} else
 		ibnd_iter_nodes(fabric, print_node, NULL);
+
+	rc = print_summary();
+	if (rc)
+		rc = 1;
 
 destroy_fabric:
 	ibnd_destroy_fabric(fabric);

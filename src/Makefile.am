@@ -79,7 +79,8 @@ man_MANS = man/ibaddr.8 man/ibcheckerrors.8 man/ibcheckerrs.8 \
 	man/ibprintswitch.8 man/ibprintca.8 man/ibfindnodesusing.8 \
 	man/ibdatacounts.8 man/ibdatacounters.8 \
 	man/ibrouters.8 man/ibprintrt.8 man/ibidsverify.8 \
-	man/check_lft_balance.8 man/ibcacheedit.8
+	man/check_lft_balance.8 man/ibcacheedit.8 \
+	man/infiniband-diags.8
 
 BUILT_SOURCES = ibdiag_version
 ibdiag_version:
@@ -94,7 +95,7 @@ ibdiag_version:
 	fi
 
 EXTRA_DIST = scripts include infiniband-diags.spec.in infiniband-diags.spec \
-	$(man_MANS) autogen.sh
+	$(man_MANS) autogen.sh etc/error_thresholds
 
 dist-hook:
 	if [ -x $(top_srcdir)/gen_chlog.sh ] ; then \
@@ -103,4 +104,8 @@ dist-hook:
 
 # install this to a default location.
 install-data-hook:
+	if test ! -d $(DESTDIR)/$(sysconfdir)/infiniband-diags; then \
+		$(top_srcdir)/config/install-sh -m 755 -d $(DESTDIR)/$(sysconfdir)/infiniband-diags; \
+	fi
 	$(top_srcdir)/config/install-sh -c -m 444 $(top_srcdir)/scripts/IBswcountlimits.pm $(DESTDIR)/$(PERL_INSTALLDIR)/IBswcountlimits.pm
+	$(top_srcdir)/config/install-sh -c -m 444 $(top_srcdir)/etc/error_thresholds $(DESTDIR)/$(sysconfdir)/infiniband-diags

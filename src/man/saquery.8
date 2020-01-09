@@ -1,4 +1,4 @@
-.TH SAQUERY 8 "October 19, 2008" "OpenIB" "OpenIB Diagnostics"
+.TH SAQUERY 8 "March 14, 2011" "OpenIB" "OpenIB Diagnostics"
 
 .SH NAME
 saquery \- query InfiniBand subnet administration attributes
@@ -106,7 +106,7 @@ options.
 Supported query names (and aliases):
  ClassPortInfo (CPI)
  NodeRecord (NR) [lid]
- PortInfoRecord (PIR) [[lid]/[port]]
+ PortInfoRecord (PIR) [[lid]/[port]/[options]]
  SL2VLTableRecord (SL2VL) [[lid]/[in_port]/[out_port]]
  PKeyTableRecord (PKTR) [[lid]/[port]/[block]]
  VLArbitrationTableRecord (VLAR) [[lid]/[port]/[block]]
@@ -117,12 +117,24 @@ Supported query names (and aliases):
  MCMemberRecord (MCMR)
  LFTRecord (LFTR) [[lid]/[block]]
  MFTRecord (MFTR) [[mlid]/[position]/[block]]
+ GUIDInfoRecord (GIR) [[lid]/[block]]
 .TP
 \fB\-d\fR
 enable debugging
 .TP
 \fB\-h\fR
 show help
+
+.SH FILES
+
+ib-node-name-map -- see ibnetdiscover for more information
+
+The node name map is used to specify user friendly names for nodes in the
+output.  Node GUIDs are used to perform the lookup.
+
+.SH DEPENDENCIES
+
+OpenSM (or other running SM/SA), libosmcomp, libibumad, libibmad
 
 .SH AUTHORS
 .TP

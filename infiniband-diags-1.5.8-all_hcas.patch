@@ -1,16 +1,21 @@
-diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/perfquery.c
---- infiniband-diags-1.5.8/src/perfquery.c.hcas	2011-02-16 05:13:21.000000000 -0500
-+++ infiniband-diags-1.5.8/src/perfquery.c	2011-07-29 17:17:41.599262511 -0400
-@@ -347,7 +347,7 @@ static void reset_counters(int extended,
+diff -up infiniband-diags-1.5.12/src/perfquery.c.hcas infiniband-diags-1.5.12/src/perfquery.c
+--- infiniband-diags-1.5.12/src/perfquery.c.hcas	2011-11-02 01:31:40.000000000 -0400
++++ infiniband-diags-1.5.12/src/perfquery.c	2012-01-06 12:01:21.793791521 -0500
+@@ -368,9 +368,10 @@ static void reset_counters(int extended,
  }
  
  static int reset, reset_only, all_ports, loop_ports, port, extended, xmt_sl,
--    rcv_sl, xmt_disc, rcv_err, smpl_ctl;
-+    rcv_sl, xmt_disc, rcv_err, smpl_ctl, all_hcas;
+-    rcv_sl, xmt_disc, rcv_err, extended_speeds, smpl_ctl, oprcvcounters, flowctlcounters,
+-    vloppackets, vlopdata, vlxmitflowctlerrors, vlxmitcounters, swportvlcong,
+-    rcvcc, slrcvfecn, slrcvbecn, xmitcc, vlxmittimecc;
++    rcv_sl, xmt_disc, rcv_err, extended_speeds, smpl_ctl, oprcvcounters,
++    flowctlcounters, vloppackets, vlopdata, vlxmitflowctlerrors,
++    vlxmitcounters, swportvlcong, rcvcc, slrcvfecn, slrcvbecn, xmitcc,
++    vlxmittimecc, all_hcas;
  
  static void common_func(ib_portid_t * portid, int port_num, int mask,
  			unsigned query, unsigned reset,
-@@ -447,12 +447,16 @@ static int process_opt(void *context, in
+@@ -604,12 +605,16 @@ static int process_opt(void *context, in
  	case 'R':
  		reset_only++;
  		break;
@@ -27,26 +32,26 @@ diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/
  int main(int argc, char **argv)
  {
  	int mgmt_classes[4] = { IB_SMI_CLASS, IB_SMI_DIRECT_CLASS, IB_SA_CLASS,
-@@ -467,6 +471,10 @@ int main(int argc, char **argv)
+@@ -624,6 +629,10 @@ int main(int argc, char **argv)
  	int start_port = 1;
  	int enhancedport0;
  	int i;
 +	int names;
 +	int cur_name = 0;
-+	char name_list[10][UMAD_CA_NAME_LEN];
++	char name_list[MAX_NAMES][UMAD_CA_NAME_LEN];
 +	umad_ca_t ca;
  
  	const struct ibdiag_opt opts[] = {
  		{"extended", 'x', 0, NULL, "show extended port counters"},
-@@ -476,6 +484,7 @@ int main(int argc, char **argv)
- 		{"rcverr", 'E', 0, NULL, "show Rcv Error Details"},
+@@ -646,6 +655,7 @@ int main(int argc, char **argv)
+ 		{"vlxmittimecc", 12, 0, NULL, "show VL Xmit Time congestion control counters"},
  		{"smplctl", 'c', 0, NULL, "show samples control"},
  		{"all_ports", 'a', 0, NULL, "show aggregated counters"},
 +		{"all_hcas", 'H', 0, NULL, "iterate through all local HCAs and ports"},
  		{"loop_ports", 'l', 0, NULL, "iterate through each port"},
  		{"reset_after_read", 'r', 0, NULL, "reset counters after read"},
  		{"Reset_only", 'R', 0, NULL, "only reset counters"},
-@@ -484,10 +493,12 @@ int main(int argc, char **argv)
+@@ -654,10 +664,12 @@ int main(int argc, char **argv)
  	char usage_args[] = " [<lid|guid> [[port] [reset_mask]]]";
  	const char *usage_examples[] = {
  		"\t\t# read local port's performance counters",
@@ -59,7 +64,7 @@ diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/
  		"-x -r 32 1\t# read extended performance counters and reset",
  		"-R 0x20 1\t# reset performance counters of port 1 only",
  		"-x -R 0x20 1\t# reset extended performance counters of port 1 only",
-@@ -503,118 +514,173 @@ int main(int argc, char **argv)
+@@ -673,186 +685,237 @@ int main(int argc, char **argv)
  	argc -= optind;
  	argv += optind;
  
@@ -67,9 +72,8 @@ diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/
 +		IBERROR("Invalid input: all_hcas and any port/lid/guid are "
 +			"not allowed together.");
 +	if (all_hcas && (loop_ports || all_ports || (port==ALL_PORTS)))
-+		IBERROR("Invalid input: all_hcas already goes over all ports, "
-+			"but in a way that's incompatible with the all_ports "
-+			"option or variants.");
++		IBERROR("Invalid input: all_hcas can not be combined with "
++			"loop_ports or all_ports or port == ALL_PORTS");
 +
  	if (argc > 1)
  		port = strtoul(argv[1], 0, 0);
@@ -91,35 +95,15 @@ diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/
 +	if (all_hcas) {
 +		if (umad_init() < 0)
 +			IBERROR("Failed to initialize libibumad");
-+		if ((names = umad_get_cas_names(name_list, 10)) < 0)
++		if ((names = umad_get_cas_names(name_list, MAX_NAMES)) < 0)
 +			IBERROR("Unable to get list of HCAs");
-+		/* Set up our initial hca, then at the end of the do loop
-+		 * get the next one
-+		 */
 +		cur_name = 0;
 +		if (umad_get_ca(name_list[cur_name], &ca))
 +			IBERROR("Unable to get umad ca");
- 
--	/* PerfMgt ClassPortInfo is a required attribute */
--	if (!pma_query_via(pc, &portid, port, ibd_timeout, CLASS_PORT_INFO,
--			   srcport))
--		IBERROR("classportinfo query");
--	/* ClassPortInfo should be supported as part of libibmad */
--	memcpy(&cap_mask, pc + 2, sizeof(cap_mask));	/* CapabilityMask */
--	cap_mask = ntohs(cap_mask);
--	if (!(cap_mask & 0x100)) {	/* bit 8 is AllPortSelect */
--		if (!all_ports && port == ALL_PORTS)
--			IBERROR("AllPortSelect not supported");
--		if (all_ports)
--			all_ports_loop = 1;
 +		ibd_ca = name_list[cur_name++];
 +		ibd_ca_port = start_port;
- 	}
- 
--	if (xmt_sl) {
--		xmt_sl_query(&portid, port, mask);
--		goto done;
--	}
++	}
++
 +	do {
 +		srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port,
 +					    mgmt_classes, 4);
@@ -130,9 +114,18 @@ diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/
 +			exit(0);
 +		}
  
--	if (rcv_sl) {
--		rcv_sl_query(&portid, port, mask);
--		goto done;
+-	/* PerfMgt ClassPortInfo is a required attribute */
+-	memset(pc, 0, sizeof(pc));
+-	if (!pma_query_via(pc, &portid, port, ibd_timeout, CLASS_PORT_INFO,
+-			   srcport))
+-		IBERROR("classportinfo query");
+-	/* ClassPortInfo should be supported as part of libibmad */
+-	memcpy(&cap_mask, pc + 2, sizeof(cap_mask));	/* CapabilityMask */
+-	if (!(cap_mask & IB_PM_ALL_PORT_SELECT)) {	/* bit 8 is AllPortSelect */
+-		if (!all_ports && port == ALL_PORTS)
+-			IBERROR("AllPortSelect not supported");
+-		if (all_ports)
+-			all_ports_loop = 1;
 -	}
 +		if (argc) {
 +			if (ib_resolve_portid_str_via(&portid, argv[0],
@@ -145,26 +138,26 @@ diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/
 +				IBERROR("can't resolve self port %s", argv[0]);
 +		}
  
--	if (xmt_disc) {
--		xmt_disc_query(&portid, port, mask);
+-	if (xmt_sl) {
+-		xmt_sl_query(&portid, port, mask);
 -		goto done;
 -	}
 +		/* PerfMgt ClassPortInfo is a required attribute */
++		memset(pc, 0, sizeof(pc));
 +		if (!pma_query_via(pc, &portid, port, ibd_timeout,
 +				   CLASS_PORT_INFO, srcport))
 +			IBERROR("classportinfo query");
 +		/* ClassPortInfo should be supported as part of libibmad */
 +		memcpy(&cap_mask, pc + 2, sizeof(cap_mask));/* CapabilityMask */
-+		cap_mask = ntohs(cap_mask);
-+		if (!(cap_mask & 0x100)) {	/* bit 8 is AllPortSelect */
++		if (!(cap_mask & IB_PM_ALL_PORT_SELECT)) {	/* bit 8 is AllPortSelect */
 +			if (!all_ports && port == ALL_PORTS)
 +				IBERROR("AllPortSelect not supported");
 +			if (all_ports)
 +				all_ports_loop = 1;
 +		}
  
--	if (rcv_err) {
--		rcv_err_query(&portid, port, mask);
+-	if (rcv_sl) {
+-		rcv_sl_query(&portid, port, mask);
 -		goto done;
 -	}
 +		if (xmt_sl) {
@@ -172,22 +165,152 @@ diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/
 +			goto done;
 +		}
  
--	if (smpl_ctl) {
--		dump_portsamples_control(&portid, port);
+-	if (xmt_disc) {
+-		xmt_disc_query(&portid, port, mask);
 -		goto done;
 -	}
 +		if (rcv_sl) {
 +			rcv_sl_query(&portid, port, mask);
 +			goto done;
 +		}
-+
+ 
+-	if (rcv_err) {
+-		rcv_err_query(&portid, port, mask);
+-		goto done;
+-	}
 +		if (xmt_disc) {
 +			xmt_disc_query(&portid, port, mask);
 +			goto done;
 +		}
-+
+ 
+-	if (extended_speeds) {
+-		extended_speeds_query(&portid, port, mask);
+-		goto done;
+-	}
 +		if (rcv_err) {
 +			rcv_err_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (oprcvcounters) {
+-		oprcvcounters_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (extended_speeds) {
++			extended_speeds_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (flowctlcounters) {
+-		flowctlcounters_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (oprcvcounters) {
++			oprcvcounters_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (vloppackets) {
+-		vloppackets_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (flowctlcounters) {
++			flowctlcounters_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (vlopdata) {
+-		vlopdata_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (vloppackets) {
++			vloppackets_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (vlxmitflowctlerrors) {
+-		vlxmitflowctlerrors_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (vlopdata) {
++			vlopdata_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (vlxmitcounters) {
+-		vlxmitcounters_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (vlxmitflowctlerrors) {
++			vlxmitflowctlerrors_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (swportvlcong) {
+-		swportvlcong_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (vlxmitcounters) {
++			vlxmitcounters_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (rcvcc) {
+-		rcvcc_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (swportvlcong) {
++			swportvlcong_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (slrcvfecn) {
+-		slrcvfecn_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (rcvcc) {
++			rcvcc_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (slrcvbecn) {
+-		slrcvbecn_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (slrcvfecn) {
++			slrcvfecn_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (xmitcc) {
+-		xmitcc_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (slrcvbecn) {
++			slrcvbecn_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (vlxmittimecc) {
+-		vlxmittimecc_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (xmitcc) {
++			xmitcc_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (smpl_ctl) {
+-		dump_portsamples_control(&portid, port);
+-		goto done;
+-	}
++		if (vlxmittimecc) {
++			vlxmittimecc_query(&portid, port, mask);
++			goto done;
++		}
+ 
++		if (smpl_ctl) {
++			dump_portsamples_control(&portid, port);
 +			goto done;
 +		}
  
@@ -199,10 +322,6 @@ diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/
 -		mad_decode_field(data, IB_NODE_NPORTS_F, &num_ports);
 -		if (!num_ports)
 -			IBERROR("smp query nodeinfo: num ports invalid");
-+		if (smpl_ctl) {
-+			dump_portsamples_control(&portid, port);
-+			goto done;
-+		}
  
 -		if (node_type == IB_NODE_SWITCH) {
 -			if (smp_query_via(data, &portid, IB_ATTR_SWITCH_INFO,
@@ -215,6 +334,11 @@ diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/
 -			    mad_get_field(data, 0, IB_SW_ENHANCED_PORT0_F);
 -			if (enhancedport0)
 -				start_port = 0;
+-		}
+-		if (all_ports_loop && !loop_ports)
+-			IBWARN
+-			    ("Emulating AllPortSelect by iterating through all ports");
+-	}
 +			node_type = mad_get_field(data, 0, IB_NODE_TYPE_F);
 +			mad_decode_field(data, IB_NODE_NPORTS_F, &num_ports);
 +			if (!num_ports)
@@ -226,19 +350,15 @@ diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/
 +						  0, 0, srcport) < 0)
 +					IBERROR("smp query nodeinfo failed");
 +				enhancedport0 =
-+				    mad_get_field(data, 0,
-+						  IB_SW_ENHANCED_PORT0_F);
++					mad_get_field(data, 0,
++						      IB_SW_ENHANCED_PORT0_F);
 +				if (enhancedport0)
 +					start_port = 0;
 +			}
 +			if (all_ports_loop && !loop_ports)
-+				IBWARN("Emulating AllPortSelect by iterating "
-+				       "through all ports");
- 		}
--		if (all_ports_loop && !loop_ports)
--			IBWARN
--			    ("Emulating AllPortSelect by iterating through all ports");
--	}
++				IBWARN ("Emulating AllPortSelect by iterating "
++					"through all ports");
++		}
  
 -	if (reset_only)
 -		goto do_reset;
@@ -249,17 +369,18 @@ diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/
 -		for (i = start_port; i <= num_ports; i++)
 +		if (all_ports_loop ||
 +		    (loop_ports && (all_ports || port == ALL_PORTS))) {
-+			for (i = start_port; i <= num_ports; i++) {
++			for (i = start_port; i <= num_ports; i++)
 +				dump_perfcounters(extended, ibd_timeout,
 +						  cap_mask, &portid, i,
 +						  (all_ports_loop &&
 +						   !loop_ports));
-+			}
 +			if (all_ports_loop && !loop_ports) {
 +				if (extended != 1)
-+					output_aggregate_perfcounters(&portid);
++					output_aggregate_perfcounters(&portid,
++								      cap_mask);
 +				else
-+					output_aggregate_perfcounters_ext(&portid);
++					output_aggregate_perfcounters_ext(&portid,
++									  cap_mask);
 +			}
 +		} else
  			dump_perfcounters(extended, ibd_timeout, cap_mask,
@@ -267,9 +388,11 @@ diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/
 -						       && !loop_ports));
 -		if (all_ports_loop && !loop_ports) {
 -			if (extended != 1)
--				output_aggregate_perfcounters(&portid);
+-				output_aggregate_perfcounters(&portid,
+-							      cap_mask);
 -			else
--				output_aggregate_perfcounters_ext(&portid);
+-				output_aggregate_perfcounters_ext(&portid,
+-								  cap_mask);
 -		}
 -	} else
 -		dump_perfcounters(extended, ibd_timeout, cap_mask, &portid,
@@ -282,22 +405,24 @@ diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/
 +			goto done;
  
  do_reset:
--	if (argc <= 2 && !extended && (cap_mask & 0x1000))
+-	if (argc <= 2 && !extended && (cap_mask & IB_PM_PC_XMIT_WAIT_SUP))
 -		mask |= (1 << 16);	/* reset portxmitwait */
-+		if (argc <= 2 && !extended && (cap_mask & 0x1000))
-+			mask |= (1 << 16);	/* reset portxmitwait */
- 
+-
 -	if (all_ports_loop || (loop_ports && (all_ports || port == ALL_PORTS))) {
 -		for (i = start_port; i <= num_ports; i++)
 -			reset_counters(extended, ibd_timeout, mask, &portid, i);
 -	} else
 -		reset_counters(extended, ibd_timeout, mask, &portid, port);
++		if (argc <= 2 && !extended &&
++		    (cap_mask & IB_PM_PC_XMIT_WAIT_SUP))
++			mask |= (1 << 16);	/* reset portxmitwait */
++
 +		if (all_ports_loop ||
-+		    (loop_ports && (all_ports || port == ALL_PORTS))) {
++		    (loop_ports && (all_ports || port == ALL_PORTS)))
 +			for (i = start_port; i <= num_ports; i++)
 +				reset_counters(extended, ibd_timeout, mask,
 +					       &portid, i);
-+		} else
++		else
 +			reset_counters(extended, ibd_timeout, mask,
 +				       &portid, port);
  
@@ -309,8 +434,9 @@ diff -up infiniband-diags-1.5.8/src/perfquery.c.hcas infiniband-diags-1.5.8/src/
 +				ibd_ca_port++;
 +			else {
 +				if (umad_get_ca(name_list[cur_name], &ca))
-+					/* We're done, the next name was
-+					 * empty, just exit gracefully
++					/*
++					 * We're done, the next name in the
++					 * list was empty, exit gracefully
 +					 */
 +					exit(0);
 +				ibd_ca = name_list[cur_name++];
