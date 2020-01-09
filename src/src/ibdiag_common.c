@@ -52,6 +52,8 @@
 #include <config.h>
 #include <getopt.h>
 #include <limits.h>
+#include <sys/stat.h>
+#include <stdarg.h>
 
 #include <infiniband/umad.h>
 #include <infiniband/mad.h>
@@ -59,18 +61,24 @@
 #include <ibdiag_version.h>
 
 int ibverbose;
-char *ibd_ca;
-int ibd_ca_port;
 enum MAD_DEST ibd_dest_type = IB_DEST_LID;
 ib_portid_t *ibd_sm_id;
-int ibd_timeout;
-
 static ib_portid_t sm_portid = { 0 };
+
+/* general config options */
+#define IBDIAG_CONFIG_GENERAL IBDIAG_CONFIG_PATH"/ibdiag.conf"
+char *ibd_ca = NULL;
+int ibd_ca_port = 0;
+int ibd_timeout = 0;
+uint32_t ibd_ibnetdisc_flags = IBND_CONFIG_MLX_EPI;
+uint64_t ibd_mkey;
+uint64_t ibd_sakey = 0;
+int show_keys = 0;
 
 static const char *prog_name;
 static const char *prog_args;
 static const char **prog_examples;
-static struct option *long_opts;
+static struct option *long_opts = NULL;
 static const struct ibdiag_opt *opts_map[256];
 
 const static char *get_build_version(void)
@@ -102,6 +110,65 @@ static void pretty_print(int start, int width, const char *str)
 		str = e;
 	}
 }
+
+static inline int val_str_true(const char *val_str)
+{
+	return ((strncmp(val_str, "TRUE", strlen("TRUE")) == 0) ||
+		(strncmp(val_str, "true", strlen("true")) == 0));
+}
+
+void read_ibdiag_config(const char *file)
+{
+	char buf[1024];
+	FILE *config_fd = NULL;
+	char *p_prefix, *p_last;
+	char *name;
+	char *val_str;
+	struct stat statbuf;
+
+	/* silently ignore missing config file */
+	if (stat(file, &statbuf))
+		return;
+
+	config_fd = fopen(file, "r");
+	if (!config_fd)
+		return;
+
+	while (fgets(buf, sizeof buf, config_fd) != NULL) {
+		p_prefix = strtok_r(buf, "\n", &p_last);
+		if (!p_prefix)
+			continue; /* ignore blank lines */
+
+		if (*p_prefix == '#')
+			continue; /* ignore comment lines */
+
+		name = strtok_r(p_prefix, "=", &p_last);
+		val_str = strtok_r(NULL, "\n", &p_last);
+
+		if (strncmp(name, "CA", strlen("CA")) == 0) {
+			free(ibd_ca);
+			ibd_ca = strdup(val_str);
+		} else if (strncmp(name, "Port", strlen("Port")) == 0) {
+			ibd_ca_port = strtoul(val_str, NULL, 0);
+		} else if (strncmp(name, "timeout", strlen("timeout")) == 0) {
+			ibd_timeout = strtoul(val_str, NULL, 0);
+		} else if (strncmp(name, "MLX_EPI", strlen("MLX_EPI")) == 0) {
+			if (val_str_true(val_str)) {
+				ibd_ibnetdisc_flags |= IBND_CONFIG_MLX_EPI;
+			} else {
+				ibd_ibnetdisc_flags &= ~IBND_CONFIG_MLX_EPI;
+			}
+		} else if (strncmp(name, "m_key", strlen("m_key")) == 0) {
+			ibd_mkey = strtoull(val_str, 0, 0);
+		} else if (strncmp(name, "sa_key",
+				   strlen("sa_key")) == 0) {
+			ibd_sakey = strtoull(val_str, 0, 0);
+		}
+	}
+
+	fclose(config_fd);
+}
+
 
 void ibdiag_show_usage()
 {
@@ -147,8 +214,10 @@ static int process_opt(int ch, char *optarg)
 	long val;
 
 	switch (ch) {
+	case 'z':
+		read_ibdiag_config(optarg);
+		break;
 	case 'h':
-	case 'u':
 		ibdiag_show_usage();
 		break;
 	case 'V':
@@ -185,7 +254,7 @@ static int process_opt(int ch, char *optarg)
 		val = strtol(optarg, &endp, 0);
 		if (errno || (endp && *endp != '\0') || val <= 0 ||
 		    val > INT_MAX)
-			IBERROR("Invalid timeout \"%s\".  Timeout requires a "
+			IBEXIT("Invalid timeout \"%s\".  Timeout requires a "
 				"positive integer value < %d.", optarg, INT_MAX);
 		else {
 			madrpc_set_timeout((int)val);
@@ -194,12 +263,26 @@ static int process_opt(int ch, char *optarg)
 		break;
 	case 's':
 		/* srcport is not required when resolving via IB_DEST_LID */
-		if (ib_resolve_portid_str_via(&sm_portid, optarg, IB_DEST_LID,
-					      0, NULL) < 0)
-			IBERROR("cannot resolve SM destination port %s",
+		if (resolve_portid_str(ibd_ca, ibd_ca_port, &sm_portid, optarg,
+				IB_DEST_LID, 0, NULL) < 0)
+			IBEXIT("cannot resolve SM destination port %s",
 				optarg);
 		ibd_sm_id = &sm_portid;
 		break;
+	case 'K':
+		show_keys = 1;
+		break;
+	case 'y':
+		errno = 0;
+		ibd_mkey = strtoull(optarg, &endp, 0);
+		if (errno || *endp != '\0') {
+			errno = 0;
+			ibd_mkey = strtoull(getpass("M_Key: "), &endp, 0);
+			if (errno || *endp != '\0') {
+				IBEXIT("Bad M_Key");
+			}
+                }
+                break;
 	default:
 		return -1;
 	}
@@ -208,6 +291,7 @@ static int process_opt(int ch, char *optarg)
 }
 
 static const struct ibdiag_opt common_opts[] = {
+	{"config", 'z', 1, "<config>", "use config file, default: " IBDIAG_CONFIG_GENERAL},
 	{"Ca", 'C', 1, "<ca>", "Ca name to use"},
 	{"Port", 'P', 1, "<port>", "Ca port number to use"},
 	{"Direct", 'D', 0, NULL, "use Direct address argument"},
@@ -215,10 +299,11 @@ static const struct ibdiag_opt common_opts[] = {
 	{"Guid", 'G', 0, NULL, "use GUID address argument"},
 	{"timeout", 't', 1, "<ms>", "timeout in ms"},
 	{"sm_port", 's', 1, "<lid>", "SM port lid"},
+	{"show_keys", 'K', 0, NULL, "display security keys in output"},
+	{"m_key", 'y', 1, "<key>", "M_Key to use in request"},
 	{"errors", 'e', 0, NULL, "show send and receive errors"},
 	{"verbose", 'v', 0, NULL, "increase verbosity level"},
 	{"debug", 'd', 0, NULL, "raise debug level"},
-	{"usage", 'u', 0, NULL, "usage message"},
 	{"help", 'h', 0, NULL, "help message"},
 	{"version", 'V', 0, NULL, "show version"},
 	{0}
@@ -295,9 +380,14 @@ int ibdiag_process_opts(int argc, char *const argv[], void *cxt,
 	prog_args = usage_args;
 	prog_examples = usage_examples;
 
+	if (long_opts)
+		free(long_opts);
+
 	long_opts = make_long_opts(exclude_common_str, custom_opts, opts_map);
 	if (!long_opts)
 		return -1;
+
+	read_ibdiag_config(IBDIAG_CONFIG_GENERAL);
 
 	make_str_opts(long_opts, str_opts, sizeof(str_opts));
 
@@ -316,12 +406,10 @@ int ibdiag_process_opts(int argc, char *const argv[], void *cxt,
 			ibdiag_show_usage();
 	}
 
-	free(long_opts);
-
 	return 0;
 }
 
-void iberror(const char *fn, char *msg, ...)
+void ibexit(const char *fn, char *msg, ...)
 {
 	char buf[512];
 	va_list va;
@@ -408,176 +496,194 @@ conv_cnt_human_readable(uint64_t val64, float *val, int data)
 	return ("");
 }
 
-/* define a common SA query structure
- * This is by no means optimal but it moves the saquery functionality out of
- * the saquery tool and provides it to other utilities.
+int is_mlnx_ext_port_info_supported(uint32_t devid)
+{
+	if (ibd_ibnetdisc_flags & IBND_CONFIG_MLX_EPI) {
+		if (devid == 0xc738)
+			return 1;
+		if (devid >= 0x1003 && devid <= 0x1011)
+			return 1;
+	}
+	return 0;
+}
+
+/** =========================================================================
+ * Resolve the SM portid using the umad layer rather than using
+ * ib_resolve_smlid_via which requires a PortInfo query on the local port.
  */
-bind_handle_t sa_get_bind_handle(void)
+int resolve_sm_portid(char *ca_name, uint8_t portnum, ib_portid_t *sm_id)
 {
-	struct ibmad_port * srcport;
-	bind_handle_t handle;
-	int mgmt_classes[2] = { IB_SMI_CLASS, IB_SMI_DIRECT_CLASS };
+	umad_port_t port;
+	int rc;
 
-	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 2);
-	if (!srcport) {
-		IBWARN("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
-		return (NULL);
-	}
+	if (!sm_id)
+		return (-1);
 
-	handle = calloc(1, sizeof(*handle));
-	if (!handle)
-		IBPANIC("calloc failed");
+	if ((rc = umad_get_port(ca_name, portnum, &port)) < 0)
+		return rc;
 
-	ib_resolve_smlid_via(&handle->dport, ibd_timeout, srcport);
-	if (!handle->dport.lid) {
-		IBWARN("No SM found.");
-		free(handle);
-		return (NULL);
-	}
+	memset(sm_id, 0, sizeof(*sm_id));
+	sm_id->lid = port.sm_lid;
+	sm_id->sl = port.sm_sl;
 
-	handle->dport.qp = 1;
-	if (!handle->dport.qkey)
-		handle->dport.qkey = IB_DEFAULT_QP1_QKEY;
-
-	handle->srcport = srcport;
-	handle->fd = mad_rpc_portid(srcport);
-	handle->agent = umad_register(handle->fd, IB_SA_CLASS, 2, 1, NULL);
-
-	return handle;
-}
-
-void sa_free_bind_handle(bind_handle_t h)
-{
-	umad_unregister(h->fd, h->agent);
-	mad_rpc_close_port(h->srcport);
-	free(h);
-}
-
-int sa_query(bind_handle_t h, uint8_t method,
-		    uint16_t attr, uint32_t mod, uint64_t comp_mask,
-		    uint64_t sm_key, void *data, struct sa_query_result *result)
-{
-	ib_rpc_t rpc;
-	void *umad, *mad;
-	int ret, offset, len = 256;
-
-	memset(&rpc, 0, sizeof(rpc));
-	rpc.mgtclass = IB_SA_CLASS;
-	rpc.method = method;
-	rpc.attr.id = attr;
-	rpc.attr.mod = mod;
-	rpc.mask = comp_mask;
-	rpc.datasz = IB_SA_DATA_SIZE;
-	rpc.dataoffs = IB_SA_DATA_OFFS;
-
-	umad = calloc(1, len + umad_size());
-	if (!umad)
-		IBPANIC("cannot alloc mem for umad: %s\n", strerror(errno));
-
-	mad_build_pkt(umad, &rpc, &h->dport, NULL, data);
-
-	mad_set_field64(umad_get_mad(umad), 0, IB_SA_MKEY_F, sm_key);
-
-	if (ibdebug > 1)
-		xdump(stdout, "SA Request:\n", umad_get_mad(umad), len);
-
-	ret = umad_send(h->fd, h->agent, umad, len, ibd_timeout, 0);
-	if (ret < 0) {
-		IBWARN("umad_send failed: attr %u: %s\n",
-			attr, strerror(errno));
-		free(umad);
-		return (IB_ERROR);
-	}
-
-recv_mad:
-	ret = umad_recv(h->fd, umad, &len, ibd_timeout);
-	if (ret < 0) {
-		if (errno == ENOSPC) {
-			umad = realloc(umad, umad_size() + len);
-			goto recv_mad;
-		}
-		IBWARN("umad_recv failed: attr 0x%x: %s\n", attr,
-			strerror(errno));
-		free(umad);
-		return (IB_ERROR);
-	}
-
-	if ((ret = umad_status(umad)))
-		return ret;
-
-	mad = umad_get_mad(umad);
-
-	if (ibdebug > 1)
-		xdump(stdout, "SA Response:\n", mad, len);
-
-	method = (uint8_t) mad_get_field(mad, 0, IB_MAD_METHOD_F);
-	offset = mad_get_field(mad, 0, IB_SA_ATTROFFS_F);
-	result->status = mad_get_field(mad, 0, IB_MAD_STATUS_F);
-	result->p_result_madw = mad;
-	if (result->status != IB_SA_MAD_STATUS_SUCCESS)
-		result->result_cnt = 0;
-	else if (method != IB_MAD_METHOD_GET_TABLE)
-		result->result_cnt = 1;
-	else if (!offset)
-		result->result_cnt = 0;
-	else
-		result->result_cnt = (len - IB_SA_DATA_OFFS) / (offset << 3);
+	umad_release_port(&port);
 
 	return 0;
 }
 
-void sa_free_result_mad(struct sa_query_result *result)
+/** =========================================================================
+ * Resolve local CA characteristics using the umad layer rather than using
+ * ib_resolve_self_via which requires SMP queries on the local port.
+ */
+int resolve_self(char *ca_name, uint8_t ca_port, ib_portid_t *portid,
+		 int *portnum, ibmad_gid_t *gid)
 {
-	if (result->p_result_madw) {
-		free((uint8_t *) result->p_result_madw - umad_size());
-		result->p_result_madw = NULL;
+	umad_port_t port;
+	uint64_t prefix, guid;
+	int rc;
+
+	if (!(portid || portnum || gid))
+		return (-1);
+
+	if ((rc = umad_get_port(ca_name, ca_port, &port)) < 0)
+		return rc;
+
+	if (portid) {
+		memset(portid, 0, sizeof(*portid));
+		portid->lid = port.base_lid;
+		portid->sl = port.sm_sl;
 	}
+	if (portnum)
+		*portnum = port.portnum;
+	if (gid) {
+		memset(gid, 0, sizeof(*gid));
+		prefix = cl_hton64(port.gid_prefix);
+		guid = cl_hton64(port.port_guid);
+		mad_encode_field(*gid, IB_GID_PREFIX_F, &prefix);
+		mad_encode_field(*gid, IB_GID_GUID_F, &guid);
+	}
+
+	umad_release_port(&port);
+
+	return 0;
 }
 
-void *sa_get_query_rec(void *mad, unsigned i)
+int resolve_gid(char *ca_name, uint8_t ca_port, ib_portid_t * portid,
+		ibmad_gid_t gid, ib_portid_t * sm_id,
+		const struct ibmad_port *srcport)
 {
-	int offset = mad_get_field(mad, 0, IB_SA_ATTROFFS_F);
-	return (uint8_t *) mad + IB_SA_DATA_OFFS + i * (offset << 3);
+	ib_portid_t sm_portid;
+	char buf[IB_SA_DATA_SIZE] = { 0 };
+
+	if (!sm_id) {
+		sm_id = &sm_portid;
+		if (resolve_sm_portid(ca_name, ca_port, sm_id) < 0)
+			return -1;
+	}
+
+	if ((portid->lid =
+	     ib_path_query_via(srcport, gid, gid, sm_id, buf)) < 0)
+		return -1;
+
+	return 0;
 }
 
-static const char *ib_sa_error_str[] = {
-	"SA_NO_ERROR",
-	"SA_ERR_NO_RESOURCES",
-	"SA_ERR_REQ_INVALID",
-	"SA_ERR_NO_RECORDS",
-	"SA_ERR_TOO_MANY_RECORDS",
-	"SA_ERR_REQ_INVALID_GID",
-	"SA_ERR_REQ_INSUFFICIENT_COMPONENTS",
-	"SA_ERR_REQ_DENIED",
-	"SA_ERR_STATUS_PRIO_SUGGESTED",
-	"SA_ERR_UNKNOWN"
-};
-
-#define ARR_SIZE(a) (sizeof(a)/sizeof((a)[0]))
-#define SA_ERR_UNKNOWN (ARR_SIZE(ib_sa_error_str) - 1)
-
-static inline const char *ib_sa_err_str(IN uint8_t status)
+int resolve_guid(char *ca_name, uint8_t ca_port, ib_portid_t *portid,
+		 uint64_t *guid, ib_portid_t *sm_id,
+		 const struct ibmad_port *srcport)
 {
-	if (status > SA_ERR_UNKNOWN)
-		status = SA_ERR_UNKNOWN;
-	return (ib_sa_error_str[status]);
+	ib_portid_t sm_portid;
+	uint8_t buf[IB_SA_DATA_SIZE] = { 0 };
+	uint64_t prefix;
+	ibmad_gid_t selfgid;
+
+	if (!sm_id) {
+		sm_id = &sm_portid;
+		if (resolve_sm_portid(ca_name, ca_port, sm_id) < 0)
+			return -1;
+	}
+
+	if (resolve_self(ca_name, ca_port, NULL, NULL, &selfgid) < 0)
+		return -1;
+
+	memcpy(&prefix, portid->gid, sizeof(prefix));
+	if (!prefix)
+		mad_set_field64(portid->gid, 0, IB_GID_PREFIX_F,
+				IB_DEFAULT_SUBN_PREFIX);
+	if (guid)
+		mad_set_field64(portid->gid, 0, IB_GID_GUID_F, *guid);
+
+	if ((portid->lid =
+	     ib_path_query_via(srcport, selfgid, portid->gid, sm_id, buf)) < 0)
+		return -1;
+
+	mad_decode_field(buf, IB_SA_PR_SL_F, &portid->sl);
+	return 0;
 }
 
-void sa_report_err(int status)
+/*
+ * Callers of this function should ensure their ibmad_port has been opened with
+ * IB_SA_CLASS as this function may require the SA to resolve addresses.
+ */
+int resolve_portid_str(char *ca_name, uint8_t ca_port, ib_portid_t * portid,
+		       char *addr_str, enum MAD_DEST dest_type,
+		       ib_portid_t *sm_id, const struct ibmad_port *srcport)
 {
-	int st = status & 0xff;
-	char sm_err_str[64] = { 0 };
-	char sa_err_str[64] = { 0 };
+	ibmad_gid_t gid;
+	uint64_t guid;
+	int lid;
+	char *routepath;
+	ib_portid_t selfportid = { 0 };
+	int selfport = 0;
 
-	if (st)
-		sprintf(sm_err_str, " SM(%s)", ib_get_err_str(st));
+	memset(portid, 0, sizeof *portid);
 
-	st = status >> 8;
-	if (st)
-		sprintf(sa_err_str, " SA(%s)", ib_sa_err_str((uint8_t) st));
+	switch (dest_type) {
+	case IB_DEST_LID:
+		lid = strtol(addr_str, 0, 0);
+		if (!IB_LID_VALID(lid))
+			return -1;
+		return ib_portid_set(portid, lid, 0, 0);
 
-	fprintf(stderr, "ERROR: Query result returned 0x%04x, %s%s\n",
-		status, sm_err_str, sa_err_str);
+	case IB_DEST_DRPATH:
+		if (str2drpath(&portid->drpath, addr_str, 0, 0) < 0)
+			return -1;
+		return 0;
+
+	case IB_DEST_GUID:
+		if (!(guid = strtoull(addr_str, 0, 0)))
+			return -1;
+
+		/* keep guid in portid? */
+		return resolve_guid(ca_name, ca_port, portid, &guid, sm_id,
+				    srcport);
+
+	case IB_DEST_DRSLID:
+		lid = strtol(addr_str, &routepath, 0);
+		routepath++;
+		if (!IB_LID_VALID(lid))
+			return -1;
+		ib_portid_set(portid, lid, 0, 0);
+
+		/* handle DR parsing and set DrSLID to local lid */
+		if (resolve_self(ca_name, ca_port, &selfportid, &selfport,
+				 NULL) < 0)
+			return -1;
+		if (str2drpath(&portid->drpath, routepath, selfportid.lid, 0) <
+		    0)
+			return -1;
+		return 0;
+
+	case IB_DEST_GID:
+		if (inet_pton(AF_INET6, addr_str, &gid) <= 0)
+			return -1;
+		return resolve_gid(ca_name, ca_port, portid, gid, sm_id,
+				   srcport);
+	default:
+		IBWARN("bad dest_type %d", dest_type);
+	}
+
+	return -1;
 }
 
 static unsigned int get_max(unsigned int num)
@@ -595,7 +701,7 @@ void get_max_msg(char *width_msg, char *speed_msg, int msg_size, ibnd_port_t * p
 	char buf[64];
 	uint32_t max_speed = 0;
 	uint32_t cap_mask, rem_cap_mask, fdr10;
-	uint8_t *info;
+	uint8_t *info = NULL;
 
 	uint32_t max_width = get_max(mad_get_field(port->info, 0,
 						   IB_PORT_LINK_WIDTH_SUPPORTED_F)
@@ -609,17 +715,29 @@ void get_max_msg(char *width_msg, char *speed_msg, int msg_size, ibnd_port_t * p
 			 mad_dump_val(IB_PORT_LINK_WIDTH_ACTIVE_F,
 				      buf, 64, &max_width));
 
-	if (port->node->type == IB_NODE_SWITCH)
-		info = (uint8_t *)&port->node->ports[0]->info;
+	if (port->node->type == IB_NODE_SWITCH) {
+		if (port->node->ports[0])
+			info = (uint8_t *)&port->node->ports[0]->info;
+	}
 	else
 		info = (uint8_t *)&port->info;
-	cap_mask = mad_get_field(info, 0, IB_PORT_CAPMASK_F);
 
-	if (port->remoteport->node->type == IB_NODE_SWITCH)
-		info = (uint8_t *)&port->remoteport->node->ports[0]->info;
+	if (info)
+		cap_mask = mad_get_field(info, 0, IB_PORT_CAPMASK_F);
 	else
+		cap_mask = 0;
+
+	info = NULL;
+	if (port->remoteport->node->type == IB_NODE_SWITCH) {
+		if (port->remoteport->node->ports[0])
+			info = (uint8_t *)&port->remoteport->node->ports[0]->info;
+	} else
 		info = (uint8_t *)&port->remoteport->info;
-	rem_cap_mask = mad_get_field(info, 0, IB_PORT_CAPMASK_F);
+
+	if (info)
+		rem_cap_mask = mad_get_field(info, 0, IB_PORT_CAPMASK_F);
+	else
+		rem_cap_mask = 0;
 	if (cap_mask & CL_NTOH32(IB_PORT_CAP_HAS_EXT_SPEEDS) &&
 	    rem_cap_mask & CL_NTOH32(IB_PORT_CAP_HAS_EXT_SPEEDS))
 		goto check_ext_speed;
@@ -667,4 +785,79 @@ check_fdr10_active:
 	if ((mad_get_field(port->ext_info, 0,
 			   IB_MLNX_EXT_PORT_LINK_SPEED_ACTIVE_F) & FDR10) == 0)
 		snprintf(speed_msg, msg_size, "Could be FDR10");
+}
+
+int vsnprint_field(char *buf, size_t n, enum MAD_FIELDS f, int spacing,
+		   const char *format, va_list va_args)
+{
+	int len, i, ret;
+
+	len = strlen(mad_field_name(f));
+        if (len + 2 > n || spacing + 1 > n)
+		return 0;
+
+	strncpy(buf, mad_field_name(f), n);
+	buf[len] = ':';
+	for (i = len+1; i < spacing+1; i++) {
+		buf[i] = '.';
+	}
+
+	ret = vsnprintf(&buf[spacing+1], n - spacing, format, va_args);
+	if (ret >= n - spacing)
+		buf[n] = '\0';
+
+	return ret + spacing;
+}
+
+int snprint_field(char *buf, size_t n, enum MAD_FIELDS f, int spacing,
+		  const char *format, ...)
+{
+	va_list val;
+	int ret;
+
+	va_start(val, format);
+	ret = vsnprint_field(buf, n, f, spacing, format, val);
+	va_end(val);
+
+	return ret;
+}
+
+void dump_portinfo(void *pi, int pisize, int tabs)
+{
+	int field, i;
+	char val[64];
+	char buf[1024];
+
+	for (field = IB_PORT_FIRST_F; field < IB_PORT_LAST_F; field++) {
+		for (i=0;i<tabs;i++)
+			printf("\t");
+		if (field == IB_PORT_MKEY_F && show_keys == 0) {
+			snprint_field(buf, 1024, field, 32, NOT_DISPLAYED_STR);
+		} else {
+			mad_decode_field(pi, field, val);
+			if (!mad_dump_field(field, buf, 1024, val))
+				return;
+		}
+		printf("%s\n", buf);
+	}
+
+	for (field = IB_PORT_CAPMASK2_F;
+	     field < IB_PORT_LINK_SPEED_EXT_LAST_F; field++) {
+		for (i=0;i<tabs;i++)
+			printf("\t");
+		mad_decode_field(pi, field, val);
+		if (!mad_dump_field(field, buf, 1024, val))
+			return;
+		printf("%s\n", buf);
+	}
+}
+
+op_fn_t *match_op(const match_rec_t match_tbl[], char *name)
+{
+	const match_rec_t *r;
+	for (r = match_tbl; r->name; r++)
+		if (!strcasecmp(r->name, name) ||
+		    (r->alias && !strcasecmp(r->alias, name)))
+			return r->fn;
+	return NULL;
 }

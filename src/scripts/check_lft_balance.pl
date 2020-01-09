@@ -45,7 +45,6 @@ use Getopt::Std;
 my $ibnetdiscover_cache = "";
 my $dump_lft_file       = "";
 my $verbose             = 0;
-my $query_opt           = "";
 
 my $switch_lid                            = undef;
 my $switch_guid                           = undef;
@@ -73,8 +72,6 @@ sub usage
 	print "  Generate ibnetdiscover-cache via \"ibnetdiscover --cache ibnetdiscover-cache\"\n";
 	print "  -e turn on heuristic(s) to look at switch balances deeper\n";
 	print "  -v verbose output, output all switches\n";
-	print "  -C <ca_name> use selected Channel Adaptor name for queries\n";
-	print "  -P <ca_port> use selected channel adaptor port for queries\n";
 	exit 2;
 }
 
@@ -178,7 +175,7 @@ sub output_switch_port_usage
 	my $all_zero_flag = 1;
 	my $ret;
 
-        $iblinkinfo_output = `iblinkinfo $query_opt --load-cache $ibnetdiscover_cache -S $switch_guid`;
+        $iblinkinfo_output = `iblinkinfo --load-cache $ibnetdiscover_cache -S $switch_guid`;
 
 	for $port (@ports) {
 		if (!defined($switch_port_count{$port})) {
@@ -293,10 +290,10 @@ sub output_switch_port_usage
 	if ($verbose || $is_unbalanced == 1) {
 		if ($is_unbalanced == 1) {
 			print "Unbalanced Switch Port Usage: ";
-			print "$switch_name, $switch_guid, $switch_lid\n";
+			print "$switch_name, $switch_guid\n";
 		} else {
 			print
-			  "Switch Port Usage: $switch_name, $switch_guid, $switch_lid\n";
+			  "Switch Port Usage: $switch_name, $switch_guid\n";
 		}
 		for $port (@output_ports) {
 			print "Port $port: $switch_port_count{$port}\n";
@@ -327,7 +324,7 @@ sub process_host_ports
 	}
 }
 
-if (!getopts("hl:i:evC:P:")) {
+if (!getopts("hl:i:ve")) {
 	usage();
 }
 
@@ -359,14 +356,6 @@ if (defined($main::opt_e)) {
 	$heuristic_flag = 1;
 }
 
-if (defined $Getopt::Std::opt_C) {
-	$query_opt = "$query_opt -C $Getopt::Std::opt_C";
-}
-
-if (defined $Getopt::Std::opt_P) {
-	$query_opt = "$query_opt -P $Getopt::Std::opt_P";
-}
-
 if (!open(FH, "< $dump_lft_file")) {
 	print STDERR ("Couldn't open dump lfts file: $dump_lft_file: $!\n");
 }
@@ -376,16 +365,20 @@ if (!open(FH, "< $dump_lft_file")) {
 foreach $lft_line (@lft_lines) {
 	chomp($lft_line);
 	if ($lft_line =~ /Unicast/) {
-		$lft_line =~ /Unicast lids .+ of switch Lid (.+) guid (.+) \((.+)\)/;
 		if (@host_ports) {
 			process_host_ports();
 		}
 		if (defined($switch_name)) {
 			output_switch_port_usage();
 		}
-		$switch_lid                            = $1;
-		$switch_guid                           = $2;
-		$switch_name                           = $3;
+		if ($lft_line =~ /Unicast lids .+ of switch DR path slid .+ guid (.+) \((.+)\)/) {
+			$switch_guid                           = $1;
+			$switch_name                           = $2;
+		}
+		if ($lft_line =~ /Unicast lids .+ of switch Lid .+ guid (.+) \((.+)\)/) {
+			$switch_guid                           = $1;
+			$switch_name                           = $2;
+		}
 		@switch_maybe_directly_connected_hosts = ();
 		%switch_port_count                     = ();
 		@host_ports                            = ();

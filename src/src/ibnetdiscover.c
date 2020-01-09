@@ -361,6 +361,8 @@ void out_switch_port(ibnd_port_t * port, int group, char *out_prefix)
 					IB_PORT_LINK_WIDTH_ACTIVE_F);
 	uint32_t ispeed = mad_get_field(port->info, 0,
 					IB_PORT_LINK_SPEED_ACTIVE_F);
+	uint32_t vlcap = mad_get_field(port->info, 0,
+				       IB_PORT_VL_CAP_F);
 	uint32_t fdr10 = mad_get_field(port->ext_info, 0,
 				       IB_MLNX_EXT_PORT_LINK_SPEED_ACTIVE_F);
 	uint32_t cap_mask, espeed;
@@ -378,13 +380,20 @@ void out_switch_port(ibnd_port_t * port, int group, char *out_prefix)
 				       port->remoteport->node->nodedesc);
 
 	ext_port_str = out_ext_port(port->remoteport, group);
-	cap_mask = mad_get_field(port->node->ports[0]->info, 0,
-				 IB_PORT_CAPMASK_F);
-	if (cap_mask & CL_NTOH32(IB_PORT_CAP_HAS_EXT_SPEEDS))
-		espeed = mad_get_field(port->info, 0,
-				       IB_PORT_LINK_SPEED_EXT_ACTIVE_F);
-	else
+
+	if (!port->node->ports[0]) {
+		cap_mask = 0;
+		ispeed = 0;
 		espeed = 0;
+	} else {
+		cap_mask = mad_get_field(port->node->ports[0]->info, 0,
+					 IB_PORT_CAPMASK_F);
+		if (cap_mask & CL_NTOH32(IB_PORT_CAP_HAS_EXT_SPEEDS))
+			espeed = mad_get_field(port->info, 0,
+					       IB_PORT_LINK_SPEED_EXT_ACTIVE_F);
+		else
+			espeed = 0;
+	}
 	fprintf(f, "\t%s[%d]%s",
 		node_name(port->remoteport->node), port->remoteport->portnum,
 		ext_port_str ? ext_port_str : "");
@@ -401,7 +410,7 @@ void out_switch_port(ibnd_port_t * port, int group, char *out_prefix)
 			dump_linkspeedext_compat(espeed, ispeed, fdr10));
 
 	if (full_info)
-		fprintf(f, " s=%d w=%d", ispeed, iwidth);
+		fprintf(f, " s=%d w=%d v=%d", ispeed, iwidth, vlcap);
 
 	if (ibnd_is_xsigo_tca(port->remoteport->guid))
 		fprintf(f, " slot %d", port->portnum);
@@ -420,6 +429,8 @@ void out_ca_port(ibnd_port_t * port, int group, char *out_prefix)
 					IB_PORT_LINK_WIDTH_ACTIVE_F);
 	uint32_t ispeed = mad_get_field(port->info, 0,
 					IB_PORT_LINK_SPEED_ACTIVE_F);
+	uint32_t vlcap = mad_get_field(port->info, 0,
+				       IB_PORT_VL_CAP_F);
 	uint32_t fdr10 = mad_get_field(port->ext_info, 0,
 				       IB_MLNX_EXT_PORT_LINK_SPEED_ACTIVE_F);
 	uint32_t cap_mask, espeed;
@@ -457,7 +468,7 @@ void out_ca_port(ibnd_port_t * port, int group, char *out_prefix)
 			dump_linkspeedext_compat(espeed, ispeed, fdr10));
 
 	if (full_info)
-		fprintf(f, " s=%d w=%d", ispeed, iwidth);
+		fprintf(f, " s=%d w=%d v=%d", ispeed, iwidth, vlcap);
 	fprintf(f, "\n");
 
 	free(rem_nodename);
@@ -679,23 +690,31 @@ void dump_ports_report(ibnd_node_t * node, void *user_data)
 	for (p = node->numports, port = node->ports[p]; p > 0;
 	     port = node->ports[--p]) {
 		uint32_t iwidth, ispeed, fdr10, espeed, cap_mask;
-		uint8_t *info;
+		uint8_t *info = NULL;
 		if (port == NULL)
 			continue;
 		iwidth =
 		    mad_get_field(port->info, 0, IB_PORT_LINK_WIDTH_ACTIVE_F);
 		ispeed =
 		    mad_get_field(port->info, 0, IB_PORT_LINK_SPEED_ACTIVE_F);
-		if (port->node->type == IB_NODE_SWITCH)
-			info = (uint8_t *)&port->node->ports[0]->info;
+		if (port->node->type == IB_NODE_SWITCH) {
+			if (port->node->ports[0])
+				info = (uint8_t *)&port->node->ports[0]->info;
+		}
 		else
 			info = (uint8_t *)&port->info;
-		cap_mask = mad_get_field(info, 0, IB_PORT_CAPMASK_F);
-		if (cap_mask & CL_NTOH32(IB_PORT_CAP_HAS_EXT_SPEEDS))
-			espeed = mad_get_field(port->info, 0,
-					       IB_PORT_LINK_SPEED_EXT_ACTIVE_F);
-		else
+		if (info) {
+			cap_mask = mad_get_field(info, 0, IB_PORT_CAPMASK_F);
+			if (cap_mask & CL_NTOH32(IB_PORT_CAP_HAS_EXT_SPEEDS))
+				espeed = mad_get_field(port->info, 0,
+						       IB_PORT_LINK_SPEED_EXT_ACTIVE_F);
+			else
+				espeed = 0;
+		} else {
+			ispeed = 0;
+			iwidth = 0;
 			espeed = 0;
+		}
 		fdr10 = mad_get_field(port->ext_info, 0,
 				      IB_MLNX_EXT_PORT_LINK_SPEED_ACTIVE_F);
 		nodename = remap_node_name(node_name_map,
@@ -1048,7 +1067,7 @@ int main(int argc, char **argv)
 	ibnd_fabric_t *diff_fabric = NULL;
 
 	const struct ibdiag_opt opts[] = {
-		{"full", 'f', 0, NULL, "show full information (ports' speed and width)"},
+		{"full", 'f', 0, NULL, "show full information (ports' speed and width, vlcap)"},
 		{"show", 's', 0, NULL, "show more information"},
 		{"list", 'l', 0, NULL, "list of connected nodes"},
 		{"grouping", 'g', 0, NULL, "show grouping"},
@@ -1074,7 +1093,7 @@ int main(int argc, char **argv)
 	};
 	char usage_args[] = "[topology-file]";
 
-	ibdiag_process_opts(argc, argv, &config, "sGDL", opts, process_opt,
+	ibdiag_process_opts(argc, argv, &config, "DGKLs", opts, process_opt,
 			    usage_args, NULL);
 
 	f = stdout;
@@ -1085,22 +1104,26 @@ int main(int argc, char **argv)
 	if (ibd_timeout)
 		config.timeout_ms = ibd_timeout;
 
+	config.flags = ibd_ibnetdisc_flags;
+
 	if (argc && !(f = fopen(argv[0], "w")))
-		IBERROR("can't open file %s for writing", argv[0]);
+		IBEXIT("can't open file %s for writing", argv[0]);
+
+	config.mkey = ibd_mkey;
 
 	node_name_map = open_node_name_map(node_name_map_file);
 
 	if (diff_cache_file &&
 	    !(diff_fabric = ibnd_load_fabric(diff_cache_file, 0)))
-		IBERROR("loading cached fabric for diff failed\n");
+		IBEXIT("loading cached fabric for diff failed\n");
 
 	if (load_cache_file) {
 		if ((fabric = ibnd_load_fabric(load_cache_file, 0)) == NULL)
-			IBERROR("loading cached fabric failed\n");
+			IBEXIT("loading cached fabric failed\n");
 	} else {
 		if ((fabric =
 		     ibnd_discover_fabric(ibd_ca, ibd_ca_port, NULL, &config)) == NULL)
-			IBERROR("discover failed\n");
+			IBEXIT("discover failed\n");
 	}
 
 	if (ports_report)
@@ -1114,7 +1137,7 @@ int main(int argc, char **argv)
 
 	if (cache_file)
 		if (ibnd_cache_fabric(fabric, cache_file, 0) < 0)
-			IBERROR("caching ibnetdiscover data failed\n");
+			IBEXIT("caching ibnetdiscover data failed\n");
 
 	ibnd_destroy_fabric(fabric);
 	if (diff_fabric)

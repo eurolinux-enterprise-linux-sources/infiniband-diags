@@ -54,27 +54,19 @@
 
 struct ibmad_port *srcport;
 
-typedef char *(op_fn_t) (ib_portid_t * dest, char **argv, int argc);
-
-typedef struct match_rec {
-	const char *name, *alias;
-	op_fn_t *fn;
-	unsigned opt_portnum;
-} match_rec_t;
-
 static op_fn_t node_desc, node_info, port_info, switch_info, pkey_table,
     sl2vl_table, vlarb_table, guid_info, mlnx_ext_port_info;
 
 static const match_rec_t match_tbl[] = {
-	{"NodeInfo", "NI", node_info},
-	{"NodeDesc", "ND", node_desc},
-	{"PortInfo", "PI", port_info, 1},
-	{"SwitchInfo", "SI", switch_info},
-	{"PKeyTable", "PKeys", pkey_table, 1},
-	{"SL2VLTable", "SL2VL", sl2vl_table, 1},
-	{"VLArbitration", "VLArb", vlarb_table, 1},
-	{"GUIDInfo", "GI", guid_info},
-	{"MlnxExtPortInfo", "MEPI", mlnx_ext_port_info, 1},
+	{"NodeInfo", "NI", node_info, 0, ""},
+	{"NodeDesc", "ND", node_desc, 0, ""},
+	{"PortInfo", "PI", port_info, 1, ""},
+	{"SwitchInfo", "SI", switch_info, 0, ""},
+	{"PKeyTable", "PKeys", pkey_table, 1, ""},
+	{"SL2VLTable", "SL2VL", sl2vl_table, 1, ""},
+	{"VLArbitration", "VLArb", vlarb_table, 1, ""},
+	{"GUIDInfo", "GI", guid_info, 0, ""},
+	{"MlnxExtPortInfo", "MEPI", mlnx_ext_port_info, 1, ""},
 	{0}
 };
 
@@ -133,7 +125,6 @@ static char *node_info(ib_portid_t * dest, char **argv, int argc)
 
 static char *port_info(ib_portid_t * dest, char **argv, int argc)
 {
-	char buf[2300];
 	char data[IB_SMP_DATA_SIZE] = { 0 };
 	int portnum = 0, orig_portnum;
 
@@ -146,9 +137,8 @@ static char *port_info(ib_portid_t * dest, char **argv, int argc)
 	if (!smp_query_via(data, dest, IB_ATTR_PORT_INFO, portnum, 0, srcport))
 		return "port info query failed";
 
-	mad_dump_portinfo(buf, sizeof buf, data, sizeof data);
-
-	printf("# Port info: %s port %d\n%s", portid2str(dest), orig_portnum, buf);
+	printf("# Port info: %s port %d\n", portid2str(dest), orig_portnum);
+	dump_portinfo(data, sizeof data, 0);
 	return 0;
 }
 
@@ -398,17 +388,6 @@ static char *guid_info(ib_portid_t * dest, char **argv, int argc)
 	return 0;
 }
 
-static op_fn_t *match_op(char *name)
-{
-	const match_rec_t *r;
-	unsigned len = strlen(name);
-	for (r = match_tbl; r->name; r++)
-		if (!strncasecmp(r->name, name, len) ||
-		    (r->alias && !strncasecmp(r->alias, name, len)))
-			return r->fn;
-	return NULL;
-}
-
 static int process_opt(void *context, int ch, char *optarg)
 {
 	switch (ch) {
@@ -473,31 +452,33 @@ int main(int argc, char **argv)
 	if (argc < 2)
 		ibdiag_show_usage();
 
-	if (!(fn = match_op(argv[0])))
-		IBERROR("operation '%s' not supported", argv[0]);
+	if (!(fn = match_op(match_tbl, argv[0])))
+		IBEXIT("operation '%s' not supported", argv[0]);
 
 	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 3);
 	if (!srcport)
-		IBERROR("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+		IBEXIT("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+
+	smp_mkey_set(srcport, ibd_mkey);
 
 	node_name_map = open_node_name_map(node_name_map_file);
 
 	if (ibd_dest_type != IB_DEST_DRSLID) {
-		if (ib_resolve_portid_str_via(&portid, argv[1], ibd_dest_type,
-					      ibd_sm_id, srcport) < 0)
-			IBERROR("can't resolve destination port %s", argv[1]);
+		if (resolve_portid_str(ibd_ca, ibd_ca_port, &portid, argv[1],
+				       ibd_dest_type, ibd_sm_id, srcport) < 0)
+			IBEXIT("can't resolve destination port %s", argv[1]);
 		if ((err = fn(&portid, argv + 2, argc - 2)))
-			IBERROR("operation %s: %s", argv[0], err);
+			IBEXIT("operation %s: %s", argv[0], err);
 	} else {
 		char concat[64];
 
 		memset(concat, 0, 64);
 		snprintf(concat, sizeof(concat), "%s %s", argv[1], argv[2]);
-		if (ib_resolve_portid_str_via(&portid, concat, ibd_dest_type,
-					      ibd_sm_id, srcport) < 0)
-			IBERROR("can't resolve destination port %s", concat);
+		if (resolve_portid_str(ibd_ca, ibd_ca_port, &portid, concat,
+				       ibd_dest_type, ibd_sm_id, srcport) < 0)
+			IBEXIT("can't resolve destination port %s", concat);
 		if ((err = fn(&portid, argv + 3, argc - 3)))
-			IBERROR("operation %s: %s", argv[0], err);
+			IBEXIT("operation %s: %s", argv[0], err);
 	}
 	close_node_name_map(node_name_map);
 	mad_rpc_close_port(srcport);

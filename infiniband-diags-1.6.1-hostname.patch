@@ -1,0 +1,21 @@
+diff -up infiniband-diags-1.6.1/scripts/set_nodedesc.sh.hostname infiniband-diags-1.6.1/scripts/set_nodedesc.sh
+--- infiniband-diags-1.6.1/scripts/set_nodedesc.sh.hostname	2013-03-10 16:56:07.646569871 -0400
++++ infiniband-diags-1.6.1/scripts/set_nodedesc.sh	2013-03-10 16:57:13.805967981 -0400
+@@ -5,7 +5,7 @@ if [ -f /etc/sysconfig/network ]; then
+ fi
+ 
+ ib_sysfs="/sys/class/infiniband"
+-newname="$HOSTNAME"
++newname=`hostname -s`
+ 
+ echo ""
+ echo "*** WARNING ***: this command is deprecated."
+@@ -18,7 +18,7 @@ function usage
+ 	echo "   -h this help"
+ 	echo "   -v view all node descriptors"
+ 	echo "   [<name>] set name to name specified."
+-	echo "      Default is to use the hostname: \"$HOSTNAME\""
++	echo "      Default is to use the hostname: \"$newname\""
+ 	exit 2
+ }
+ 

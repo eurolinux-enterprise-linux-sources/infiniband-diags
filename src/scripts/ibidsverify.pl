@@ -37,6 +37,8 @@ use strict;
 use Getopt::Std;
 use IBswcountlimits;
 
+my $return_code = 0;
+
 sub usage_and_exit
 {
 	my $prog = $_[0];
@@ -106,10 +108,13 @@ sub insert_lid
 		if (defined($insert_lid::lids{$lid})) {
 			print
 "LID $lid already defined for NodeGUID $insert_lid::lids{$lid}->{nodeguid}\n";
+			$return_code = 1;
 		} else {
 			$rec = {lid => $lid, nodeguid => $nodeguid};
 			$insert_lid::lids{$lid} = $rec;
 		}
+	} else {
+		$return_code = $status;
 	}
 }
 
@@ -126,22 +131,25 @@ sub insert_nodeguid
 		if (defined($insert_nodeguid::nodeguids{$nodeguid})) {
 			print
 "NodeGUID $nodeguid already defined for LID $insert_nodeguid::nodeguids{$nodeguid}->{lid}\n";
+			$return_code = 1;
 		} else {
 			$rec = {lid => $lid, nodeguid => $nodeguid};
 			$insert_nodeguid::nodeguids{$nodeguid} = $rec;
 		}
+	} else {
+		$return_code = $status;
 	}
 }
 
 sub validate_portguid
 {
 	my ($portguid)  = shift(@_);
-	my ($firstport) = shift(@_);
+	my ($nodeguid)  = shift(@_);
 
-	if (defined($insert_nodeguid::nodeguids{$portguid})
-		&& ($firstport ne "yes"))
-	{
-		print "PortGUID $portguid is invalid duplicate of a NodeGUID\n";
+	if (($nodeguid ne $portguid)
+		&& defined($insert_nodeguid::nodeguids{$portguid})) {
+		print "PortGUID $portguid is an invalid duplicate of a NodeGUID\n";
+		$return_code = 1;
 	}
 }
 
@@ -150,7 +158,7 @@ sub insert_portguid
 	my ($lid)       = shift(@_);
 	my ($portguid)  = shift(@_);
 	my ($nodetype)  = shift(@_);
-	my ($firstport) = shift(@_);
+	my ($nodeguid)  = shift(@_);
 	my $rec         = undef;
 	my $status      = "";
 
@@ -159,11 +167,14 @@ sub insert_portguid
 		if (defined($insert_portguid::portguids{$portguid})) {
 			print
 "PortGUID $portguid already defined for LID $insert_portguid::portguids{$portguid}->{lid}\n";
+			$return_code = 1;
 		} else {
 			$rec = {lid => $lid, portguid => $portguid};
 			$insert_portguid::portguids{$portguid} = $rec;
-			validate_portguid($portguid, $firstport);
+			validate_portguid($portguid, $nodeguid);
 		}
+	} else {
+		$return_code = $status;
 	}
 }
 
@@ -208,7 +219,7 @@ sub main
 			insert_lid($lid, $nodeguid, $nodetype);
 			insert_nodeguid($lid, $nodeguid, $nodetype);
 			if ($portguid ne "") {
-				insert_portguid($lid, $portguid, $nodetype, $firstport);
+				insert_portguid($lid, $portguid, $nodetype, $nodeguid);
 			}
 		}
 		if ($line =~ /^Ca.*/) {
@@ -247,7 +258,7 @@ sub main
 			}
 			if ($line =~ /^\[(\d+)\]\((.*)\)/) {
 				$portguid = "0x" . $2;
-				insert_portguid($lid, $portguid, $nodetype, $firstport);
+				insert_portguid($lid, $portguid, $nodetype, $nodeguid);
 			}
 		}
 
@@ -256,4 +267,6 @@ sub main
 	close IBNET_TOPO;
 }
 main;
+
+exit ($return_code);
 

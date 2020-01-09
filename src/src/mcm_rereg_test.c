@@ -42,6 +42,9 @@
 
 #include <infiniband/umad.h>
 #include <infiniband/mad.h>
+#include <infiniband/iba/ib_types.h>
+
+#include "ibdiag_common.h"
 
 #define info(fmt, ...) fprintf(stderr, "INFO: " fmt, ## __VA_ARGS__ )
 #define err(fmt, ...) fprintf(stderr, "ERR: " fmt, ## __VA_ARGS__ )
@@ -52,26 +55,6 @@
 #endif
 
 #define TMO 100
-
-/* Multicast Member Record Component Masks */
-#define IB_MCR_COMPMASK_MGID        (1ULL<<0)
-#define IB_MCR_COMPMASK_PORT_GID    (1ULL<<1)
-#define IB_MCR_COMPMASK_QKEY        (1ULL<<2)
-#define IB_MCR_COMPMASK_MLID        (1ULL<<3)
-#define IB_MCR_COMPMASK_MTU_SEL     (1ULL<<4)
-#define IB_MCR_COMPMASK_MTU         (1ULL<<5)
-#define IB_MCR_COMPMASK_TCLASS      (1ULL<<6)
-#define IB_MCR_COMPMASK_PKEY        (1ULL<<7)
-#define IB_MCR_COMPMASK_RATE_SEL    (1ULL<<8)
-#define IB_MCR_COMPMASK_RATE        (1ULL<<9)
-#define IB_MCR_COMPMASK_LIFE_SEL    (1ULL<<10)
-#define IB_MCR_COMPMASK_LIFE        (1ULL<<11)
-#define IB_MCR_COMPMASK_SL          (1ULL<<12)
-#define IB_MCR_COMPMASK_FLOW        (1ULL<<13)
-#define IB_MCR_COMPMASK_HOP         (1ULL<<14)
-#define IB_MCR_COMPMASK_SCOPE       (1ULL<<15)
-#define IB_MCR_COMPMASK_JOIN_STATE  (1ULL<<16)
-#define IB_MCR_COMPMASK_PROXY       (1ULL<<17)
 
 static ibmad_gid_t mgid_ipoib = {
 	0xff, 0x12, 0x40, 0x1b, 0xff, 0xff, 0x00, 0x00,
@@ -118,7 +101,9 @@ static int rereg_send(int port, int agent, ib_portid_t * dport,
 
 	build_mcm_rec_umad(umad, dport, method, comp_mask, data);
 	if (umad_send(port, agent, umad, len, TMO, 0) < 0) {
-		err("umad_send leave failed: %s\n", strerror(errno));
+		err("umad_send %s failed: %s\n",
+		    (method == IB_MAD_METHOD_GET) ? "query" : "non query",
+		    strerror(errno));
 		return -1;
 	}
 	dbg("umad_send %d: tid = 0x%016" PRIx64 "\n", method,
@@ -181,7 +166,7 @@ static int rereg_send_all(int port, int agent, ib_portid_t * dport,
 		    rereg_port_gid(port, agent, dport, umad, len, list[i].gid);
 		if (ret < 0) {
 			err("rereg_send_all: rereg_port_gid 0x%016" PRIx64
-			    " failed\n", list[i].guid);
+			    " failed\n", ntohll(list[i].guid));
 			continue;
 		}
 		list[i].trid = mad_get_field64(umad_get_mad(umad), 0,
@@ -194,34 +179,6 @@ static int rereg_send_all(int port, int agent, ib_portid_t * dport,
 
 	return 0;
 }
-
-#if 0
-static int rereg_mcm_rec_send(int port, int agent, ib_portid_t * dport, int cnt)
-{
-	ib_portid_t portid;
-	ibmad_gid_t port_gid;
-	uint8_t *umad;
-	int len, ret = 0;
-
-	ib_resolve_self(&portid, NULL, &port_gid);
-
-	len = umad_size() + 256;
-	umad = calloc(1, len);
-	if (!umad) {
-		err("cannot alloc mem for umad: %s\n", strerror(errno));
-		return -1;
-	}
-
-	while (cnt--) {
-		if (!rereg_port_gid(port, agent, dport, umad, len, port_gid))
-			ret += 2;
-	}
-
-	free(umad);
-
-	return ret;
-}
-#endif
 
 static int rereg_recv(int port, int agent, ib_portid_t * dport,
 		      uint8_t * umad, int length, int tmo)
@@ -350,42 +307,6 @@ static int rereg_query_all(int port, int agent, ib_portid_t * dport,
 	return 0;
 }
 
-#if 0
-static int rereg_mcm_rec_recv(int port, int agent, int cnt)
-{
-	uint8_t *umad, *mad;
-	int len = umad_size() + 256;
-	int i;
-
-	umad = calloc(1, len);
-	if (!umad) {
-		err("cannot alloc mem for umad: %s\n", strerror(errno));
-		return -1;
-	}
-
-	for (i = 0; i < cnt; i++) {
-		int retry;
-		retry = 0;
-		while (umad_recv(port, umad, &len, TMO) < 0 &&
-		       errno == ETIMEDOUT)
-			if (retry++ > 3) {
-				err("umad_recv %d failed: %s\n",
-				    i, strerror(errno));
-				free(umad);
-				return -1;
-			}
-		dbg("umad_recv %d (retries %d), tid = 0x%016" PRIx64
-		    ": len = %d, status = %d\n", i, retry,
-		    mad_get_field64(umad_get_mad(umad), 0, IB_MAD_TRID_F), len,
-		    umad_status(umad));
-		mad = umad_get_mad(umad);
-	}
-
-	free(umad);
-	return 0;
-}
-#endif
-
 #define MAX_CLIENTS 50
 
 static int rereg_and_test_port(char *guid_file, int port, int agent,
@@ -451,12 +372,7 @@ int main(int argc, char **argv)
 	if (!srcport)
 		err("Failed to open port");
 
-#if 1
-	ib_resolve_smlid_via(&dport_id, TMO, srcport);
-#else
-	memset(&dport_id, 0, sizeof(dport_id));
-	dport_id.lid = 1;
-#endif
+	resolve_sm_portid(NULL, 0, &dport_id);
 	dport_id.qp = 1;
 	if (!dport_id.qkey)
 		dport_id.qkey = IB_DEFAULT_QP1_QKEY;
@@ -467,28 +383,11 @@ int main(int argc, char **argv)
 		err("cannot alloc mem for umad: %s\n", strerror(errno));
 		return -1;
 	}
-#if 1
 	port = mad_rpc_portid(srcport);
-#else
-	ret = umad_init();
-
-	port = umad_open_port(NULL, 0);
-	if (port < 0) {
-		err("umad_open_port failed: %s\n", strerror(errno));
-		return port;
-	}
-#endif
 
 	agent = umad_register(port, IB_SA_CLASS, 2, 0, NULL);
 
-#if 0
-	int cnt;
-	cnt = rereg_mcm_rec_send(port, agent, &dport_id, cnt);
-
-	rereg_recv_all(port, agent, &dport_id);
-#else
 	rereg_and_test_port(guid_file, port, agent, &dport_id, TMO);
-#endif
 	mad = umad_get_mad(umad);
 
 	free(umad);

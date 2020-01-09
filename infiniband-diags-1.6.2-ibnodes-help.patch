@@ -1,0 +1,29 @@
+diff -up infiniband-diags-1.6.2/scripts/ibnodes.in.help infiniband-diags-1.6.2/scripts/ibnodes.in
+--- infiniband-diags-1.6.2/scripts/ibnodes.in.help	2014-01-23 20:34:12.901950927 -0500
++++ infiniband-diags-1.6.2/scripts/ibnodes.in	2014-01-23 20:39:20.641024165 -0500
+@@ -1,5 +1,24 @@
+ #!/bin/sh
++usage() {
++        echo Usage: `basename $0` "[-h] [<topology-file> | -C ca_name" \
++	            "-P ca_port -t timeout_ms]"
++        exit -1
++}
++
++options=""
++
++while [ "$1" ]; do
++	case $1 in
++		-h | --help)
++			usage
++			;;
++		default)
++			options="${options} $1"
++			shift
++			;;
++	esac
++done
+ 
+ IBPATH=${IBPATH:-@IBSCRIPTPATH@}
+ 
+-$IBPATH/ibhosts $@; $IBPATH/ibswitches $@
++$IBPATH/ibhosts ${options}; $IBPATH/ibswitches ${options}

@@ -250,6 +250,13 @@ static int find_route(ib_portid_t * from, ib_portid_t * to, int dump)
 	int maxhops = MAXHOPS;
 	int portnum, outport;
 
+	memset(&fromnode,0,sizeof(Node));
+	memset(&tonode,0,sizeof(Node));
+	memset(&nextnode,0,sizeof(Node));
+	memset(&fromport,0,sizeof(Port));
+	memset(&toport,0,sizeof(Port));
+	memset(&nextport,0,sizeof(Port));
+
 	DEBUG("from %s", portid2str(from));
 
 	if (get_node(&fromnode, &fromport, from) < 0 ||
@@ -502,10 +509,10 @@ static Node *find_mcpath(ib_portid_t * from, int mlid)
 	DEBUG("from %s", portid2str(from));
 
 	if (!(node = calloc(1, sizeof(Node))))
-		IBERROR("out of memory");
+		IBEXIT("out of memory");
 
 	if (!(port = calloc(1, sizeof(Port))))
-		IBERROR("out of memory");
+		IBEXIT("out of memory");
 
 	if (get_node(node, port, from) < 0) {
 		IBWARN("can't reach node %s", portid2str(from));
@@ -568,12 +575,13 @@ static Node *find_mcpath(ib_portid_t * from, int mlid)
 						path->drpath.cnt--;
 				} else {
 					if (!(port = calloc(1, sizeof(Port))))
-						IBERROR("out of memory");
+						IBEXIT("out of memory");
 
 					if (get_port(port, i, path) < 0) {
 						IBWARN
 						    ("can't reach node %s port %d",
 						     portid2str(path), i);
+						free(port);
 						return 0;
 					}
 
@@ -585,15 +593,17 @@ static Node *find_mcpath(ib_portid_t * from, int mlid)
 					link_port(port, node);
 #endif
 
-					if (extend_dpath(&path->drpath, i) < 0)
+					if (extend_dpath(&path->drpath, i) < 0) {
+						free(port);
 						return 0;
+					}
 				}
 
 				if (!(remotenode = calloc(1, sizeof(Node))))
-					IBERROR("out of memory");
+					IBEXIT("out of memory");
 
 				if (!(remoteport = calloc(1, sizeof(Port))))
-					IBERROR("out of memory");
+					IBEXIT("out of memory");
 
 				if (get_node(remotenode, remoteport, path) < 0) {
 					IBWARN
@@ -757,7 +767,7 @@ int main(int argc, char **argv)
 		NULL,
 	};
 
-	ibdiag_process_opts(argc, argv, NULL, "D", opts, process_opt,
+	ibdiag_process_opts(argc, argv, NULL, "DKy", opts, process_opt,
 			    usage_args, usage_examples);
 
 	f = stdout;
@@ -772,24 +782,26 @@ int main(int argc, char **argv)
 
 	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 3);
 	if (!srcport)
-		IBERROR("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+		IBEXIT("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+
+	smp_mkey_set(srcport, ibd_mkey);
 
 	node_name_map = open_node_name_map(node_name_map_file);
 
-	if (ib_resolve_portid_str_via(&src_portid, argv[0], ibd_dest_type,
-				      ibd_sm_id, srcport) < 0)
-		IBERROR("can't resolve source port %s", argv[0]);
+	if (resolve_portid_str(ibd_ca, ibd_ca_port, &src_portid, argv[0],
+			       ibd_dest_type, ibd_sm_id, srcport) < 0)
+		IBEXIT("can't resolve source port %s", argv[0]);
 
-	if (ib_resolve_portid_str_via(&dest_portid, argv[1], ibd_dest_type,
-				      ibd_sm_id, srcport) < 0)
-		IBERROR("can't resolve destination port %s", argv[1]);
+	if (resolve_portid_str(ibd_ca, ibd_ca_port, &dest_portid, argv[1],
+			       ibd_dest_type, ibd_sm_id, srcport) < 0)
+		IBEXIT("can't resolve destination port %s", argv[1]);
 
 	if (ibd_dest_type == IB_DEST_DRPATH) {
 		if (resolve_lid(&src_portid, NULL) < 0)
-			IBERROR("cannot resolve lid for port \'%s\'",
+			IBEXIT("cannot resolve lid for port \'%s\'",
 				portid2str(&src_portid));
 		if (resolve_lid(&dest_portid, NULL) < 0)
-			IBERROR("cannot resolve lid for port \'%s\'",
+			IBEXIT("cannot resolve lid for port \'%s\'",
 				portid2str(&dest_portid));
 	}
 
@@ -801,14 +813,14 @@ int main(int argc, char **argv)
 	if (ibd_dest_type != IB_DEST_DRPATH) {
 		/* first find a direct path to the src port */
 		if (find_route(&my_portid, &src_portid, 0) < 0)
-			IBERROR("can't find a route to the src port");
+			IBEXIT("can't find a route to the src port");
 
 		src_portid = my_portid;
 	}
 
 	if (!multicast) {
 		if (find_route(&src_portid, &dest_portid, dumplevel) < 0)
-			IBERROR("can't find a route from src to dest");
+			IBEXIT("can't find a route from src to dest");
 		exit(0);
 	} else {
 		if (mlid < 0xc000)
@@ -816,10 +828,10 @@ int main(int argc, char **argv)
 	}
 
 	if (!(target_portguid = find_target_portguid(&dest_portid)))
-		IBERROR("can't reach target lid %d", dest_portid.lid);
+		IBEXIT("can't reach target lid %d", dest_portid.lid);
 
 	if (!(endnode = find_mcpath(&src_portid, mlid)))
-		IBERROR("can't find a multicast route from src to dest");
+		IBEXIT("can't find a multicast route from src to dest");
 
 	/* dump multicast path */
 	dump_mcpath(endnode, dumplevel);

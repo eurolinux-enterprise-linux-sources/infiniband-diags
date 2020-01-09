@@ -14,34 +14,86 @@ sbin_PROGRAMS = src/ibaddr src/ibnetdiscover src/ibping src/ibportstate \
 	        src/ibroute src/ibstat src/ibsysstat src/ibtracert \
 	        src/perfquery src/sminfo src/smpdump src/smpquery \
 	        src/saquery src/vendstat src/iblinkinfo \
-		src/ibqueryerrors src/ibcacheedit
+		src/ibqueryerrors src/ibcacheedit src/ibccquery \
+		src/ibccconfig \
+		src/dump_fts
 
 if ENABLE_TEST_UTILS
 sbin_PROGRAMS += src/ibsendtrap src/mcm_rereg_test
 endif
 
-sbin_SCRIPTS = scripts/ibcheckerrs scripts/ibchecknet scripts/ibchecknode \
-               scripts/ibcheckport scripts/ibhosts scripts/ibstatus \
-	       scripts/ibswitches scripts/ibnodes scripts/ibrouters \
-	       scripts/ibcheckwidth scripts/ibcheckportwidth \
-	       scripts/ibcheckstate scripts/ibcheckportstate \
-	       scripts/ibcheckerrors scripts/ibclearerrors \
-	       scripts/ibclearcounters scripts/ibdatacounts \
-	       scripts/ibdatacounters scripts/ibdiscover.pl \
-	       scripts/dump_lfts.sh scripts/dump_mfts.sh \
-	       scripts/set_nodedesc.sh \
-	       scripts/ibqueryerrors.pl scripts/ibswportwatch.pl \
-	       scripts/iblinkinfo.pl scripts/ibprintswitch.pl \
-	       scripts/ibprintca.pl scripts/ibprintrt.pl \
-	       scripts/ibfindnodesusing.pl scripts/ibidsverify.pl \
-	       scripts/check_lft_balance.pl
+sbin_SCRIPTS = scripts/ibhosts \
+		scripts/ibswitches scripts/ibnodes scripts/ibrouters \
+		scripts/ibfindnodesusing.pl scripts/ibidsverify.pl \
+		scripts/check_lft_balance.pl \
+		scripts/dump_lfts.sh scripts/dump_mfts.sh \
+		scripts/ibstatus
+
+if ENABLE_COMPAT_UTILS
+sbin_SCRIPTS += scripts/ibcheckerrs scripts/ibchecknet scripts/ibchecknode \
+		scripts/ibcheckport scripts/ibcheckportwidth scripts/ibcheckportstate \
+		scripts/ibcheckwidth scripts/ibcheckstate \
+		scripts/ibcheckerrors scripts/ibdatacounts \
+		scripts/ibdatacounters scripts/ibdiscover.pl \
+		scripts/ibswportwatch.pl \
+		scripts/ibqueryerrors.pl scripts/iblinkinfo.pl \
+		scripts/ibprintca.pl scripts/ibprintswitch.pl scripts/ibprintrt.pl \
+		scripts/set_nodedesc.sh scripts/ibclearerrors scripts/ibclearcounters
+endif
+
+man_MANS = doc/man/ibaddr.8 \
+		doc/man/check_lft_balance.8 \
+		doc/man/ibcacheedit.8 \
+		doc/man/ibccconfig.8 \
+		doc/man/ibccquery.8 \
+		doc/man/dump_fts.8 \
+		doc/man/iblinkinfo.8 \
+		doc/man/ibfindnodesusing.8 \
+		doc/man/ibhosts.8 \
+		doc/man/ibidsverify.8 \
+		doc/man/ibnetdiscover.8 \
+		doc/man/ibnodes.8 \
+		doc/man/ibping.8 \
+		doc/man/ibportstate.8 \
+		doc/man/ibqueryerrors.8 \
+		doc/man/ibroute.8 \
+		doc/man/ibrouters.8 \
+		doc/man/ibstat.8 \
+		doc/man/ibstatus.8 \
+		doc/man/ibswitches.8 \
+		doc/man/ibsysstat.8 \
+		doc/man/ibtracert.8 \
+		doc/man/perfquery.8 \
+		doc/man/saquery.8 \
+		doc/man/sminfo.8 \
+		doc/man/smpdump.8 \
+		doc/man/smpquery.8 \
+		doc/man/vendstat.8 \
+		doc/man/infiniband-diags.8 \
+		man/dump_lfts.8 \
+		man/dump_mfts.8
+
+# define this for the dist target
+compat_man_pages = man/ibdiscover.8 man/ibcheckerrors.8 man/ibcheckerrs.8 \
+		man/ibchecknet.8 man/ibchecknode.8 man/ibcheckport.8 \
+		man/ibcheckportstate.8 man/ibcheckportwidth.8 \
+		man/ibcheckstate.8 man/ibcheckwidth.8 \
+		man/ibswportwatch.8 \
+		man/ibprintswitch.8 man/ibprintca.8 man/ibdatacounts.8 \
+		man/ibdatacounters.8 man/ibprintrt.8 \
+		man/ibclearcounters.8 man/ibclearerrors.8
+
+# but only actually install them if specified
+if ENABLE_COMPAT_UTILS
+man_MANS += $(compat_man_pages)
+endif
 
 noinst_LIBRARIES = libcommon.a
 
 AM_CFLAGS = -Wall $(DBGFLAGS)
 LDADD = libcommon.a
 
-libcommon_a_SOURCES = src/ibdiag_common.c
+libcommon_a_SOURCES = src/ibdiag_common.c src/ibdiag_sa.c
 src_ibaddr_SOURCES = src/ibaddr.c
 src_ibnetdiscover_SOURCES = src/ibnetdiscover.c
 src_ibnetdiscover_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
@@ -60,27 +112,16 @@ src_ibsendtrap_SOURCES = src/ibsendtrap.c
 src_vendstat_SOURCES = src/vendstat.c
 src_mcm_rereg_test_SOURCES = src/mcm_rereg_test.c
 src_iblinkinfo_SOURCES = src/iblinkinfo.c
+src_ibccquery_SOURCES = src/ibccquery.c
+src_ibccconfig_SOURCES = src/ibccconfig.c
 src_iblinkinfo_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
 src_ibqueryerrors_SOURCES = src/ibqueryerrors.c
 src_ibqueryerrors_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
 src_ibcacheedit_SOURCES = src/ibcacheedit.c
 src_ibcacheedit_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
 
-man_MANS = man/ibaddr.8 man/ibcheckerrors.8 man/ibcheckerrs.8 \
-	man/ibchecknet.8 man/ibchecknode.8 man/ibcheckport.8 \
-	man/ibcheckportstate.8 man/ibcheckportwidth.8 man/ibcheckstate.8 \
-	man/ibcheckwidth.8 man/ibclearcounters.8 man/ibclearerrors.8 \
-	man/ibhosts.8 man/ibnetdiscover.8 man/ibnodes.8 man/ibping.8 \
-	man/ibportstate.8 man/ibroute.8 man/ibstat.8 man/ibstatus.8 \
-	man/ibswitches.8 man/ibtracert.8 man/perfquery.8 man/sminfo.8 \
-	man/smpdump.8 man/smpquery.8 man/saquery.8 man/vendstat.8 \
-	man/dump_lfts.8 man/dump_mfts.8 man/ibdiscover.8 man/ibsysstat.8 \
-	man/iblinkinfo.8 man/ibqueryerrors.8 man/ibswportwatch.8 \
-	man/ibprintswitch.8 man/ibprintca.8 man/ibfindnodesusing.8 \
-	man/ibdatacounts.8 man/ibdatacounters.8 \
-	man/ibrouters.8 man/ibprintrt.8 man/ibidsverify.8 \
-	man/check_lft_balance.8 man/ibcacheedit.8 \
-	man/infiniband-diags.8
+src_dump_fts_SOURCES = src/dump_fts.c
+src_dump_fts_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
 
 BUILT_SOURCES = ibdiag_version
 ibdiag_version:
@@ -94,8 +135,15 @@ ibdiag_version:
 		fi ; \
 	fi
 
-EXTRA_DIST = scripts include infiniband-diags.spec.in infiniband-diags.spec \
-	$(man_MANS) autogen.sh etc/error_thresholds
+if HAVE_DASH
+TESTS = tests/check_shells.sh
+endif
+
+EXTRA_DIST = doc scripts include infiniband-diags.spec.in infiniband-diags.spec \
+	$(man_MANS) $(compat_man_pages) autogen.sh etc/*
+
+distclean-local:
+	$(top_srcdir)/doc/generate clean
 
 dist-hook:
 	if [ -x $(top_srcdir)/gen_chlog.sh ] ; then \
@@ -109,3 +157,4 @@ install-data-hook:
 	fi
 	$(top_srcdir)/config/install-sh -c -m 444 $(top_srcdir)/scripts/IBswcountlimits.pm $(DESTDIR)/$(PERL_INSTALLDIR)/IBswcountlimits.pm
 	$(top_srcdir)/config/install-sh -c -m 444 $(top_srcdir)/etc/error_thresholds $(DESTDIR)/$(sysconfdir)/infiniband-diags
+	$(top_srcdir)/config/install-sh -c -m 400 $(top_srcdir)/etc/ibdiag.conf $(DESTDIR)/$(sysconfdir)/infiniband-diags

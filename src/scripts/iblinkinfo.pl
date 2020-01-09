@@ -37,4 +37,6 @@
 
 # this is now just a wrapper for the C based utility
 $str = join " ",@ARGV;
-exec "/usr/local/sbin/iblinkinfo $str";
+system "/usr/local/sbin/iblinkinfo $str";
+printf (STDERR "\n*** WARNING ***: this command has been replaced by iblinkinfo\n\n");
+

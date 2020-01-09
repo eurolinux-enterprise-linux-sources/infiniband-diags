@@ -84,16 +84,18 @@ static char *ibping_serv(void)
 
 	while ((umad = mad_receive_via(0, -1, srcport))) {
 
-		mad = umad_get_mad(umad);
-		data = (char *)mad + IB_VENDOR_RANGE2_DATA_OFFS;
+		if (umad_status(umad) == 0) {
+			mad = umad_get_mad(umad);
+			data = (char *)mad + IB_VENDOR_RANGE2_DATA_OFFS;
 
-		memcpy(data, host_and_domain, IB_VENDOR_RANGE2_DATA_SIZE);
+			memcpy(data, host_and_domain, IB_VENDOR_RANGE2_DATA_SIZE);
 
-		DEBUG("Pong: %s", data);
+			DEBUG("Pong: %s", data);
 
-		if (mad_respond_via(umad, 0, 0, srcport) < 0)
-			DEBUG("respond failed");
+			if (mad_respond_via(umad, 0, 0, srcport) < 0)
+				DEBUG("respond failed");
 
+		}
 		mad_free(umad);
 	}
 
@@ -186,8 +188,7 @@ static int process_opt(void *context, int ch, char *optarg)
 
 int main(int argc, char **argv)
 {
-	int mgmt_classes[3] =
-	    { IB_SMI_CLASS, IB_SMI_DIRECT_CLASS, IB_SA_CLASS };
+	int mgmt_classes[1] = { IB_SA_CLASS };
 	int ping_class = IB_VENDOR_OPENIB_PING_CLASS;
 	uint64_t rtt;
 	char *err;
@@ -201,7 +202,7 @@ int main(int argc, char **argv)
 	};
 	char usage_args[] = "<dest lid|guid>";
 
-	ibdiag_process_opts(argc, argv, NULL, "D", opts, process_opt,
+	ibdiag_process_opts(argc, argv, NULL, "DKy", opts, process_opt,
 			    usage_args, NULL);
 
 	argc -= optind;
@@ -210,29 +211,29 @@ int main(int argc, char **argv)
 	if (!argc && !server)
 		ibdiag_show_usage();
 
-	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 3);
+	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 1);
 	if (!srcport)
-		IBERROR("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+		IBEXIT("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
 
 	if (server) {
 		if (mad_register_server_via(ping_class, 0, 0, oui, srcport) < 0)
-			IBERROR("can't serve class %d on this port",
+			IBEXIT("can't serve class %d on this port",
 				ping_class);
 
 		get_host_and_domain(host_and_domain, sizeof host_and_domain);
 
 		if ((err = ibping_serv()))
-			IBERROR("ibping to %s: %s", portid2str(&portid), err);
+			IBEXIT("ibping to %s: %s", portid2str(&portid), err);
 		exit(0);
 	}
 
 	if (mad_register_client_via(ping_class, 0, srcport) < 0)
-		IBERROR("can't register ping class %d on this port",
+		IBEXIT("can't register ping class %d on this port",
 			ping_class);
 
-	if (ib_resolve_portid_str_via(&portid, argv[0], ibd_dest_type,
-				      ibd_sm_id, srcport) < 0)
-		IBERROR("can't resolve destination port %s", argv[0]);
+	if (resolve_portid_str(ibd_ca, ibd_ca_port, &portid, argv[0],
+			       ibd_dest_type, ibd_sm_id, srcport) < 0)
+		IBEXIT("can't resolve destination port %s", argv[0]);
 
 	signal(SIGINT, report);
 	signal(SIGTERM, report);

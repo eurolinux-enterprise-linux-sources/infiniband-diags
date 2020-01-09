@@ -1,8 +1,8 @@
 /*
  * Copyright (c) 2006,2007 The Regents of the University of California.
  * Copyright (c) 2004-2009 Voltaire, Inc. All rights reserved.
- * Copyright (c) 2002-2011 Mellanox Technologies LTD. All rights reserved.
- * Copyright (c) 1996-2003 Intel Corporation. All rights reserved.
+ * Copyright (c) 2002-2013 Mellanox Technologies LTD. All rights reserved.
+ * Copyright (c) 1996-2013 Intel Corporation. All rights reserved.
  * Copyright (c) 2009 HNR Consulting. All rights reserved.
  *
  * Produced at Lawrence Livermore National Laboratory.
@@ -58,8 +58,17 @@
 #include <complib/cl_nodenamemap.h>
 
 #include "ibdiag_common.h"
+#include "ibdiag_sa.h"
+
+#ifndef IB_PR_COMPMASK_SERVICEID
+#define IB_PR_COMPMASK_SERVICEID (IB_PR_COMPMASK_SERVICEID_MSB | \
+				  IB_PR_COMPMASK_SERVICEID_LSB)
+#endif
+
+#define UMAD_SA_CAP_MASK2_IS_MCAST_TOP_SUP (1 << 3)
 
 struct query_params {
+	uint64_t service_id;
 	ib_gid_t sgid, dgid, gid, mgid;
 	uint16_t slid, dlid, mlid;
 	uint32_t flow_label;
@@ -73,19 +82,19 @@ struct query_params {
 	uint8_t scope;
 	uint8_t join_state;
 	int proxy_join;
+	ib_class_port_info_t cpi;
 };
 
 struct query_cmd {
 	const char *name, *alias;
 	uint16_t query_type;
 	const char *usage;
-	int (*handler) (const struct query_cmd * q, bind_handle_t h,
+	int (*handler) (const struct query_cmd * q, struct sa_handle * h,
 			struct query_params * p, int argc, char *argv[]);
 };
 
 static char *node_name_map_file = NULL;
 static nn_map_t *node_name_map = NULL;
-static uint64_t smkey = 1;
 
 /**
  * Declare some globals because I don't want this to be too complex.
@@ -116,20 +125,6 @@ static unsigned valid_gid(ib_gid_t * gid)
 	return memcmp(&zero_gid, gid, sizeof(*gid));
 }
 
-static void format_buf(char *in, char *out, unsigned size)
-{
-	unsigned i;
-
-	for (i = 0; i < size - 3 && *in; i++) {
-		*out++ = *in;
-		if (*in++ == '\n' && *in) {
-			*out++ = '\t';
-			*out++ = '\t';
-		}
-	}
-	*out = '\0';
-}
-
 static void print_node_desc(ib_node_record_t * node_record)
 {
 	ib_node_info_t *p_ni = &(node_record->node_info);
@@ -145,7 +140,7 @@ static void print_node_desc(ib_node_record_t * node_record)
 	}
 }
 
-static void dump_node_record(void *data)
+static void dump_node_record(void *data, struct query_params *p)
 {
 	ib_node_record_t *nr = data;
 	ib_node_info_t *ni = &nr->node_info;
@@ -154,7 +149,7 @@ static void dump_node_record(void *data)
 				       (char *)nr->node_desc.description);
 
 	printf("NodeRecord dump:\n"
-	       "\t\tlid.....................0x%X\n"
+	       "\t\tlid.....................%u\n"
 	       "\t\treserved................0x%X\n"
 	       "\t\tbase_version............0x%X\n"
 	       "\t\tclass_version...........0x%X\n"
@@ -209,10 +204,10 @@ static void print_node_record(ib_node_record_t * node_record)
 		break;
 	}
 
-	dump_node_record(node_record);
+	dump_node_record(node_record, 0);
 }
 
-static void dump_path_record(void *data)
+static void dump_path_record(void *data, struct query_params *p)
 {
 	char gid_str[INET6_ADDRSTRLEN];
 	char gid_str2[INET6_ADDRSTRLEN];
@@ -246,11 +241,10 @@ static void dump_path_record(void *data)
 	       p_pr->resv2[3], p_pr->resv2[4], p_pr->resv2[5]);
 }
 
-static void dump_class_port_info(void *data)
+static void dump_class_port_info(ib_class_port_info_t *cpi)
 {
 	char gid_str[INET6_ADDRSTRLEN];
 	char gid_str2[INET6_ADDRSTRLEN];
-	ib_class_port_info_t *cpi = data;
 
 	printf("SA ClassPortInfo:\n"
 	       "\t\tBase version.............%d\n"
@@ -282,7 +276,7 @@ static void dump_class_port_info(void *data)
 	       cl_ntoh32(cpi->trap_qkey));
 }
 
-static void dump_portinfo_record(void *data)
+static void dump_portinfo_record(void *data, struct query_params *p)
 {
 	ib_portinfo_record_t *p_pir = data;
 	const ib_port_info_t *const p_pi = &p_pir->port_info;
@@ -298,24 +292,22 @@ static void dump_portinfo_record(void *data)
 	       cl_ntoh32(p_pi->capability_mask));
 }
 
-static void dump_one_portinfo_record(void *data)
+static void dump_one_portinfo_record(void *data, struct query_params *p)
 {
-	char buf[2300], buf2[4096];
 	ib_portinfo_record_t *pir = data;
 	ib_port_info_t *pi = &pir->port_info;
 
-	mad_dump_portinfo(buf, sizeof(buf), pi, sizeof(*pi));
-	format_buf(buf, buf2, sizeof(buf2));
 	printf("PortInfoRecord dump:\n"
-	       "\tRID:\n"
+	       "\tRID\n"
 	       "\t\tEndPortLid..............%u\n"
 	       "\t\tPortNum.................%u\n"
 	       "\t\tOptions.................0x%x\n"
-	       "\tPortInfo dump:\n\t\t%s",
-	       cl_ntoh16(pir->lid), pir->port_num, pir->options, buf2);
+	       "\tPortInfo dump:\n",
+	       cl_ntoh16(pir->lid), pir->port_num, pir->options);
+	dump_portinfo(pi, sizeof(*pi), 2);
 }
 
-static void dump_one_mcmember_record(void *data)
+static void dump_one_mcmember_record(void *data, struct query_params *p)
 {
 	char mgid[INET6_ADDRSTRLEN], gid[INET6_ADDRSTRLEN];
 	ib_member_rec_t *mr = data;
@@ -346,7 +338,7 @@ static void dump_one_mcmember_record(void *data)
 	       flow, hop, scope, join, mr->proxy_join);
 }
 
-static void dump_multicast_group_record(void *data)
+static void dump_multicast_group_record(void *data, struct query_params *p)
 {
 	char gid_str[INET6_ADDRSTRLEN];
 	ib_member_rec_t *p_mcmr = data;
@@ -365,7 +357,8 @@ static void dump_multicast_group_record(void *data)
 }
 
 static void dump_multicast_member_record(ib_member_rec_t *p_mcmr,
-					 struct sa_query_result *nr_result)
+					 struct sa_query_result *nr_result,
+					 struct query_params *params)
 {
 	char gid_str[INET6_ADDRSTRLEN];
 	char gid_str2[INET6_ADDRSTRLEN];
@@ -381,6 +374,8 @@ static void dump_multicast_member_record(ib_member_rec_t *p_mcmr,
 		ib_node_record_t *nr = sa_get_query_rec(nr_result->p_result_madw, i);
 		if (nr->node_info.port_guid ==
 		    p_mcmr->port_gid.unicast.interface_id) {
+			if(node_name != NULL)
+				free(node_name);
 			node_name = remap_node_name(node_name_map,
 						nr->node_info.node_guid,
 						(char *)nr->node_desc.description);
@@ -411,7 +406,7 @@ static void dump_multicast_member_record(ib_member_rec_t *p_mcmr,
 	free(node_name);
 }
 
-static void dump_service_record(void *data)
+static void dump_service_record(void *data, struct query_params *p)
 {
 	char gid[INET6_ADDRSTRLEN];
 	char buf_service_key[35];
@@ -471,7 +466,8 @@ static void dump_service_record(void *data)
 	       cl_ntoh64(p_sr->service_id),
 	       inet_ntop(AF_INET6, p_sr->service_gid.raw, gid, sizeof gid),
 	       cl_ntoh16(p_sr->service_pkey), cl_ntoh32(p_sr->service_lease),
-	       buf_service_key, buf_service_name,
+	       (show_keys ? buf_service_key : NOT_DISPLAYED_STR),
+               buf_service_name,
 	       p_sr->service_data8[0], p_sr->service_data8[1],
 	       p_sr->service_data8[2], p_sr->service_data8[3],
 	       p_sr->service_data8[4], p_sr->service_data8[5],
@@ -496,7 +492,68 @@ static void dump_service_record(void *data)
 	       cl_ntoh64(p_sr->service_data64[1]));
 }
 
-static void dump_inform_info_record(void *data)
+static void dump_sm_info_record(void *data, struct query_params *p)
+{
+	ib_sminfo_record_t *p_smr = data;
+	const ib_sm_info_t *const p_smi = &p_smr->sm_info;
+	uint8_t priority, state;
+	priority = ib_sminfo_get_priority(p_smi);
+	state = ib_sminfo_get_state(p_smi);
+
+	printf("SMInfoRecord dump:\n"
+	       "\t\tRID\n"
+	       "\t\tLID...................%u\n"
+	       "\t\tSMInfo dump:\n"
+	       "\t\tGUID..................0x%016" PRIx64 "\n"
+	       "\t\tSM_Key................0x%016" PRIx64 "\n"
+	       "\t\tActCount..............%u\n"
+	       "\t\tPriority..............%u\n"
+	       "\t\tSMState...............%u\n",
+	       cl_ntoh16(p_smr->lid),
+	       cl_ntoh64(p_smr->sm_info.guid),
+	       cl_ntoh64(p_smr->sm_info.sm_key),
+	       cl_ntoh32(p_smr->sm_info.act_count),
+	       priority, state);
+}
+
+static void dump_switch_info_record(void *data, struct query_params *p)
+{
+	ib_switch_info_record_t *p_sir = data;
+	uint32_t sa_cap_mask2 = ib_class_cap_mask2(&p->cpi);
+
+	printf("SwitchInfoRecord dump:\n"
+		"\t\tRID\n"
+		"\t\tLID.....................................%u\n"
+		"\t\tSwitchInfo dump:\n"
+		"\t\tLinearFDBCap............................0x%X\n"
+		"\t\tRandomFDBCap............................0x%X\n"
+		"\t\tMulticastFDBCap.........................0x%X\n"
+		"\t\tLinearFDBTop............................0x%X\n"
+		"\t\tDefaultPort.............................%u\n"
+		"\t\tDefaultMulticastPrimaryPort.............%u\n"
+		"\t\tDefaultMulticastNotPrimaryPort..........%u\n"
+		"\t\tLifeTimeValue/PortStateChange/OpSL2VL...0x%X\n"
+		"\t\tLIDsPerPort.............................0x%X\n"
+		"\t\tPartitionEnforcementCap.................0x%X\n"
+		"\t\tflags...................................0x%X\n",
+		cl_ntoh16(p_sir->lid),
+		cl_ntoh16(p_sir->switch_info.lin_cap),
+		cl_ntoh16(p_sir->switch_info.rand_cap),
+		cl_ntoh16(p_sir->switch_info.mcast_cap),
+		cl_ntoh16(p_sir->switch_info.lin_top),
+		p_sir->switch_info.def_port,
+		p_sir->switch_info.def_mcast_pri_port,
+		p_sir->switch_info.def_mcast_not_port,
+		p_sir->switch_info.life_state,
+		cl_ntoh16(p_sir->switch_info.lids_per_port),
+		cl_ntoh16(p_sir->switch_info.enforce_cap),
+		p_sir->switch_info.flags);
+	if (sa_cap_mask2 & UMAD_SA_CAP_MASK2_IS_MCAST_TOP_SUP)
+		printf("\t\tMulticastFDBTop.........................0x%X\n",
+		       cl_ntoh16(p_sir->switch_info.mcast_top));
+}
+
+static void dump_inform_info_record(void *data, struct query_params *p)
 {
 	char gid_str[INET6_ADDRSTRLEN];
 	char gid_str2[INET6_ADDRSTRLEN];
@@ -507,7 +564,7 @@ static void dump_inform_info_record(void *data)
 	ib_inform_info_get_qpn_resp_time(p_iir->inform_info.g_or_v.
 					 generic.qpn_resp_time_val, &qpn,
 					 &resp_time_val);
-	if (p_iir->inform_info.is_generic)
+	if (p_iir->inform_info.is_generic) {
 		printf("InformInfoRecord dump:\n"
 		       "\t\tRID\n"
 		       "\t\tSubscriberGID...........%s\n"
@@ -519,10 +576,7 @@ static void dump_inform_info_record(void *data)
 		       "\t\tis_generic..............0x%X\n"
 		       "\t\tsubscribe...............0x%X\n"
 		       "\t\ttrap_type...............0x%X\n"
-		       "\t\ttrap_num................%u\n"
-		       "\t\tqpn.....................0x%06X\n"
-		       "\t\tresp_time_val...........0x%X\n"
-		       "\t\tnode_type...............0x%06X\n",
+		       "\t\ttrap_num................%u\n",
 		       inet_ntop(AF_INET6, p_iir->subscriber_gid.raw, gid_str,
 				 sizeof gid_str),
 		       cl_ntoh16(p_iir->subscriber_enum),
@@ -533,11 +587,20 @@ static void dump_inform_info_record(void *data)
 		       p_iir->inform_info.is_generic,
 		       p_iir->inform_info.subscribe,
 		       cl_ntoh16(p_iir->inform_info.trap_type),
-		       cl_ntoh16(p_iir->inform_info.g_or_v.generic.trap_num),
-		       cl_ntoh32(qpn), resp_time_val,
+		       cl_ntoh16(p_iir->inform_info.g_or_v.generic.trap_num));
+		if (show_keys) {
+			printf("\t\tqpn.....................0x%06X\n",
+			       cl_ntoh32(qpn));
+		} else {
+			printf("\t\tqpn....................."
+			       NOT_DISPLAYED_STR "\n");
+		}
+		printf("\t\tresp_time_val...........0x%X\n"
+		       "\t\tnode_type...............0x%06X\n",
+		       resp_time_val,
 		       cl_ntoh32(ib_inform_info_get_prod_type
 				 (&p_iir->inform_info)));
-	else
+	} else {
 		printf("InformInfoRecord dump:\n"
 		       "\t\tRID\n"
 		       "\t\tSubscriberGID...........%s\n"
@@ -549,10 +612,7 @@ static void dump_inform_info_record(void *data)
 		       "\t\tis_generic..............0x%X\n"
 		       "\t\tsubscribe...............0x%X\n"
 		       "\t\ttrap_type...............0x%X\n"
-		       "\t\tdev_id..................0x%X\n"
-		       "\t\tqpn.....................0x%06X\n"
-		       "\t\tresp_time_val...........0x%X\n"
-		       "\t\tvendor_id...............0x%06X\n",
+		       "\t\tdev_id..................0x%X\n",
 		       inet_ntop(AF_INET6, p_iir->subscriber_gid.raw, gid_str,
 				 sizeof gid_str),
 		       cl_ntoh16(p_iir->subscriber_enum),
@@ -563,13 +623,23 @@ static void dump_inform_info_record(void *data)
 		       p_iir->inform_info.is_generic,
 		       p_iir->inform_info.subscribe,
 		       cl_ntoh16(p_iir->inform_info.trap_type),
-		       cl_ntoh16(p_iir->inform_info.g_or_v.vend.dev_id),
-		       cl_ntoh32(qpn), resp_time_val,
+		       cl_ntoh16(p_iir->inform_info.g_or_v.vend.dev_id));
+		if (show_keys) {
+			printf("\t\tqpn.....................0x%06X\n",
+			       cl_ntoh32(qpn));
+		} else {
+			printf("\t\tqpn....................."
+			       NOT_DISPLAYED_STR "\n");
+		}
+		printf("\t\tresp_time_val...........0x%X\n"
+		       "\t\tvendor_id...............0x%06X\n",
+		       resp_time_val,
 		       cl_ntoh32(ib_inform_info_get_prod_type
 				 (&p_iir->inform_info)));
+	}
 }
 
-static void dump_one_link_record(void *data)
+static void dump_one_link_record(void *data, struct query_params *p)
 {
 	ib_link_record_t *lr = data;
 	printf("LinkRecord dump:\n"
@@ -581,7 +651,7 @@ static void dump_one_link_record(void *data)
 	       lr->to_port_num, cl_ntoh16(lr->to_lid));
 }
 
-static void dump_one_slvl_record(void *data)
+static void dump_one_slvl_record(void *data, struct query_params *p)
 {
 	ib_slvl_table_record_t *slvl = data;
 	ib_slvl_table_t *t = &slvl->slvl_tbl;
@@ -603,7 +673,7 @@ static void dump_one_slvl_record(void *data)
 	       ib_slvl_table_get(t, 14), ib_slvl_table_get(t, 15));
 }
 
-static void dump_one_vlarb_record(void *data)
+static void dump_one_vlarb_record(void *data, struct query_params *p)
 {
 	ib_vl_arb_table_record_t *vlarb = data;
 	ib_vl_arb_element_t *e = vlarb->vl_arb_tbl.vl_entry;
@@ -630,7 +700,7 @@ static void dump_one_vlarb_record(void *data)
 		       e[i + 15].weight);
 }
 
-static void dump_one_pkey_tbl_record(void *data)
+static void dump_one_pkey_tbl_record(void *data, struct query_params *params)
 {
 	ib_pkey_table_record_t *pktr = data;
 	ib_net16_t *p = pktr->pkey_tbl.pkey_entry;
@@ -651,7 +721,7 @@ static void dump_one_pkey_tbl_record(void *data)
 	printf("\n");
 }
 
-static void dump_one_lft_record(void *data)
+static void dump_one_lft_record(void *data, struct query_params *p)
 {
 	ib_lft_record_t *lftr = data;
 	unsigned block = cl_ntoh16(lftr->block_num);
@@ -665,7 +735,7 @@ static void dump_one_lft_record(void *data)
 	printf("\n");
 }
 
-static void dump_one_guidinfo_record(void *data)
+static void dump_one_guidinfo_record(void *data, struct query_params *p)
 {
 	ib_guidinfo_record_t *gir = data;
 	printf("GUIDInfo Record dump:\n"
@@ -690,7 +760,7 @@ static void dump_one_guidinfo_record(void *data)
 	       cl_ntoh64(gir->guid_info.guid[7]));
 }
 
-static void dump_one_mft_record(void *data)
+static void dump_one_mft_record(void *data, struct query_params *p)
 {
 	ib_mft_record_t *mftr = data;
 	unsigned position = cl_ntoh16(mftr->position_block_num) >> 12;
@@ -712,27 +782,30 @@ static void dump_one_mft_record(void *data)
 	printf("\n");
 }
 
-static void dump_results(struct sa_query_result *r, void (*dump_func) (void *))
+static void dump_results(struct sa_query_result *r,
+			 void (*dump_func) (void *, struct query_params *),
+			 struct query_params *p)
 {
 	unsigned i;
 	for (i = 0; i < r->result_cnt; i++) {
 		void *data = sa_get_query_rec(r->p_result_madw, i);
-		dump_func(data);
+		dump_func(data, p);
 	}
 }
 
 /**
  * Get any record(s)
  */
-static int get_any_records(bind_handle_t h,
+static int get_any_records(struct sa_handle * h,
 			   uint16_t attr_id, uint32_t attr_mod,
-			   ib_net64_t comp_mask, void *attr, uint64_t sm_key,
+			   ib_net64_t comp_mask, void *attr,
+			   size_t attr_size,
 			   struct sa_query_result *result)
 {
 	int ret = sa_query(h, IB_MAD_METHOD_GET_TABLE, attr_id, attr_mod,
-			   cl_ntoh64(comp_mask), sm_key, attr, result);
+			   cl_ntoh64(comp_mask), ibd_sakey, attr, attr_size, result);
 	if (ret) {
-		fprintf(stderr, "Query SA failed: %s\n", ib_get_err_str(ret));
+		fprintf(stderr, "Query SA failed: %s\n", strerror(ret));
 		return ret;
 	}
 
@@ -744,18 +817,21 @@ static int get_any_records(bind_handle_t h,
 	return ret;
 }
 
-static int get_and_dump_any_records(bind_handle_t h, uint16_t attr_id,
+static int get_and_dump_any_records(struct sa_handle * h, uint16_t attr_id,
 				    uint32_t attr_mod, ib_net64_t comp_mask,
-				    void *attr, uint64_t sm_key,
-				    void (*dump_func) (void *))
+				    void *attr,
+				    size_t attr_size,
+				    void (*dump_func) (void *,
+				    		       struct query_params *),
+				    struct query_params *p)
 {
 	struct sa_query_result result;
 	int ret = get_any_records(h, attr_id, attr_mod, comp_mask, attr,
-				  sm_key, &result);
+				  attr_size, &result);
 	if (ret)
 		return ret;
 
-	dump_results(&result, dump_func);
+	dump_results(&result, dump_func, p);
 	sa_free_result_mad(&result);
 	return 0;
 }
@@ -763,22 +839,23 @@ static int get_and_dump_any_records(bind_handle_t h, uint16_t attr_id,
 /**
  * Get all the records available for requested query type.
  */
-static int get_all_records(bind_handle_t h, uint16_t attr_id, int trusted,
+static int get_all_records(struct sa_handle * h, uint16_t attr_id,
 			   struct sa_query_result *result)
 {
-	return get_any_records(h, attr_id, 0, 0, NULL, trusted ? smkey : 0,
-			       result);
+	return get_any_records(h, attr_id, 0, 0, NULL, 0, result);
 }
 
-static int get_and_dump_all_records(bind_handle_t h, uint16_t attr_id,
-				    int trusted, void (*dump_func) (void *))
+static int get_and_dump_all_records(struct sa_handle * h, uint16_t attr_id,
+				    void (*dump_func) (void *,
+						       struct query_params *p),
+				    struct query_params *p)
 {
 	struct sa_query_result result;
-	int ret = get_all_records(h, attr_id, 0, &result);
+	int ret = get_all_records(h, attr_id, &result);
 	if (ret)
 		return ret;
 
-	dump_results(&result, dump_func);
+	dump_results(&result, dump_func, p);
 	sa_free_result_mad(&result);
 	return ret;
 }
@@ -786,28 +863,26 @@ static int get_and_dump_all_records(bind_handle_t h, uint16_t attr_id,
 /**
  * return the lid from the node descriptor (name) supplied
  */
-static int get_lid_from_name(bind_handle_t h, const char *name, uint16_t * lid)
+static int get_lid_from_name(struct sa_handle * h, const char *name, uint16_t * lid)
 {
 	ib_node_record_t *node_record = NULL;
-	ib_node_info_t *p_ni = NULL;
 	unsigned i;
 	int ret;
 	struct sa_query_result result;
 
-	ret = get_all_records(h, IB_SA_ATTR_NODERECORD, 0, &result);
+	ret = get_all_records(h, IB_SA_ATTR_NODERECORD, &result);
 	if (ret)
 		return ret;
 
-	ret = IB_NOT_FOUND;
+	ret = ENONET;
 	for (i = 0; i < result.result_cnt; i++) {
 		node_record = sa_get_query_rec(result.p_result_madw, i);
-		p_ni = &(node_record->node_info);
 		if (name
 		    && strncmp(name, (char *)node_record->node_desc.description,
 			       sizeof(node_record->node_desc.description)) ==
 		    0) {
 			*lid = cl_ntoh16(node_record->lid);
-			ret = IB_SUCCESS;
+			ret = 0;
 			break;
 		}
 	}
@@ -815,16 +890,18 @@ static int get_lid_from_name(bind_handle_t h, const char *name, uint16_t * lid)
 	return ret;
 }
 
-static uint16_t get_lid(bind_handle_t h, const char *name)
+static uint16_t get_lid(struct sa_handle * h, const char *name)
 {
+	int rc = 0;
 	uint16_t rc_lid = 0;
 
 	if (!name)
 		return 0;
 	if (isalpha(name[0])) {
-		if (get_lid_from_name(h, name, &rc_lid) != IB_SUCCESS) {
-			fprintf(stderr, "Failed to find lid for \"%s\"\n", name);
-			exit(EINVAL);
+		if ((rc = get_lid_from_name(h, name, &rc_lid)) != 0) {
+			fprintf(stderr, "Failed to find lid for \"%s\": %s\n",
+				name, strerror(rc));
+			exit(rc);
 		}
 	} else {
 		long val;
@@ -840,7 +917,17 @@ static uint16_t get_lid(bind_handle_t h, const char *name)
 	return rc_lid;
 }
 
-static int parse_lid_and_ports(bind_handle_t h,
+static int parse_iir_subscriber_gid(char *str, ib_inform_info_record_t *ir)
+{
+       int rc = inet_pton(AF_INET6,str,&(ir->subscriber_gid.raw));
+       if(rc < 1){
+          fprintf(stderr, "Invalid SubscriberGID specified: \"%s\"\n",str);
+          exit(EINVAL);
+       }
+       return rc;
+}
+
+static int parse_lid_and_ports(struct sa_handle * h,
 			       char *str, int *lid, int *port1, int *port2)
 {
 	char *p, *e;
@@ -883,7 +970,7 @@ static int parse_lid_and_ports(bind_handle_t h,
 /*
  * Get the portinfo records available with IsSM or IsSMdisabled CapabilityMask bit on.
  */
-static int get_issm_records(bind_handle_t h, ib_net32_t capability_mask,
+static int get_issm_records(struct sa_handle * h, ib_net32_t capability_mask,
 			    struct sa_query_result *result)
 {
 	ib_portinfo_record_t attr;
@@ -892,16 +979,16 @@ static int get_issm_records(bind_handle_t h, ib_net32_t capability_mask,
 	attr.port_info.capability_mask = capability_mask;
 
 	return get_any_records(h, IB_SA_ATTR_PORTINFORECORD, 1 << 31,
-			       IB_PIR_COMPMASK_CAPMASK, &attr, 0, result);
+			       IB_PIR_COMPMASK_CAPMASK, &attr, sizeof(attr), result);
 }
 
-static int print_node_records(bind_handle_t h)
+static int print_node_records(struct sa_handle * h, struct query_params *p)
 {
 	unsigned i;
 	int ret;
 	struct sa_query_result result;
 
-	ret = get_all_records(h, IB_SA_ATTR_NODERECORD, 0, &result);
+	ret = get_all_records(h, IB_SA_ATTR_NODERECORD, &result);
 	if (ret)
 		return ret;
 
@@ -923,9 +1010,21 @@ static int print_node_records(bind_handle_t h)
 			if (requested_guid == cl_ntoh64(p_ni->port_guid))
 				print_node_record(node_record);
 		} else {
+			ib_node_info_t *p_ni = &(node_record->node_info);
+			ib_node_desc_t *p_nd = &(node_record->node_desc);
+			char *name;
+
+			name = remap_node_name (node_name_map,
+						cl_ntoh64(p_ni->node_guid),
+						(char *)p_nd->description);
+
 			if (!requested_name ||
 			    (strncmp(requested_name,
 				     (char *)node_record->node_desc.description,
+				     sizeof(node_record->
+					    node_desc.description)) == 0) ||
+			    (strncmp(requested_name,
+				     name,
 				     sizeof(node_record->
 					    node_desc.description)) == 0)) {
 				print_node_record(node_record);
@@ -934,34 +1033,15 @@ static int print_node_records(bind_handle_t h)
 					exit(0);
 				}
 			}
+
+			free(name);
 		}
 	}
 	sa_free_result_mad(&result);
 	return ret;
 }
 
-static int get_print_class_port_info(bind_handle_t h)
-{
-	struct sa_query_result result;
-	int ret = sa_query(h, IB_MAD_METHOD_GET, CLASS_PORT_INFO, 0, 0,
-			   0, NULL, &result);
-	if (ret) {
-		fprintf(stderr, "ERROR: Query SA failed: %s\n",
-			ib_get_err_str(ret));
-		return ret;
-	}
-	if (result.status != IB_SA_MAD_STATUS_SUCCESS) {
-		sa_report_err(result.status);
-		ret = EIO;
-		goto Exit;
-	}
-	dump_results(&result, dump_class_port_info);
-Exit:
-	sa_free_result_mad(&result);
-	return ret;
-}
-
-static int query_path_records(const struct query_cmd *q, bind_handle_t h,
+static int query_path_records(const struct query_cmd *q, struct sa_handle * h,
 			      struct query_params *p, int argc, char *argv[])
 {
 	ib_path_rec_t pr;
@@ -971,6 +1051,7 @@ static int query_path_records(const struct query_cmd *q, bind_handle_t h,
 	uint8_t reversible = 0;
 
 	memset(&pr, 0, sizeof(pr));
+	CHECK_AND_SET_VAL(p->service_id, 64, 0, pr.service_id, PR, SERVICEID);
 	CHECK_AND_SET_GID(p->sgid, pr.sgid, PR, SGID);
 	CHECK_AND_SET_GID(p->dgid, pr.dgid, PR, DGID);
 	CHECK_AND_SET_VAL(p->slid, 16, 0, pr.slid, PR, SLID);
@@ -992,10 +1073,10 @@ static int query_path_records(const struct query_cmd *q, bind_handle_t h,
 				  SELEC);
 
 	return get_and_dump_any_records(h, IB_SA_ATTR_PATHRECORD, 0, comp_mask,
-					&pr, 0, dump_path_record);
+					&pr, sizeof(pr), dump_path_record, p);
 }
 
-static int print_issm_records(bind_handle_t h)
+static int print_issm_records(struct sa_handle * h, struct query_params *p)
 {
 	struct sa_query_result result;
 	int ret = 0;
@@ -1006,7 +1087,7 @@ static int print_issm_records(bind_handle_t h)
 		return (ret);
 
 	printf("IsSM ports\n");
-	dump_results(&result, dump_portinfo_record);
+	dump_results(&result, dump_portinfo_record, p);
 	sa_free_result_mad(&result);
 
 	/* Now, get IsSMdisabled records */
@@ -1015,24 +1096,25 @@ static int print_issm_records(bind_handle_t h)
 		return (ret);
 
 	printf("\nIsSMdisabled ports\n");
-	dump_results(&result, dump_portinfo_record);
+	dump_results(&result, dump_portinfo_record, p);
 	sa_free_result_mad(&result);
 
 	return (ret);
 }
 
-static int print_multicast_member_records(bind_handle_t h)
+static int print_multicast_member_records(struct sa_handle * h,
+					struct query_params *params)
 {
 	struct sa_query_result mc_group_result;
 	struct sa_query_result nr_result;
 	int ret;
 	unsigned i;
 
-	ret = get_all_records(h, IB_SA_ATTR_MCRECORD, 1, &mc_group_result);
+	ret = get_all_records(h, IB_SA_ATTR_MCRECORD, &mc_group_result);
 	if (ret)
 		return ret;
 
-	ret = get_all_records(h, IB_SA_ATTR_NODERECORD, 0, &nr_result);
+	ret = get_all_records(h, IB_SA_ATTR_NODERECORD, &nr_result);
 	if (ret)
 		goto return_mc;
 
@@ -1040,7 +1122,7 @@ static int print_multicast_member_records(bind_handle_t h)
 		ib_member_rec_t *rec = (ib_member_rec_t *)
 				sa_get_query_rec(mc_group_result.p_result_madw,
 					      i);
-		dump_multicast_member_record(rec, &nr_result);
+		dump_multicast_member_record(rec, &nr_result, params);
 	}
 
 	sa_free_result_mad(&nr_result);
@@ -1051,19 +1133,21 @@ return_mc:
 	return ret;
 }
 
-static int print_multicast_group_records(bind_handle_t h)
+static int print_multicast_group_records(struct sa_handle * h,
+					 struct query_params *p)
 {
-	return get_and_dump_all_records(h, IB_SA_ATTR_MCRECORD, 0,
-					dump_multicast_group_record);
+	return get_and_dump_all_records(h, IB_SA_ATTR_MCRECORD,
+					dump_multicast_group_record, p);
 }
 
-static int query_class_port_info(const struct query_cmd *q, bind_handle_t h,
+static int query_class_port_info(const struct query_cmd *q, struct sa_handle * h,
 				 struct query_params *p, int argc, char *argv[])
 {
-	return get_print_class_port_info(h);
+	dump_class_port_info(&p->cpi);
+	return (0);
 }
 
-static int query_node_records(const struct query_cmd *q, bind_handle_t h,
+static int query_node_records(const struct query_cmd *q, struct sa_handle * h,
 			      struct query_params *p, int argc, char *argv[])
 {
 	ib_node_record_t nr;
@@ -1077,11 +1161,11 @@ static int query_node_records(const struct query_cmd *q, bind_handle_t h,
 	CHECK_AND_SET_VAL(lid, 16, 0, nr.lid, NR, LID);
 
 	return get_and_dump_any_records(h, IB_SA_ATTR_NODERECORD, 0, comp_mask,
-					&nr, 0, dump_node_record);
+					&nr, sizeof(nr), dump_node_record, p);
 }
 
 static int query_portinfo_records(const struct query_cmd *q,
-				  bind_handle_t h, struct query_params *p,
+				  struct sa_handle * h, struct query_params *p,
 				  int argc, char *argv[])
 {
 	ib_portinfo_record_t pir;
@@ -1097,12 +1181,12 @@ static int query_portinfo_records(const struct query_cmd *q,
 	CHECK_AND_SET_VAL(options, 8, -1, pir.options, PIR, OPTIONS);
 
 	return get_and_dump_any_records(h, IB_SA_ATTR_PORTINFORECORD, 0,
-					comp_mask, &pir, 0,
-					dump_one_portinfo_record);
+					comp_mask, &pir, sizeof(pir),
+					dump_one_portinfo_record, p);
 }
 
 static int query_mcmember_records(const struct query_cmd *q,
-				  bind_handle_t h, struct query_params *p,
+				  struct sa_handle * h, struct query_params *p,
 				  int argc, char *argv[])
 {
 	ib_member_rec_t mr;
@@ -1130,25 +1214,75 @@ static int query_mcmember_records(const struct query_cmd *q,
 	CHECK_AND_SET_VAL(p->proxy_join, 8, -1, mr.proxy_join, MCR, PROXY);
 
 	return get_and_dump_any_records(h, IB_SA_ATTR_MCRECORD, 0, comp_mask,
-					&mr, smkey, dump_one_mcmember_record);
+					&mr, sizeof(mr), dump_one_mcmember_record, p);
 }
 
-static int query_service_records(const struct query_cmd *q, bind_handle_t h,
+static int query_service_records(const struct query_cmd *q, struct sa_handle * h,
 				 struct query_params *p, int argc, char *argv[])
 {
-	return get_and_dump_all_records(h, IB_SA_ATTR_SERVICERECORD, 0,
-					dump_service_record);
+	return get_and_dump_all_records(h, IB_SA_ATTR_SERVICERECORD,
+					dump_service_record, p);
 }
 
-static int query_informinfo_records(const struct query_cmd *q,
-				    bind_handle_t h, struct query_params *p,
+static int query_sm_info_records(const struct query_cmd *q,
+				 struct sa_handle * h, struct query_params *p,
+				 int argc, char *argv[])
+{
+	ib_sminfo_record_t smir;
+	ib_net64_t comp_mask = 0;
+	int lid = 0;
+
+	if (argc > 0)
+		parse_lid_and_ports(h, argv[0], &lid, NULL, NULL);
+
+	memset(&smir, 0, sizeof(smir));
+	CHECK_AND_SET_VAL(lid, 16, 0, smir.lid, SMIR, LID);
+
+	return get_and_dump_any_records(h, IB_SA_ATTR_SMINFORECORD, 0,
+					comp_mask, &smir, sizeof(smir),
+					dump_sm_info_record, p);
+}
+
+static int query_switchinfo_records(const struct query_cmd *q,
+				struct sa_handle * h, struct query_params *p,
+				int argc, char *argv[])
+{
+	ib_switch_info_record_t swir;
+	ib_net64_t comp_mask = 0;
+	int lid = 0;
+
+	if (argc > 0)
+		parse_lid_and_ports(h, argv[0], &lid, NULL, NULL);
+
+	memset(&swir, 0, sizeof(swir));
+	CHECK_AND_SET_VAL(lid, 16, 0, swir.lid, SWIR, LID);
+
+	return get_and_dump_any_records(h, IB_SA_ATTR_SWITCHINFORECORD, 0,
+					comp_mask, &swir, sizeof(swir),
+					dump_switch_info_record, p);
+}
+
+static int query_inform_info_records(const struct query_cmd *q,
+				    struct sa_handle * h, struct query_params *p,
 				    int argc, char *argv[])
 {
-	return get_and_dump_all_records(h, IB_SA_ATTR_INFORMINFORECORD, 0,
-					dump_inform_info_record);
+       int rc = 0;
+       ib_inform_info_record_t ir;
+       ib_net64_t comp_mask = 0;
+       memset(&ir, 0, sizeof(ir));
+
+       if (argc > 0) {
+           comp_mask = IB_IIR_COMPMASK_SUBSCRIBERGID;
+           if((rc = parse_iir_subscriber_gid(argv[0], &ir)) < 1)
+                 return rc;
+       }
+
+       return get_and_dump_any_records(h, IB_SA_ATTR_INFORMINFORECORD, 0, comp_mask,
+				       &ir, sizeof(ir), dump_inform_info_record, p);
+
 }
 
-static int query_link_records(const struct query_cmd *q, bind_handle_t h,
+static int query_link_records(const struct query_cmd *q, struct sa_handle * h,
 			      struct query_params *p, int argc, char *argv[])
 {
 	ib_link_record_t lr;
@@ -1168,10 +1302,10 @@ static int query_link_records(const struct query_cmd *q, bind_handle_t h,
 	CHECK_AND_SET_VAL(to_port, 8, -1, lr.to_port_num, LR, TO_PORT);
 
 	return get_and_dump_any_records(h, IB_SA_ATTR_LINKRECORD, 0, comp_mask,
-					&lr, 0, dump_one_link_record);
+					&lr, sizeof(lr), dump_one_link_record, p);
 }
 
-static int query_sl2vl_records(const struct query_cmd *q, bind_handle_t h,
+static int query_sl2vl_records(const struct query_cmd *q, struct sa_handle * h,
 			       struct query_params *p, int argc, char *argv[])
 {
 	ib_slvl_table_record_t slvl;
@@ -1187,11 +1321,11 @@ static int query_sl2vl_records(const struct query_cmd *q, bind_handle_t h,
 	CHECK_AND_SET_VAL(out_port, 8, -1, slvl.out_port_num, SLVL, OUT_PORT);
 
 	return get_and_dump_any_records(h, IB_SA_ATTR_SL2VLTABLERECORD, 0,
-					comp_mask, &slvl, 0,
-					dump_one_slvl_record);
+					comp_mask, &slvl, sizeof(slvl),
+					dump_one_slvl_record, p);
 }
 
-static int query_vlarb_records(const struct query_cmd *q, bind_handle_t h,
+static int query_vlarb_records(const struct query_cmd *q, struct sa_handle * h,
 			       struct query_params *p, int argc, char *argv[])
 {
 	ib_vl_arb_table_record_t vlarb;
@@ -1207,12 +1341,12 @@ static int query_vlarb_records(const struct query_cmd *q, bind_handle_t h,
 	CHECK_AND_SET_VAL(block, 8, -1, vlarb.block_num, VLA, BLOCK);
 
 	return get_and_dump_any_records(h, IB_SA_ATTR_VLARBTABLERECORD, 0,
-					comp_mask, &vlarb, 0,
-					dump_one_vlarb_record);
+					comp_mask, &vlarb, sizeof(vlarb),
+					dump_one_vlarb_record, p);
 }
 
 static int query_pkey_tbl_records(const struct query_cmd *q,
-				  bind_handle_t h, struct query_params *p,
+				  struct sa_handle * h, struct query_params *p,
 				  int argc, char *argv[])
 {
 	ib_pkey_table_record_t pktr;
@@ -1228,11 +1362,11 @@ static int query_pkey_tbl_records(const struct query_cmd *q,
 	CHECK_AND_SET_VAL(block, 16, -1, pktr.block_num, PKEY, BLOCK);
 
 	return get_and_dump_any_records(h, IB_SA_ATTR_PKEYTABLERECORD, 0,
-					comp_mask, &pktr, smkey,
-					dump_one_pkey_tbl_record);
+					comp_mask, &pktr, sizeof(pktr),
+					dump_one_pkey_tbl_record, p);
 }
 
-static int query_lft_records(const struct query_cmd *q, bind_handle_t h,
+static int query_lft_records(const struct query_cmd *q, struct sa_handle * h,
 			     struct query_params *p, int argc, char *argv[])
 {
 	ib_lft_record_t lftr;
@@ -1247,10 +1381,10 @@ static int query_lft_records(const struct query_cmd *q, bind_handle_t h,
 	CHECK_AND_SET_VAL(block, 16, -1, lftr.block_num, LFTR, BLOCK);
 
 	return get_and_dump_any_records(h, IB_SA_ATTR_LFTRECORD, 0, comp_mask,
-					&lftr, 0, dump_one_lft_record);
+					&lftr, sizeof(lftr), dump_one_lft_record, p);
 }
 
-static int query_guidinfo_records(const struct query_cmd *q, bind_handle_t h,
+static int query_guidinfo_records(const struct query_cmd *q, struct sa_handle * h,
 				  struct query_params *p, int argc, char *argv[])
 {
 	ib_guidinfo_record_t gir;
@@ -1265,11 +1399,11 @@ static int query_guidinfo_records(const struct query_cmd *q, bind_handle_t h,
 	CHECK_AND_SET_VAL(block, 8, -1, gir.block_num, GIR, BLOCKNUM);
 
 	return get_and_dump_any_records(h, IB_SA_ATTR_GUIDINFORECORD, 0,
-					comp_mask, &gir, 0,
-					dump_one_guidinfo_record);
+					comp_mask, &gir, sizeof(gir),
+					dump_one_guidinfo_record, p);
 }
 
-static int query_mft_records(const struct query_cmd *q, bind_handle_t h,
+static int query_mft_records(const struct query_cmd *q, struct sa_handle * h,
 			     struct query_params *p, int argc, char *argv[])
 {
 	ib_mft_record_t mftr;
@@ -1288,7 +1422,30 @@ static int query_mft_records(const struct query_cmd *q, bind_handle_t h,
 	mftr.position_block_num |= cl_hton16(pos << 12);
 
 	return get_and_dump_any_records(h, IB_SA_ATTR_MFTRECORD, 0, comp_mask,
-					&mftr, 0, dump_one_mft_record);
+					&mftr, sizeof(mftr), dump_one_mft_record, p);
+}
+
+static int query_sa_cpi(struct sa_handle *h, struct query_params *query_params)
+{
+	ib_class_port_info_t *cpi;
+	struct sa_query_result result;
+	int ret = sa_query(h, IB_MAD_METHOD_GET, CLASS_PORT_INFO, 0, 0,
+		       ibd_sakey, NULL, 0, &result);
+	if (ret) {
+		fprintf(stderr, "ERROR: Query SA failed: %s\n", strerror(ret));
+		return ret;
+	}
+
+	if (result.status != IB_SA_MAD_STATUS_SUCCESS) {
+		sa_report_err(result.status);
+		ret = EIO;
+		goto Exit;
+	}
+	cpi = sa_get_query_rec(result.p_result_madw, 0);
+	memcpy(&query_params->cpi, cpi, sizeof(query_params->cpi));
+Exit:
+	sa_free_result_mad(&result);
+	return (0);
 }
 
 static const struct query_cmd query_cmds[] = {
@@ -1305,7 +1462,7 @@ static const struct query_cmd query_cmds[] = {
 	{"VLArbitrationTableRecord", "VLAR", IB_SA_ATTR_VLARBTABLERECORD,
 	 "[[lid]/[port]/[block]]", query_vlarb_records},
 	{"InformInfoRecord", "IIR", IB_SA_ATTR_INFORMINFORECORD,
-	 NULL, query_informinfo_records},
+	 "[subscriber_gid]", query_inform_info_records},
 	{"LinkRecord", "LR", IB_SA_ATTR_LINKRECORD,
 	 "[[from_lid]/[from_port]] [[to_lid]/[to_port]]", query_link_records},
 	{"ServiceRecord", "SR", IB_SA_ATTR_SERVICERECORD,
@@ -1320,17 +1477,20 @@ static const struct query_cmd query_cmds[] = {
 	 "[[mlid]/[position]/[block]]", query_mft_records},
 	{"GUIDInfoRecord", "GIR", IB_SA_ATTR_GUIDINFORECORD,
 	 "[[lid]/[block]]", query_guidinfo_records},
+	{"SwitchInfoRecord", "SWIR", IB_SA_ATTR_SWITCHINFORECORD,
+	 "[lid]", query_switchinfo_records},
+	{"SMInfoRecord", "SMIR", IB_SA_ATTR_SMINFORECORD,
+	 "[lid]", query_sm_info_records},
 	{0}
 };
 
 static const struct query_cmd *find_query(const char *name)
 {
 	const struct query_cmd *q;
-	unsigned len = strlen(name);
 
 	for (q = query_cmds; q->name; q++)
-		if (!strncasecmp(name, q->name, len) ||
-		    (q->alias && !strncasecmp(name, q->alias, len)))
+		if (!strcasecmp(name, q->name) ||
+		    (q->alias && !strcasecmp(name, q->alias)))
 			return q;
 
 	return NULL;
@@ -1400,7 +1560,7 @@ static int process_opt(void *context, int ch, char *optarg)
 			fprintf(stderr, "cannot get SM_Key\n");
 			ibdiag_show_usage();
 		}
-		smkey = strtoull(optarg, NULL, 0);
+		ibd_sakey = strtoull(optarg, NULL, 0);
 		break;
 	case 'p':
 		query_type = IB_SA_ATTR_PATHRECORD;
@@ -1530,6 +1690,9 @@ static int process_opt(void *context, int ch, char *optarg)
 	case 'X':
 		p->proxy_join = strtoul(optarg, NULL, 0);
 		break;
+	case 22:
+		p->service_id = strtoull(optarg, NULL, 0);
+		break;
 	default:
 		return -1;
 	}
@@ -1538,8 +1701,9 @@ static int process_opt(void *context, int ch, char *optarg)
 
 int main(int argc, char **argv)
 {
+	int sa_cpi_required = 0;
 	char usage_args[1024];
-	bind_handle_t h;
+	struct sa_handle * h;
 	struct query_params params;
 	const struct query_cmd *q;
 	int status;
@@ -1574,7 +1738,9 @@ int main(int argc, char **argv)
 		{"smkey", 4, 1, "<val>",
 		 "SA SM_Key value for the query."
 		 " If non-numeric value (like 'x') is specified then"
-		 " saquery will prompt for a value"},
+		 " saquery will prompt for a value. "
+		 " Default (when not specified here or in ibdiag.conf) is to "
+		 " use SM_Key == 0 (or \"untrusted\")"},
 		{"slid", 5, 1, "<lid>", "Source LID (PathRecord)"},
 		{"dlid", 6, 1, "<lid>", "Destination LID (PathRecord)"},
 		{"mlid", 7, 1, "<lid>", "Multicast LID (MCMemberRecord)"},
@@ -1610,6 +1776,7 @@ int main(int argc, char **argv)
 		{"scope", 21, 1, NULL, "Scope (MCMemberRecord)"},
 		{"join_state", 'J', 1, NULL, "Join state (MCMemberRecord)"},
 		{"proxy_join", 'X', 1, NULL, "Proxy join (MCMemberRecord)"},
+		{"service_id", 22, 1, NULL, "ServiceID (PathRecord)"},
 		{0}
 	};
 
@@ -1637,7 +1804,7 @@ int main(int argc, char **argv)
 	q = NULL;
 	ibd_timeout = DEFAULT_SA_TIMEOUT_MS;
 
-	ibdiag_process_opts(argc, argv, &params, "DLGs", opts, process_opt,
+	ibdiag_process_opts(argc, argv, &params, "DGLsy", opts, process_opt,
 			    usage_args, NULL);
 
 	argc -= optind;
@@ -1687,7 +1854,10 @@ int main(int argc, char **argv)
 		ibdiag_show_usage();
 	}
 
-	h = sa_get_bind_handle();
+	if (umad_init())
+		IBEXIT("Failed to initialized umad library");
+
+	h = sa_get_handle();
 	if (!h)
 		IBPANIC("Failed to bind to the SA");
 
@@ -1698,36 +1868,48 @@ int main(int argc, char **argv)
 	if (dst_lid && *dst_lid)
 		params.dlid = get_lid(h, dst_lid);
 
+	if (command == SAQUERY_CMD_CLASS_PORT_INFO ||
+	    query_type == IB_SA_ATTR_SWITCHINFORECORD)
+		sa_cpi_required = 1;
+
+	if (sa_cpi_required && (status = query_sa_cpi(h, &params)) != 0) {
+		fprintf(stderr, "Failed to query SA:ClassPortInfo\n");
+		goto error;
+	}
+
 	switch (command) {
 	case SAQUERY_CMD_NODE_RECORD:
-		status = print_node_records(h);
+		status = print_node_records(h, &params);
 		break;
 	case SAQUERY_CMD_CLASS_PORT_INFO:
-		status = get_print_class_port_info(h);
+		dump_class_port_info(&params.cpi);
+		status = 0;
 		break;
 	case SAQUERY_CMD_ISSM:
-		status = print_issm_records(h);
+		status = print_issm_records(h, &params);
 		break;
 	case SAQUERY_CMD_MCGROUPS:
-		status = print_multicast_group_records(h);
+		status = print_multicast_group_records(h, &params);
 		break;
 	case SAQUERY_CMD_MCMEMBERS:
-		status = print_multicast_member_records(h);
+		status = print_multicast_member_records(h, &params);
 		break;
 	default:
 		if ((!q && !(q = find_query_by_type(query_type)))
 		    || !q->handler) {
 			fprintf(stderr, "Unknown query type %d\n",
 				ntohs(query_type));
-			status = IB_UNKNOWN_ERROR;
+			status = EINVAL;
 		} else
 			status = q->handler(q, h, &params, argc, argv);
 		break;
 	}
 
+error:
 	if (src_lid)
 		free(src_lid);
-	sa_free_bind_handle(h);
+	sa_free_handle(h);
+	umad_done();
 	close_node_name_map(node_name_map);
 	return (status);
 }

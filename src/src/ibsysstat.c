@@ -63,6 +63,7 @@ typedef struct cpu_info {
 
 static cpu_info cpus[MAX_CPUS];
 static int host_ncpu;
+static int server = 0, oui = IB_OPENIB_OUI;
 
 static int server_respond(void *umad, int size)
 {
@@ -222,7 +223,7 @@ static char *ibsystat(ib_portid_t * portid, int attr)
 	rpc.method = IB_MAD_METHOD_GET;
 	rpc.attr.id = attr;
 	rpc.attr.mod = 0;
-	rpc.oui = IB_OPENIB_OUI;
+	rpc.oui = oui;
 	rpc.timeout = 0;
 	rpc.datasz = IB_VENDOR_RANGE2_DATA_SIZE;
 	rpc.dataoffs = IB_VENDOR_RANGE2_DATA_OFFS;
@@ -270,8 +271,10 @@ int build_cpuinfo(void)
 	while (fgets(line, sizeof(line) - 1, f)) {
 		if (!strncmp(line, "processor\t", 10)) {
 			ncpu++;
-			if (ncpu > MAX_CPUS)
+			if (ncpu > MAX_CPUS) {
+				fclose(f);
 				return MAX_CPUS;
+			}
 			continue;
 		}
 
@@ -292,8 +295,6 @@ int build_cpuinfo(void)
 
 	return ncpu;
 }
-
-static int server = 0, oui = IB_OPENIB_OUI;
 
 static int process_opt(void *context, int ch, char *optarg)
 {
@@ -326,7 +327,7 @@ int main(int argc, char **argv)
 	};
 	char usage_args[] = "<dest lid|guid> [<op>]";
 
-	ibdiag_process_opts(argc, argv, NULL, "D", opts, process_opt,
+	ibdiag_process_opts(argc, argv, NULL, "DKy", opts, process_opt,
 			    usage_args, NULL);
 
 	argc -= optind;
@@ -340,30 +341,30 @@ int main(int argc, char **argv)
 
 	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 3);
 	if (!srcport)
-		IBERROR("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+		IBEXIT("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
 
 	if (server) {
 		if (mad_register_server_via(sysstat_class, 1, 0, oui, srcport) <
 		    0)
-			IBERROR("can't serve class %d", sysstat_class);
+			IBEXIT("can't serve class %d", sysstat_class);
 
 		host_ncpu = build_cpuinfo();
 
 		if ((err = ibsystat_serv()))
-			IBERROR("ibssystat to %s: %s", portid2str(&portid),
+			IBEXIT("ibssystat to %s: %s", portid2str(&portid),
 				err);
 		exit(0);
 	}
 
 	if (mad_register_client_via(sysstat_class, 1, srcport) < 0)
-		IBERROR("can't register to sysstat class %d", sysstat_class);
+		IBEXIT("can't register to sysstat class %d", sysstat_class);
 
-	if (ib_resolve_portid_str_via(&portid, argv[0], ibd_dest_type,
-				      ibd_sm_id, srcport) < 0)
-		IBERROR("can't resolve destination port %s", argv[0]);
+	if (resolve_portid_str(ibd_ca, ibd_ca_port, &portid, argv[0],
+			       ibd_dest_type, ibd_sm_id, srcport) < 0)
+		IBEXIT("can't resolve destination port %s", argv[0]);
 
 	if ((err = ibsystat(&portid, attr)))
-		IBERROR("ibsystat to %s: %s", portid2str(&portid), err);
+		IBEXIT("ibsystat to %s: %s", portid2str(&portid), err);
 
 	mad_rpc_close_port(srcport);
 	exit(0);

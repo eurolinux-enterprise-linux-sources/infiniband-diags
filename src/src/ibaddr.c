@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 		NULL
 	};
 
-	ibdiag_process_opts(argc, argv, NULL, "L", opts, process_opt,
+	ibdiag_process_opts(argc, argv, NULL, "KL", opts, process_opt,
 			    usage_args, usage_examples);
 
 	argc -= optind;
@@ -147,19 +147,21 @@ int main(int argc, char **argv)
 
 	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 3);
 	if (!srcport)
-		IBERROR("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+		IBEXIT("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+
+	smp_mkey_set(srcport, ibd_mkey);
 
 	if (argc) {
-		if (ib_resolve_portid_str_via(&portid, argv[0], ibd_dest_type,
-					      ibd_sm_id, srcport) < 0)
-			IBERROR("can't resolve destination port %s", argv[0]);
+		if (resolve_portid_str(ibd_ca, ibd_ca_port, &portid, argv[0],
+				       ibd_dest_type, ibd_sm_id, srcport) < 0)
+			IBEXIT("can't resolve destination port %s", argv[0]);
 	} else {
-		if (ib_resolve_self_via(&portid, &port, 0, srcport) < 0)
-			IBERROR("can't resolve self port %s", argv[0]);
+		if (resolve_self(ibd_ca, ibd_ca_port, &portid, &port, NULL) < 0)
+			IBEXIT("can't resolve self port %s", argv[0]);
 	}
 
 	if (ib_resolve_addr(&portid, port, show_lid, show_gid) < 0)
-		IBERROR("can't resolve requested address");
+		IBEXIT("can't resolve requested address");
 
 	mad_rpc_close_port(srcport);
 	exit(0);

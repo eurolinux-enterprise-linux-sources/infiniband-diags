@@ -1,18 +1,19 @@
 Summary: OpenFabrics Alliance InfiniBand Diagnostic Tools
 Name: infiniband-diags 
-Version: 1.5.12
-Release: 5%{?dist}
+Version: 1.6.4
+Release: 1%{?dist}
 License: GPLv2 or BSD
 Group: System Environment/Libraries
 Url: http://openfabrics.org/
 Source0: http://www.openfabrics.org/downloads/management/%{name}-%{version}.tar.gz
 Patch0: infiniband-diags-1.5.8-all_hcas.patch
-Patch1: infiniband-diags-1.5.12-help.patch
+Patch1: infiniband-diags-1.6.2-ibnodes-help.patch
+Patch2: infiniband-diags-1.6.1-hostname.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: opensm-devel >= 3.3.13, libibumad-devel, libibmad-devel, perl
+BuildRequires: opensm-devel >= 3.3.17, libibumad-devel, libibmad-devel, perl, glib2-devel
 Provides: perl(IBswcountlimits)
 Obsoletes: openib-diags < 1.3
-ExclusiveArch: %{ix86} x86_64 ia64 ppc ppc64
+ExcludeArch: s390 s390x
 
 # Find the correct directory to install the perl module into.
 %global _perldir %(perl -e 'use Config; print $Config{installvendorarch};')
@@ -41,151 +42,53 @@ Static libraries for the infiniband-diags library.
 %setup -q
 %patch0 -p1 -b .hcas
 %patch1 -p1 -b .help
+%patch2 -p1 -b .hostname
 
 %build
 %configure --with-perl-installdir=%{_perldir}
 make
 
 %install
-rm -rf $RPM_BUILD_ROOT
-make DESTDIR=$RPM_BUILD_ROOT install
+rm -rf %{buildroot}
+make DESTDIR=%{buildroot} install
 # remove unpackaged files from the buildroot
-rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
-# rm -f $RPM_BUILD_ROOT%{_sbindir}/*.{pl,sh}
-# Do not ship man pages for scripts we don't ship.
-rm -f $RPM_BUILD_ROOT%{_sbindir}/check_lft_balance.pl
-rm -f $RPM_BUILD_ROOT%{_mandir}/man8/check_lft_balance.8*
-rm -f $RPM_BUILD_ROOT%{_sbindir}/dump_lfts.sh
-rm -f $RPM_BUILD_ROOT%{_mandir}/man8/dump_lfts.8*
-rm -f $RPM_BUILD_ROOT%{_sbindir}/dump_mfts.sh
-rm -f $RPM_BUILD_ROOT%{_mandir}/man8/dump_mfts.8*
-rm -f $RPM_BUILD_ROOT%{_sbindir}/ibdiscover.pl
-rm -f $RPM_BUILD_ROOT%{_mandir}/man8/ibdiscover.8*
-rm -f $RPM_BUILD_ROOT%{_sbindir}/ibfindnodesusing.pl
-rm -f $RPM_BUILD_ROOT%{_mandir}/man8/ibfindnodesusing.8*
-rm -f $RPM_BUILD_ROOT%{_sbindir}/ibidsverify.pl
-rm -f $RPM_BUILD_ROOT%{_mandir}/man8/ibidsverify.8*
-rm -f $RPM_BUILD_ROOT%{_sbindir}/iblinkinfo.pl
-rm -f $RPM_BUILD_ROOT%{_sbindir}/ibprintca.pl
-rm -f $RPM_BUILD_ROOT%{_mandir}/man8/ibprintca.8*
-rm -f $RPM_BUILD_ROOT%{_sbindir}/ibprintrt.pl
-rm -f $RPM_BUILD_ROOT%{_mandir}/man8/ibprintrt.8*
-rm -f $RPM_BUILD_ROOT%{_sbindir}/ibprintswitch.pl
-rm -f $RPM_BUILD_ROOT%{_mandir}/man8/ibprintswitch.8*
-rm -f $RPM_BUILD_ROOT%{_sbindir}/ibqueryerrors.pl
-rm -f $RPM_BUILD_ROOT%{_sbindir}/set_nodedesc.sh
-
+rm -f %{buildroot}%{_libdir}/*.la
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
 
 %files
 %defattr(-,root,root)
-%{_mandir}/man8/infiniband-diags.8*
-
-%{_sbindir}/ibaddr
-%{_mandir}/man8/ibaddr.8*
-%{_sbindir}/ibcacheedit
-%{_mandir}/man8/ibcacheedit.8*
-%{_sbindir}/ibcheckerrors
-%{_mandir}/man8/ibcheckerrors.8*
-%{_sbindir}/ibcheckerrs
-%{_mandir}/man8/ibcheckerrs.8*
-%{_sbindir}/ibchecknet
-%{_mandir}/man8/ibchecknet.8*
-%{_sbindir}/ibchecknode
-%{_mandir}/man8/ibchecknode.8*
-%{_sbindir}/ibcheckport
-%{_mandir}/man8/ibcheckport.8*
-%{_sbindir}/ibcheckportstate
-%{_mandir}/man8/ibcheckportstate.8*
-%{_sbindir}/ibcheckportwidth
-%{_mandir}/man8/ibcheckportwidth.8*
-%{_sbindir}/ibcheckstate
-%{_mandir}/man8/ibcheckstate.8*
-%{_sbindir}/ibcheckwidth
-%{_mandir}/man8/ibcheckwidth.8*
-%{_sbindir}/ibclearcounters
-%{_mandir}/man8/ibclearcounters.8*
-%{_sbindir}/ibclearerrors
-%{_mandir}/man8/ibclearerrors.8*
-%{_sbindir}/ibdatacounters
-%{_mandir}/man8/ibdatacounters.8*
-%{_sbindir}/ibdatacounts
-%{_mandir}/man8/ibdatacounts.8*
-%{_sbindir}/ibhosts
-%{_mandir}/man8/ibhosts.8*
-%{_sbindir}/iblinkinfo
-%{_mandir}/man8/iblinkinfo.8*
-%{_sbindir}/ibnetdiscover
-%{_mandir}/man8/ibnetdiscover.8*
-%{_sbindir}/ibnodes
-%{_mandir}/man8/ibnodes.8*
-%{_sbindir}/ibping
-%{_mandir}/man8/ibping.8*
-%{_sbindir}/ibportstate
-%{_mandir}/man8/ibportstate.8*
-%{_sbindir}/ibqueryerrors
-%{_mandir}/man8/ibqueryerrors.8*
-%{_sbindir}/ibroute
-%{_mandir}/man8/ibroute.8*
-%{_sbindir}/ibrouters
-%{_mandir}/man8/ibrouters.8*
-%{_sbindir}/ibstat
-%{_mandir}/man8/ibstat.8*
-%{_sbindir}/ibstatus
-%{_mandir}/man8/ibstatus.8*
-%{_sbindir}/ibswitches
-%{_mandir}/man8/ibswitches.8*
-%{_sbindir}/ibswportwatch.pl
-%{_mandir}/man8/ibswportwatch.8*
-%{_sbindir}/ibsysstat
-%{_mandir}/man8/ibsysstat.8*
-%{_sbindir}/ibtracert
-%{_mandir}/man8/ibtracert.8*
-%{_sbindir}/perfquery
-%{_mandir}/man8/perfquery.8*
-%{_sbindir}/saquery
-%{_mandir}/man8/saquery.8*
-%{_sbindir}/sminfo
-%{_mandir}/man8/sminfo.8*
-%{_sbindir}/smpdump
-%{_mandir}/man8/smpdump.8*
-%{_sbindir}/smpquery
-%{_mandir}/man8/smpquery.8*
-%{_sbindir}/vendstat
-%{_mandir}/man8/vendstat.8*
-
-%{_libdir}/libibnetdisc.so.5
-%{_libdir}/libibnetdisc.so.5.2.0
+%{_mandir}/man8/*
+%{_sbindir}/*
+%{_libdir}/libibnetdisc.so.*
 %dir %{_sysconfdir}/infiniband-diags
-%config(noreplace) %{_sysconfdir}/infiniband-diags/error_thresholds
+%config(noreplace) %{_sysconfdir}/infiniband-diags/*
 %doc COPYING README ChangeLog
 %{_perldir}/IBswcountlimits.pm
 
 %files devel
 %defattr(-,root,root)
 %dir %{_includedir}/infiniband
-%{_includedir}/infiniband/ibnetdisc.h
-%{_includedir}/infiniband/ibnetdisc_osd.h
+%{_includedir}/infiniband/*
 %{_libdir}/libibnetdisc.so
-%{_mandir}/man3/ibnd_debug.*
-%{_mandir}/man3/ibnd_destroy_fabric.*
-%{_mandir}/man3/ibnd_discover_fabric.*
-%{_mandir}/man3/ibnd_find_node_dr.*
-%{_mandir}/man3/ibnd_find_node_guid.*
-%{_mandir}/man3/ibnd_iter_nodes.*
-%{_mandir}/man3/ibnd_iter_nodes_type.*
-%{_mandir}/man3/ibnd_show_progress.*
+%{_mandir}/man3/*
 
 %files devel-static
 %defattr(-,root,root)
 %{_libdir}/*.a
 
 %changelog
+* Tue Jun 17 2014 Doug Ledford <dledford@redhat.com> - 1.6.4-1
+- Update to latest upstream release
+- Simplify and reduce spec file
+- Ship the various scripts we used to remove, they can be useful
+- Pick up changes from rhel7 and bring them to rhel6
+- Related: bz1082730
+
 * Mon Oct 15 2012 Doug Ledford <dledford@redhat.com> - 1.5.12-5
 - Bump and rebuild against latest opensm
 - Pick up fixes done for rhel5.9
@@ -323,7 +226,7 @@ rm -rf $RPM_BUILD_ROOT
 - OpenFabrics 1.2.2 release
 - Minor changes to ibswitches and ibhosts output
 
-* Thu Feb 14 2007 Hal Rosenstock <halr@voltaire.com> - 1.2.1
+* Wed Feb 14 2007 Hal Rosenstock <halr@voltaire.com> - 1.2.1
 - OpenFabrics 1.2.1 release
 - Initial release of vendstat tool
 
@@ -385,7 +288,7 @@ rm -rf $RPM_BUILD_ROOT
 - dump_lft.sh script added
 - Renamed discover.pl to ibdiscover.pl
 
-* Sun Jun 10 2006 Hal Rosenstock <halr@voltaire.com> - 1.0-1
+* Fri Jun 10 2006 Hal Rosenstock <halr@voltaire.com> - 1.0-1
 - OpenFabrics 1.0 release
 
 * Tue May 30 2006 Hal Rosenstock <halr@voltaire.com> - 1.0.0-rc6

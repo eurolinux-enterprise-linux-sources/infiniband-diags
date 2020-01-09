@@ -109,7 +109,7 @@ int main(int argc, char **argv)
 	};
 	char usage_args[] = "<sm_lid|sm_dr_path> [modifier]";
 
-	ibdiag_process_opts(argc, argv, NULL, "s", opts, process_opt,
+	ibdiag_process_opts(argc, argv, NULL, "sK", opts, process_opt,
 			    usage_args, NULL);
 
 	argc -= optind;
@@ -120,15 +120,17 @@ int main(int argc, char **argv)
 
 	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 3);
 	if (!srcport)
-		IBERROR("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+		IBEXIT("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+
+	smp_mkey_set(srcport, ibd_mkey);
 
 	if (argc) {
-		if (ib_resolve_portid_str_via(&portid, argv[0], ibd_dest_type,
-					      0, srcport) < 0)
-			IBERROR("can't resolve destination port %s", argv[0]);
+		if (resolve_portid_str(ibd_ca, ibd_ca_port, &portid, argv[0],
+				       ibd_dest_type, 0, srcport) < 0)
+			IBEXIT("can't resolve destination port %s", argv[0]);
 	} else {
-		if (ib_resolve_smlid_via(&portid, ibd_timeout, srcport) < 0)
-			IBERROR("can't resolve sm port %s", argv[0]);
+		if (resolve_sm_portid(ibd_ca, ibd_ca_port, &portid) < 0)
+			IBEXIT("can't resolve sm port %s", argv[0]);
 	}
 
 	mad_encode_field(sminfo, IB_SMINFO_GUID_F, &guid);
@@ -140,10 +142,10 @@ int main(int argc, char **argv)
 	if (mod) {
 		if (!(p = smp_set_via(sminfo, &portid, IB_ATTR_SMINFO, mod,
 				      ibd_timeout, srcport)))
-			IBERROR("query");
+			IBEXIT("query");
 	} else if (!(p = smp_query_via(sminfo, &portid, IB_ATTR_SMINFO, 0,
 				       ibd_timeout, srcport)))
-		IBERROR("query");
+		IBEXIT("query");
 
 	mad_decode_field(sminfo, IB_SMINFO_GUID_F, &guid);
 	mad_decode_field(sminfo, IB_SMINFO_ACT_F, &act);

@@ -94,6 +94,7 @@ struct perf_count perf_count =
 struct perf_count_ext perf_count_ext = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 #define ALL_PORTS 0xFF
+#define MAX_PORTS 255
 
 /* Notes: IB semantics is to cap counters if count has exceeded limits.
  * Therefore we must check for overflows and cap the counters if necessary.
@@ -303,7 +304,7 @@ static void dump_perfcounters(int extended, int timeout, uint16_t cap_mask,
 		memset(pc, 0, sizeof(pc));
 		if (!pma_query_via(pc, portid, port, timeout,
 				   IB_GSI_PORT_COUNTERS, srcport))
-			IBERROR("perfquery");
+			IBEXIT("perfquery");
 		if (!(cap_mask & IB_PM_PC_XMIT_WAIT_SUP)) {
 			/* if PortCounters:PortXmitWait not supported clear this counter */
 			VERBOSE("PortXmitWait not indicated"
@@ -332,7 +333,7 @@ static void dump_perfcounters(int extended, int timeout, uint16_t cap_mask,
 		memset(pc, 0, sizeof(pc));
 		if (!pma_query_via(pc, portid, port, timeout,
 				   IB_GSI_PORT_COUNTERS_EXT, srcport))
-			IBERROR("perfextquery");
+			IBEXIT("perfextquery");
 		if (aggregate)
 			aggregate_perfcounters_ext(cap_mask);
 		else
@@ -359,11 +360,11 @@ static void reset_counters(int extended, int timeout, int mask,
 	if (extended != 1) {
 		if (!performance_reset_via(pc, portid, port, mask, timeout,
 					   IB_GSI_PORT_COUNTERS, srcport))
-			IBERROR("perf reset");
+			IBEXIT("perf reset");
 	} else {
 		if (!performance_reset_via(pc, portid, port, mask, timeout,
 					   IB_GSI_PORT_COUNTERS_EXT, srcport))
-			IBERROR("perf ext reset");
+			IBEXIT("perf ext reset");
 	}
 }
 
@@ -371,19 +372,21 @@ static int reset, reset_only, all_ports, loop_ports, port, extended, xmt_sl,
     rcv_sl, xmt_disc, rcv_err, extended_speeds, smpl_ctl, oprcvcounters, flowctlcounters,
     vloppackets, vlopdata, vlxmitflowctlerrors, vlxmitcounters, swportvlcong,
     rcvcc, slrcvfecn, slrcvbecn, xmitcc, vlxmittimecc;
+static int ports[MAX_PORTS];
+static int ports_count;
 
 static void common_func(ib_portid_t * portid, int port_num, int mask,
 			unsigned query, unsigned reset,
 			const char *name, uint16_t attr,
 			void dump_func(char *, int, void *, int))
 {
-	char buf[1024];
+	char buf[1536];
 
 	if (query) {
 		memset(pc, 0, sizeof(pc));
 		if (!pma_query_via(pc, portid, port_num, ibd_timeout, attr,
 				   srcport))
-			IBERROR("cannot query %s", name);
+			IBEXIT("cannot query %s", name);
 
 		dump_func(buf, sizeof(buf), pc, sizeof(pc));
 
@@ -394,7 +397,7 @@ static void common_func(ib_portid_t * portid, int port_num, int mask,
 	memset(pc, 0, sizeof(pc));
 	if (reset && !performance_reset_via(pc, portid, port, mask, ibd_timeout,
 					    attr, srcport))
-		IBERROR("cannot reset %s", name);
+		IBEXIT("cannot reset %s", name);
 }
 
 static void xmt_sl_query(ib_portid_t * portid, int port, int mask)
@@ -425,12 +428,56 @@ static void rcv_err_query(ib_portid_t * portid, int port, int mask)
 		    mad_dump_perfcounters_rcv_err);
 }
 
-static void extended_speeds_query(ib_portid_t * portid, int port, int mask)
+static uint8_t *ext_speeds_reset_via(void *rcvbuf, ib_portid_t * dest,
+				     int port, uint64_t mask, unsigned timeout,
+				     const struct ibmad_port * srcport)
 {
-	common_func(portid, port, mask, !reset_only, (reset_only || reset),
-		    "PortExtendedSpeedsCounters",
-		    IB_GSI_PORT_EXT_SPEEDS_COUNTERS,
-		    mad_dump_port_ext_speeds_counters);
+	ib_rpc_t rpc = { 0 };
+	int lid = dest->lid;
+
+	DEBUG("lid %u port %d mask 0x%" PRIx64, lid, port, mask);
+
+	if (lid == -1) {
+		IBWARN("only lid routed is supported");
+		return NULL;
+	}
+
+	if (!mask)
+		mask = ~0;
+
+	rpc.mgtclass = IB_PERFORMANCE_CLASS;
+	rpc.method = IB_MAD_METHOD_SET;
+	rpc.attr.id = IB_GSI_PORT_EXT_SPEEDS_COUNTERS;
+
+	memset(rcvbuf, 0, IB_MAD_SIZE);
+
+	mad_set_field(rcvbuf, 0, IB_PESC_PORT_SELECT_F, port);
+	mad_set_field64(rcvbuf, 0, IB_PESC_COUNTER_SELECT_F, mask);
+	rpc.attr.mod = 0;
+	rpc.timeout = timeout;
+	rpc.datasz = IB_PC_DATA_SZ;
+	rpc.dataoffs = IB_PC_DATA_OFFS;
+	if (!dest->qp)
+		dest->qp = 1;
+	if (!dest->qkey)
+		dest->qkey = IB_DEFAULT_QP1_QKEY;
+
+	return mad_rpc(srcport, &rpc, dest, rcvbuf, rcvbuf);
+}
+
+static void extended_speeds_query(ib_portid_t * portid, int port, uint64_t ext_mask)
+{
+	int mask = ext_mask;
+
+	if (!reset_only)
+		common_func(portid, port, mask, 1, 0,
+			    "PortExtendedSpeedsCounters",
+			    IB_GSI_PORT_EXT_SPEEDS_COUNTERS,
+			    mad_dump_port_ext_speeds_counters);
+
+	if ((reset_only || reset) &&
+	    !ext_speeds_reset_via(pc, portid, port, ext_mask, ibd_timeout, srcport))
+		IBEXIT("cannot reset PortExtendedSpeedsCounters");
 }
 
 static void oprcvcounters_query(ib_portid_t * portid, int port, int mask)
@@ -519,12 +566,12 @@ static void vlxmittimecc_query(ib_portid_t * portid, int port, int mask)
 
 void dump_portsamples_control(ib_portid_t * portid, int port)
 {
-	char buf[1024];
+	char buf[1280];
 
 	memset(pc, 0, sizeof(pc));
 	if (!pma_query_via(pc, portid, port, ibd_timeout,
 			   IB_GSI_PORT_SAMPLES_CONTROL, srcport))
-		IBERROR("sampctlquery");
+		IBEXIT("sampctlquery");
 
 	mad_dump_portsamples_control(buf, sizeof buf, pc, sizeof pc);
 	printf("# PortSamplesControl: %s port %d\n%s", portid2str(portid),
@@ -612,17 +659,17 @@ static int process_opt(void *context, int ch, char *optarg)
 
 int main(int argc, char **argv)
 {
-	int mgmt_classes[4] = { IB_SMI_CLASS, IB_SMI_DIRECT_CLASS, IB_SA_CLASS,
-		IB_PERFORMANCE_CLASS
-	};
+	int mgmt_classes[3] = { IB_SMI_CLASS, IB_SA_CLASS, IB_PERFORMANCE_CLASS };
 	ib_portid_t portid = { 0 };
 	int mask = 0xffff;
+	uint64_t ext_mask = 0xffffffffffffffffULL;
 	uint16_t cap_mask;
 	int all_ports_loop = 0;
 	int node_type, num_ports = 0;
 	uint8_t data[IB_SMP_DATA_SIZE] = { 0 };
 	int start_port = 1;
 	int enhancedport0;
+	char *tmpstr;
 	int i;
 
 	const struct ibdiag_opt opts[] = {
@@ -651,7 +698,7 @@ int main(int argc, char **argv)
 		{"Reset_only", 'R', 0, NULL, "only reset counters"},
 		{0}
 	};
-	char usage_args[] = " [<lid|guid> [[port] [reset_mask]]]";
+	char usage_args[] = " [<lid|guid> [[port(s)] [reset_mask]]]";
 	const char *usage_examples[] = {
 		"\t\t# read local port's performance counters",
 		"32 1\t\t# read performance counters from lid 32, port 1",
@@ -664,44 +711,79 @@ int main(int argc, char **argv)
 		"-R -a 32\t# reset performance counters of all ports",
 		"-R 32 2 0x0fff\t# reset only error counters of port 2",
 		"-R 32 2 0xf000\t# reset only non-error counters of port 2",
+		"-a 32 1-10\t# read performance counters from lid 32, port 1-10, aggregate output",
+		"-l 32 1-10\t# read performance counters from lid 32, port 1-10, output each port",
+		"-a 32 1,4,8\t# read performance counters from lid 32, port 1, 4, and 8, aggregate output",
+		"-l 32 1,4,8\t# read performance counters from lid 32, port 1, 4, and 8, output each port",
 		NULL,
 	};
 
-	ibdiag_process_opts(argc, argv, NULL, "D", opts, process_opt,
+	ibdiag_process_opts(argc, argv, NULL, "DK", opts, process_opt,
 			    usage_args, usage_examples);
 
 	argc -= optind;
 	argv += optind;
 
-	if (argc > 1)
-		port = strtoul(argv[1], 0, 0);
-	if (argc > 2)
-		mask = strtoul(argv[2], 0, 0);
+	if (argc > 1) {
+		if (strchr(argv[1], ',')) {
+			tmpstr = strtok(argv[1], ",");
+			while (tmpstr) {
+				ports[ports_count++] = strtoul(tmpstr, 0, 0);
+				tmpstr = strtok(NULL, ",");
+			}
+			port = ports[0];
+		}
+		else if ((tmpstr = strchr(argv[1], '-'))) {
+			int pmin, pmax;
 
-	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 4);
+			*tmpstr = '\0';
+			tmpstr++;
+
+			pmin = strtoul(argv[1], 0, 0);
+			pmax = strtoul(tmpstr, 0, 0);
+
+			if (pmin >= pmax)
+				IBEXIT("max port must be greater than min port in range");
+
+			while (pmin <= pmax)
+				ports[ports_count++] = pmin++;
+
+			port = ports[0];
+		}
+		else
+			port = strtoul(argv[1], 0, 0);
+	}
+	if (argc > 2) {
+		ext_mask = strtoull(argv[2], 0, 0);
+		mask = ext_mask;
+	}
+
+	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 3);
 	if (!srcport)
-		IBERROR("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+		IBEXIT("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+
+	smp_mkey_set(srcport, ibd_mkey);
 
 	if (argc) {
-		if (ib_resolve_portid_str_via(&portid, argv[0], ibd_dest_type,
-					      ibd_sm_id, srcport) < 0)
-			IBERROR("can't resolve destination port %s", argv[0]);
+		if (resolve_portid_str(ibd_ca, ibd_ca_port, &portid, argv[0],
+				       ibd_dest_type, ibd_sm_id, srcport) < 0)
+			IBEXIT("can't resolve destination port %s", argv[0]);
 	} else {
-		if (ib_resolve_self_via(&portid, &port, 0, srcport) < 0)
-			IBERROR("can't resolve self port %s", argv[0]);
+		if (resolve_self(ibd_ca, ibd_ca_port, &portid, &port, 0) < 0)
+			IBEXIT("can't resolve self port %s", argv[0]);
 	}
 
 	/* PerfMgt ClassPortInfo is a required attribute */
 	memset(pc, 0, sizeof(pc));
 	if (!pma_query_via(pc, &portid, port, ibd_timeout, CLASS_PORT_INFO,
 			   srcport))
-		IBERROR("classportinfo query");
+		IBEXIT("classportinfo query");
 	/* ClassPortInfo should be supported as part of libibmad */
 	memcpy(&cap_mask, pc + 2, sizeof(cap_mask));	/* CapabilityMask */
 	if (!(cap_mask & IB_PM_ALL_PORT_SELECT)) {	/* bit 8 is AllPortSelect */
 		if (!all_ports && port == ALL_PORTS)
-			IBERROR("AllPortSelect not supported");
-		if (all_ports)
+			IBEXIT("AllPortSelect not supported");
+		if (all_ports && port == ALL_PORTS)
 			all_ports_loop = 1;
 	}
 
@@ -726,7 +808,7 @@ int main(int argc, char **argv)
 	}
 
 	if (extended_speeds) {
-		extended_speeds_query(&portid, port, mask);
+		extended_speeds_query(&portid, port, ext_mask);
 		goto done;
 	}
 
@@ -799,16 +881,16 @@ int main(int argc, char **argv)
 	if (all_ports_loop || (loop_ports && (all_ports || port == ALL_PORTS))) {
 		if (smp_query_via(data, &portid, IB_ATTR_NODE_INFO, 0, 0,
 				  srcport) < 0)
-			IBERROR("smp query nodeinfo failed");
+			IBEXIT("smp query nodeinfo failed");
 		node_type = mad_get_field(data, 0, IB_NODE_TYPE_F);
 		mad_decode_field(data, IB_NODE_NPORTS_F, &num_ports);
 		if (!num_ports)
-			IBERROR("smp query nodeinfo: num ports invalid");
+			IBEXIT("smp query nodeinfo: num ports invalid");
 
 		if (node_type == IB_NODE_SWITCH) {
 			if (smp_query_via(data, &portid, IB_ATTR_SWITCH_INFO,
 					  0, 0, srcport) < 0)
-				IBERROR("smp query nodeinfo failed");
+				IBEXIT("smp query nodeinfo failed");
 			enhancedport0 =
 			    mad_get_field(data, 0, IB_SW_ENHANCED_PORT0_F);
 			if (enhancedport0)
@@ -835,6 +917,19 @@ int main(int argc, char **argv)
 				output_aggregate_perfcounters_ext(&portid,
 								  cap_mask);
 		}
+	} else if (ports_count > 1) {
+		for (i = 0; i < ports_count; i++)
+			dump_perfcounters(extended, ibd_timeout, cap_mask,
+					  &portid, ports[i],
+					  (all_ports && !loop_ports));
+		if (all_ports && !loop_ports) {
+			if (extended != 1)
+				output_aggregate_perfcounters(&portid,
+							      cap_mask);
+			else
+				output_aggregate_perfcounters_ext(&portid,
+								  cap_mask);
+		}
 	} else
 		dump_perfcounters(extended, ibd_timeout, cap_mask, &portid,
 				  port, 0);
@@ -849,6 +944,9 @@ do_reset:
 	if (all_ports_loop || (loop_ports && (all_ports || port == ALL_PORTS))) {
 		for (i = start_port; i <= num_ports; i++)
 			reset_counters(extended, ibd_timeout, mask, &portid, i);
+	} else if (ports_count > 1) {
+		for (i = 0; i < ports_count; i++)
+			reset_counters(extended, ibd_timeout, mask, &portid, ports[i]);
 	} else
 		reset_counters(extended, ibd_timeout, mask, &portid, port);
 

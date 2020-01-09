@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2012 Mellanox Technologies LTD.  All rights reserved.
  * Copyright (c) 2004-2009 Voltaire Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
@@ -57,6 +58,7 @@
 /* Config space addresses */
 #define IB_MLX_IS3_PORT_XMIT_WAIT	0x10013C
 
+
 struct ibmad_port *srcport;
 
 typedef struct {
@@ -82,6 +84,13 @@ typedef struct {
 } is3_fw_info_t;
 
 typedef struct {
+	uint32_t ext_major;
+	uint32_t ext_minor;
+	uint32_t ext_sub_minor;
+	uint32_t reserved[4];
+} is4_fw_ext_info_t;
+
+typedef struct {
 	uint8_t resv1;
 	uint8_t major;
 	uint8_t minor;
@@ -95,6 +104,14 @@ typedef struct {
 	is3_fw_info_t fw_info;
 	is3_sw_info_t sw_info;
 } is3_general_info_t;
+
+typedef struct {
+	uint8_t reserved[8];
+	is3_hw_info_t hw_info;
+	is3_fw_info_t fw_info;
+	is4_fw_ext_info_t ext_fw_info;
+	is3_sw_info_t sw_info;
+} is4_general_info_t;
 
 typedef struct {
 	uint8_t reserved[8];
@@ -125,6 +142,22 @@ typedef struct {
 	is4_group_select_t group_selects[COUNTER_GROUPS_NUM];
 } is4_config_counter_groups_t;
 
+static uint16_t ext_fw_info_device[][2] = {
+	{0x0245, 0x0245},	/* Switch-X */
+	{0xc738, 0xc738},	/* Switch-X */
+	{0x01b3, 0x01b3},	/* IS-4 */
+	{0x1003, 0x1011},	/* Connect-X */
+	{0x0000, 0x0000}};
+
+static int is_ext_fw_info_supported(uint16_t device_id) {
+	int i;
+	for (i = 0; ext_fw_info_device[i][0]; i++)
+		if (ext_fw_info_device[i][0] <= device_id &&
+		    device_id <= ext_fw_info_device[i][1])
+			return 1;
+	return 0;
+}
+
 static int do_vendor(ib_portid_t *portid, struct ibmad_port *srcport,
 		     uint8_t class, uint8_t method, uint16_t attr_id,
 		     uint32_t attr_mod, void *data)
@@ -139,7 +172,7 @@ static int do_vendor(ib_portid_t *portid, struct ibmad_port *srcport,
 	call.mod = attr_mod;
 
 	if (!ib_vendor_call_via(data, portid, &call, srcport))
-		IBERROR("vendstat: method %u, attribute %u", method, attr_id);
+		IBEXIT("vendstat: method %u, attribute %u", method, attr_id);
 
 	return 0;
 }
@@ -161,7 +194,7 @@ static void do_config_space_records(ib_portid_t *portid, unsigned set,
 		      set ? IB_MAD_METHOD_SET : IB_MAD_METHOD_GET,
 		      IB_MLX_IS3_CONFIG_SPACE_ACCESS, 2 << 22 | records << 16,
 		      cs))
-		IBERROR("cannot %s config space records", set ? "set" : "get");
+		IBEXIT("cannot %s config space records", set ? "set" : "get");
 
 	for (i = 0; i < records; i++) {
 		printf("Config space record at 0x%x: 0x%x\n",
@@ -180,7 +213,7 @@ static void counter_groups_info(ib_portid_t * portid, int port)
 	memset(&buf, 0, sizeof(buf));
 	if (do_vendor(portid, srcport, IB_MLX_VENDOR_CLASS, IB_MAD_METHOD_GET,
 		      IB_MLX_IS4_COUNTER_GROUP_INFO, port, buf))
-		IBERROR("counter group info query");
+		IBEXIT("counter group info query");
 
 	cg_info = (is4_counter_group_info_t *) & buf;
 	num_cg = cg_info->num_of_counter_groups;
@@ -218,14 +251,14 @@ static void config_counter_groups(ib_portid_t * portid, int port)
 
 	if (do_vendor(portid, srcport, IB_MLX_VENDOR_CLASS, IB_MAD_METHOD_SET,
 		      IB_MLX_IS4_CONFIG_COUNTER_GROUP, port, buf))
-		IBERROR("config counter group set");
+		IBEXIT("config counter group set");
 
 	/* get config counter groups */
 	memset(&buf, 0, sizeof(buf));
 
 	if (do_vendor(portid, srcport, IB_MLX_VENDOR_CLASS, IB_MAD_METHOD_GET,
 		      IB_MLX_IS4_CONFIG_COUNTER_GROUP, port, buf))
-		IBERROR("config counter group query");
+		IBEXIT("config counter group query");
 }
 
 static int general_info, xmit_wait, counter_group_info, config_counter_group;
@@ -285,14 +318,16 @@ static int process_opt(void *context, int ch, char *optarg)
 
 int main(int argc, char **argv)
 {
-	int mgmt_classes[4] = { IB_SMI_CLASS, IB_SMI_DIRECT_CLASS, IB_SA_CLASS,
-		IB_MLX_VENDOR_CLASS
-	};
+	int mgmt_classes[2] = { IB_SA_CLASS, IB_MLX_VENDOR_CLASS };
 	ib_portid_t portid = { 0 };
 	int port = 0;
 	char buf[1024];
-	is3_general_info_t *gi;
-
+	uint32_t fw_ver_major = 0;
+	uint32_t fw_ver_minor = 0;
+	uint32_t fw_ver_sub_minor = 0;
+	uint8_t sw_ver_major = 0, sw_ver_minor = 0, sw_ver_sub_minor = 0;
+	is3_general_info_t *gi_is3;
+	is4_general_info_t *gi_is4;
 	const struct ibdiag_opt opts[] = {
 		{"N", 'N', 0, NULL, "show IS3 or IS4 general information"},
 		{"w", 'w', 0, NULL, "show IS3 port xmit wait counters"},
@@ -313,7 +348,7 @@ int main(int argc, char **argv)
 		NULL
 	};
 
-	ibdiag_process_opts(argc, argv, NULL, "D", opts, process_opt,
+	ibdiag_process_opts(argc, argv, NULL, "DKy", opts, process_opt,
 			    usage_args, usage_examples);
 
 	argc -= optind;
@@ -322,17 +357,17 @@ int main(int argc, char **argv)
 	if (argc > 1)
 		port = strtoul(argv[1], 0, 0);
 
-	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 4);
+	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 2);
 	if (!srcport)
-		IBERROR("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+		IBEXIT("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
 
 	if (argc) {
-		if (ib_resolve_portid_str_via(&portid, argv[0], ibd_dest_type,
-					      ibd_sm_id, srcport) < 0)
-			IBERROR("can't resolve destination port %s", argv[0]);
+		if (resolve_portid_str(ibd_ca, ibd_ca_port, &portid, argv[0],
+				       ibd_dest_type, ibd_sm_id, srcport) < 0)
+			IBEXIT("can't resolve destination port %s", argv[0]);
 	} else {
-		if (ib_resolve_self_via(&portid, &port, 0, srcport) < 0)
-			IBERROR("can't resolve self port %s", argv[0]);
+		if (resolve_self(ibd_ca, ibd_ca_port, &portid, &port, 0) < 0)
+			IBEXIT("can't resolve self port %s", argv[0]);
 	}
 
 	if (counter_group_info) {
@@ -360,7 +395,7 @@ int main(int argc, char **argv)
 	/* Only General Info and Port Xmit Wait Counters */
 	/* queries are currently supported */
 	if (!general_info && !xmit_wait)
-		IBERROR("at least one of -N and -w must be specified");
+		IBEXIT("at least one of -N and -w must be specified");
 
 	/* Would need a list of these and it might not be complete */
 	/* so for right now, punt on this */
@@ -369,40 +404,56 @@ int main(int argc, char **argv)
 	memset(&buf, 0, sizeof(buf));
 	if (do_vendor(&portid, srcport, IB_MLX_VENDOR_CLASS, IB_MAD_METHOD_GET,
 		      CLASS_PORT_INFO, 0, buf))
-		IBERROR("classportinfo query");
+		IBEXIT("classportinfo query");
 
 	memset(&buf, 0, sizeof(buf));
-	gi = (is3_general_info_t *) & buf;
+	gi_is3 = (is3_general_info_t *) &buf;
 	if (do_vendor(&portid, srcport, IB_MLX_VENDOR_CLASS, IB_MAD_METHOD_GET,
-		      IB_MLX_IS3_GENERAL_INFO, 0, gi))
-		IBERROR("generalinfo query");
+		      IB_MLX_IS3_GENERAL_INFO, 0, gi_is3))
+		IBEXIT("generalinfo query");
+
+	if (is_ext_fw_info_supported(ntohs(gi_is3->hw_info.device_id))) {
+		gi_is4 = (is4_general_info_t *) &buf;
+		fw_ver_major = ntohl(gi_is4->ext_fw_info.ext_major);
+		fw_ver_minor = ntohl(gi_is4->ext_fw_info.ext_minor);
+		fw_ver_sub_minor = ntohl(gi_is4->ext_fw_info.ext_sub_minor);
+		sw_ver_major = gi_is4->sw_info.major;
+		sw_ver_minor = gi_is4->sw_info.minor;
+		sw_ver_sub_minor = gi_is4->sw_info.sub_minor;
+	} else {
+		fw_ver_major = gi_is3->fw_info.major;
+		fw_ver_minor = gi_is3->fw_info.minor;
+		fw_ver_sub_minor = gi_is3->fw_info.sub_minor;
+		sw_ver_major = gi_is3->sw_info.major;
+		sw_ver_minor = gi_is3->sw_info.minor;
+		sw_ver_sub_minor = gi_is3->sw_info.sub_minor;
+	}
 
 	if (general_info) {
 		/* dump IS3 or IS4 general info here */
-		printf("hw_dev_rev:  0x%04x\n", ntohs(gi->hw_info.hw_revision));
-		printf("hw_dev_id:   0x%04x\n", ntohs(gi->hw_info.device_id));
-		printf("hw_uptime:   0x%08x\n", ntohl(gi->hw_info.uptime));
+		printf("hw_dev_rev:  0x%04x\n", ntohs(gi_is3->hw_info.hw_revision));
+		printf("hw_dev_id:   0x%04x\n", ntohs(gi_is3->hw_info.device_id));
+		printf("hw_uptime:   0x%08x\n", ntohl(gi_is3->hw_info.uptime));
 		printf("fw_version:  %02d.%02d.%02d\n",
-		       gi->fw_info.major, gi->fw_info.minor,
-		       gi->fw_info.sub_minor);
-		printf("fw_build_id: 0x%04x\n", ntohl(gi->fw_info.build_id));
-		printf("fw_date:     %02d/%02d/%04x\n",
-		       gi->fw_info.month, gi->fw_info.day,
-		       ntohs(gi->fw_info.year));
-		printf("fw_psid:     '%s'\n", gi->fw_info.psid);
+		       fw_ver_major, fw_ver_minor, fw_ver_sub_minor);
+		printf("fw_build_id: 0x%04x\n", ntohl(gi_is3->fw_info.build_id));
+		printf("fw_date:     %02x/%02x/%04x\n",
+		       gi_is3->fw_info.month, gi_is3->fw_info.day,
+		       ntohs(gi_is3->fw_info.year));
+		printf("fw_psid:     '%s'\n", gi_is3->fw_info.psid);
 		printf("fw_ini_ver:  %d\n",
-		       ntohl(gi->fw_info.ini_file_version));
-		printf("sw_version:  %02d.%02d.%02d\n", gi->sw_info.major,
-		       gi->sw_info.minor, gi->sw_info.sub_minor);
+		       ntohl(gi_is3->fw_info.ini_file_version));
+		printf("sw_version:  %02d.%02d.%02d\n", sw_ver_major,
+		       sw_ver_minor, sw_ver_sub_minor);
 	}
 
 	if (xmit_wait) {
 		is3_config_space_t *cs;
 		unsigned i;
 
-		if (ntohs(gi->hw_info.device_id) != IS3_DEVICE_ID)
-			IBERROR("Unsupported device ID 0x%x",
-				ntohs(gi->hw_info.device_id));
+		if (ntohs(gi_is3->hw_info.device_id) != IS3_DEVICE_ID)
+			IBEXIT("Unsupported device ID 0x%x",
+				ntohs(gi_is3->hw_info.device_id));
 
 		memset(&buf, 0, sizeof(buf));
 		/* Set record addresses for each port */
@@ -413,7 +464,7 @@ int main(int argc, char **argv)
 		if (do_vendor(&portid, srcport, IB_MLX_VENDOR_CLASS,
 			      IB_MAD_METHOD_GET, IB_MLX_IS3_CONFIG_SPACE_ACCESS,
 			      2 << 22 | 16 << 16, cs))
-			IBERROR("vendstat");
+			IBEXIT("vendstat");
 
 		for (i = 0; i < 16; i++)
 			if (cs->record[i].data)	/* PortXmitWait is 32 bit counter */
@@ -429,7 +480,7 @@ int main(int argc, char **argv)
 		if (do_vendor(&portid, srcport, IB_MLX_VENDOR_CLASS,
 			      IB_MAD_METHOD_GET, IB_MLX_IS3_CONFIG_SPACE_ACCESS,
 			      2 << 22 | 8 << 16, cs))
-			IBERROR("vendstat");
+			IBEXIT("vendstat");
 
 		for (i = 0; i < 8; i++)
 			if (cs->record[i].data)	/* PortXmitWait is 32 bit counter */

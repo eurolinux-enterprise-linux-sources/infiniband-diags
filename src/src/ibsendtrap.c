@@ -130,11 +130,11 @@ static int send_trap(const char *name,
 	ib_rpc_t trap_rpc;
 	ib_mad_notice_attr_t notice;
 
-	if (ib_resolve_self_via(&selfportid, &selfport, NULL, srcport))
-		IBERROR("can't resolve self");
+	if (resolve_self(ibd_ca, ibd_ca_port, &selfportid, &selfport, NULL))
+		IBEXIT("can't resolve self");
 
-	if (ib_resolve_smlid_via(&sm_port, 0, srcport))
-		IBERROR("can't resolve SM destination port");
+	if (resolve_sm_portid(ibd_ca, ibd_ca_port, &sm_port))
+		IBEXIT("can't resolve SM destination port");
 
 	memset(&trap_rpc, 0, sizeof(trap_rpc));
 	trap_rpc.mgtclass = IB_SMI_CLASS;
@@ -192,7 +192,7 @@ int main(int argc, char **argv)
 	snprintf(usage_args + n, sizeof(usage_args) - n,
 		 "\n  default behavior is to send \"%s\"", traps[0].trap_name);
 
-	ibdiag_process_opts(argc, argv, NULL, "DLG", NULL, NULL,
+	ibdiag_process_opts(argc, argv, NULL, "DGKL", NULL, NULL,
 			    usage_args, NULL);
 
 	argc -= optind;
@@ -207,7 +207,9 @@ int main(int argc, char **argv)
 
 	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 2);
 	if (!srcport)
-		IBERROR("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+		IBEXIT("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+
+	smp_mkey_set(srcport, ibd_mkey);
 
 	rc = process_send_trap(trap_name);
 	mad_rpc_close_port(srcport);

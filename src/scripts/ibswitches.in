@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
 IBPATH=${IBPATH:-@IBSCRIPTPATH@}
 
-function usage() {
+usage() {
 	echo Usage: `basename $0` "[-h] [<topology-file> | -C ca_name" \
-	    "-P ca_port -t(imeout) timeout_ms]"
+	    "-P ca_port -t timeout_ms]"
 	exit -1
 }
 
@@ -13,10 +13,10 @@ ca_info=""
 
 while [ "$1" ]; do
 	case $1 in
-	-h)
+	-h | --help)
 		usage
 		;;
-	-P | -C | -t | -timeout)
+	-P | --Port | -C | --Ca | -t | --timeout)
 		case $2 in
 		-*)
 			usage
@@ -56,10 +56,10 @@ echo "$text" | awk '
 			pi=match(desc, "port 0.*")
 			pinfo=substr(desc, pi)
 			desc=substr(desc, 1, pi-2)
-			type="base"
+			type="base port 0"
 			ti=match(desc, type)
 			if (ti==0) {
-				type="enhanced"
+				type="enhanced port 0"
 				ti=match(desc, type)
 				if (ti!=0)
 					desc=substr(desc, 1, ti-2)

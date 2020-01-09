@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 if [ -f /etc/sysconfig/network ]; then
 . /etc/sysconfig/network
@@ -7,6 +7,9 @@ fi
 ib_sysfs="/sys/class/infiniband"
 newname="$HOSTNAME"
 
+echo ""
+echo "*** WARNING ***: this command is deprecated."
+echo ""
 
 function usage
 {

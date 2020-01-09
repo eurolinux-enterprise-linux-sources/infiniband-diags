@@ -42,6 +42,10 @@
 
 #include <infiniband/ibnetdisc_osd.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct ibnd_chassis;		/* forward declare */
 struct ibnd_port;		/* forward declare */
 
@@ -54,6 +58,8 @@ typedef struct ibnd_node {
 	struct ibnd_node *next;	/* all node list in fabric */
 
 	ib_portid_t path_portid;	/* path from "from_node" */
+					/* NOTE: this is not valid on a fabric
+					 * read from a cache file */
 	uint16_t smalid;
 	uint8_t smalmc;
 
@@ -136,6 +142,9 @@ typedef struct ibnd_chassis {
 
 #define HTSZ 137
 
+/* define config flags */
+#define IBND_CONFIG_MLX_EPI (1 << 0)
+
 typedef struct ibnd_config {
 	unsigned max_smps;
 	unsigned show_progress;
@@ -143,7 +152,9 @@ typedef struct ibnd_config {
 	unsigned debug;
 	unsigned timeout_ms;
 	unsigned retries;
-	uint8_t pad[56];
+	uint32_t flags;
+	uint64_t mkey;
+	uint8_t pad[44];
 } ibnd_config_t;
 
 /** =========================================================================
@@ -220,6 +231,9 @@ IBND_EXPORT ibnd_port_t *ibnd_find_port_guid(ibnd_fabric_t * fabric,
 					uint64_t guid);
 IBND_EXPORT ibnd_port_t *ibnd_find_port_dr(ibnd_fabric_t * fabric,
 					char *dr_str);
+IBND_EXPORT ibnd_port_t *ibnd_find_port_lid(ibnd_fabric_t * fabric,
+					    uint16_t lid);
+
 typedef void (*ibnd_iter_port_func_t) (ibnd_port_t * port, void *user_data);
 IBND_EXPORT void ibnd_iter_ports(ibnd_fabric_t * fabric,
 				ibnd_iter_port_func_t func, void *user_data);
@@ -236,5 +250,9 @@ IBND_EXPORT char *ibnd_get_chassis_slot_str(ibnd_node_t * node,
 IBND_EXPORT int ibnd_is_xsigo_guid(uint64_t guid);
 IBND_EXPORT int ibnd_is_xsigo_tca(uint64_t guid);
 IBND_EXPORT int ibnd_is_xsigo_hca(uint64_t guid);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif				/* _IBNETDISC_H_ */

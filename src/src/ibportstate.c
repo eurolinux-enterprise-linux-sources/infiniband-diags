@@ -41,6 +41,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>
+#include <errno.h>
 
 #include <infiniband/umad.h>
 #include <infiniband/mad.h>
@@ -64,22 +65,30 @@ enum port_ops {
 	LID,
 	SMLID,
 	LMC,
+	MKEY,
+	MKEYLEASE,
+	MKEYPROT,
+	ON,
+	OFF
 };
 
 struct ibmad_port *srcport;
-int speed = 0; /* no state change */
-int espeed = 0; /* no state change */
-int fdr10 = 0; /* no state change */
-int width = 0; /* no state change */
-int lid;
-int smlid;
-int lmc;
-int mtu;
-int vls = 0; /* no state change */
+uint64_t speed = 0; /* no state change */
+uint64_t espeed = 0; /* no state change */
+uint64_t fdr10 = 0; /* no state change */
+uint64_t width = 0; /* no state change */
+uint64_t lid;
+uint64_t smlid;
+uint64_t lmc;
+uint64_t mtu;
+uint64_t vls = 0; /* no state change */
+uint64_t mkey;
+uint64_t mkeylease;
+uint64_t mkeyprot;
 
 struct {
 	const char *name;
-	int *val;
+	uint64_t *val;
 	int set;
 } port_args[] = {
 	{"query", NULL, 0},	/* QUERY */
@@ -98,6 +107,11 @@ struct {
 	{"lid", &lid, 0},	/* LID */
 	{"smlid", &smlid, 0},	/* SMLID */
 	{"lmc", &lmc, 0},	/* LMC */
+	{"mkey", &mkey, 0},	/* MKEY */
+	{"mkeylease", &mkeylease, 0},	/* MKEY LEASE */
+	{"mkeyprot", &mkeyprot, 0},	/* MKEY PROTECT BITS */
+	{"on", NULL, 0},	/* ON */
+	{"off", NULL, 0},	/* OFF */
 };
 
 #define NPORT_ARGS (sizeof(port_args) / sizeof(port_args[0]))
@@ -112,22 +126,13 @@ static int get_node_info(ib_portid_t * dest, uint8_t * data)
 	int node_type;
 
 	if (!smp_query_via(data, dest, IB_ATTR_NODE_INFO, 0, 0, srcport))
-		IBERROR("smp query nodeinfo failed");
+		IBEXIT("smp query nodeinfo failed");
 
 	node_type = mad_get_field(data, 0, IB_NODE_TYPE_F);
 	if (node_type == IB_NODE_SWITCH)	/* Switch NodeType ? */
 		return 1;
 	else
 		return 0;
-}
-
-static int is_mlnx_ext_port_info_supported(uint32_t devid)
-{
-	if (devid == 0xc738)
-		return 1;
-	if (devid >= 0x1003 && devid <= 0x1010)
-		return 1;
-	return 0;
 }
 
 static int get_port_info(ib_portid_t * dest, uint8_t * data, int portnum,
@@ -139,19 +144,19 @@ static int get_port_info(ib_portid_t * dest, uint8_t * data, int portnum,
 
 	if (is_switch) {
 		if (!smp_query_via(smp, dest, IB_ATTR_PORT_INFO, 0, 0, srcport))
-			IBERROR("smp query port 0 portinfo failed");
+			IBEXIT("smp query port 0 portinfo failed");
 		info = smp;
 	} else
 		info = data;
 
 	if (!smp_query_via(data, dest, IB_ATTR_PORT_INFO, portnum, 0, srcport))
-		IBERROR("smp query portinfo failed");
+		IBEXIT("smp query portinfo failed");
 	cap_mask = mad_get_field(info, 0, IB_PORT_CAPMASK_F);
 	return (cap_mask & CL_NTOH32(IB_PORT_CAP_HAS_EXT_SPEEDS));
 }
 
 static void show_port_info(ib_portid_t * dest, uint8_t * data, int portnum,
-			   int espeed_cap)
+			   int espeed_cap, int is_switch)
 {
 	char buf[2300];
 	char val[64];
@@ -210,25 +215,48 @@ static void show_port_info(ib_portid_t * dest, uint8_t * data, int portnum,
 			       val);
 		sprintf(buf + strlen(buf), "%s", "\n");
 	}
+	if (!is_switch || portnum == 0) {
+		if (show_keys) {
+			mad_decode_field(data, IB_PORT_MKEY_F, val);
+			mad_dump_field(IB_PORT_MKEY_F, buf + strlen(buf),
+				       sizeof buf - strlen(buf), val);
+		} else
+			snprint_field(buf+strlen(buf), sizeof(buf)-strlen(buf),
+				      IB_PORT_MKEY_F, 32, NOT_DISPLAYED_STR);
+		sprintf(buf+strlen(buf), "%s", "\n");
+		mad_decode_field(data, IB_PORT_MKEY_LEASE_F, val);
+		mad_dump_field(IB_PORT_MKEY_LEASE_F, buf + strlen(buf),
+			       sizeof buf - strlen(buf), val);
+		sprintf(buf+strlen(buf), "%s", "\n");
+		mad_decode_field(data, IB_PORT_MKEY_PROT_BITS_F, val);
+		mad_dump_field(IB_PORT_MKEY_PROT_BITS_F, buf + strlen(buf),
+			       sizeof buf - strlen(buf), val);
+		sprintf(buf+strlen(buf), "%s", "\n");
+	}
 
 	printf("# Port info: %s port %d\n%s", portid2str(dest), portnum, buf);
 }
 
 static void set_port_info(ib_portid_t * dest, uint8_t * data, int portnum,
-			  int espeed_cap)
+			  int espeed_cap, int is_switch)
 {
-	if (!smp_set_via(data, dest, IB_ATTR_PORT_INFO, portnum, 0, srcport))
-		IBERROR("smp set portinfo failed");
+	unsigned mod;
+
+	mod = portnum;
+	if (espeed_cap)
+		mod |= 1<<31;
+	if (!smp_set_via(data, dest, IB_ATTR_PORT_INFO, mod, 0, srcport))
+		IBEXIT("smp set portinfo failed");
 
 	printf("\nAfter PortInfo set:\n");
-	show_port_info(dest, data, portnum, espeed_cap);
+	show_port_info(dest, data, portnum, espeed_cap, is_switch);
 }
 
 static void get_ext_port_info(ib_portid_t * dest, uint8_t * data, int portnum)
 {
 	if (!smp_query_via(data, dest, IB_ATTR_MLNX_EXT_PORT_INFO,
 			   portnum, 0, srcport))
-		IBERROR("smp query ext portinfo failed");
+		IBEXIT("smp query ext portinfo failed");
 }
 
 static void show_ext_port_info(ib_portid_t * dest, uint8_t * data, int portnum)
@@ -245,7 +273,7 @@ static void set_ext_port_info(ib_portid_t * dest, uint8_t * data, int portnum)
 {
 	if (!smp_set_via(data, dest, IB_ATTR_MLNX_EXT_PORT_INFO,
 			 portnum, 0, srcport))
-		IBERROR("smp set ext portinfo failed");
+		IBEXIT("smp set ext portinfo failed");
 
 	printf("\nAfter ExtendedPortInfo set:\n");
 	show_ext_port_info(dest, data, portnum);
@@ -357,10 +385,12 @@ int main(int argc, char **argv)
 	int changed = 0;
 	int i;
 	uint16_t devid, rem_devid;
-	long val;
+	uint64_t val;
+	char *endp;
 	char usage_args[] = "<dest dr_path|lid|guid> <portnum> [<op>]\n"
-	    "\nSupported ops: enable, disable, reset, speed, width, query,\n"
-	    "\tdown, arm, active, vls, mtu, lid, smlid, lmc\n";
+	    "\nSupported ops: enable, disable, on, off, reset, speed, espeed, fdr10,\n"
+	    "\twidth, query, down, arm, active, vls, mtu, lid, smlid, lmc,\n"
+	    "\tmkey, mkeylease, mkeyprot\n";
 	const char *usage_examples[] = {
 		"3 1 disable\t\t\t# by lid",
 		"-G 0x2C9000100D051 1 enable\t# by guid",
@@ -383,11 +413,13 @@ int main(int argc, char **argv)
 
 	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 3);
 	if (!srcport)
-		IBERROR("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
+		IBEXIT("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
 
-	if (ib_resolve_portid_str_via(&portid, argv[0], ibd_dest_type,
-				      ibd_sm_id, srcport) < 0)
-		IBERROR("can't resolve destination port %s", argv[0]);
+	smp_mkey_set(srcport, ibd_mkey);
+
+	if (resolve_portid_str(ibd_ca, ibd_ca_port, &portid, argv[0],
+			       ibd_dest_type, ibd_sm_id, srcport) < 0)
+		IBEXIT("can't resolve destination port %s", argv[0]);
 
 	if (argc > 1)
 		portnum = strtol(argv[1], 0, 0);
@@ -401,7 +433,7 @@ int main(int argc, char **argv)
 			port_args[j].set = 1;
 			if (!port_args[j].val) {
 				if (port_op >= 0)
-					IBERROR("%s only one of: ",
+					IBEXIT("%s only one of: ",
 						"query, enable, disable, "
 						"reset, down, arm, active, "
 						"can be specified",
@@ -410,53 +442,74 @@ int main(int argc, char **argv)
 				break;
 			}
 			if (++i >= argc)
-				IBERROR("%s requires an additional parameter",
+				IBEXIT("%s requires an additional parameter",
 					port_args[j].name);
-			val = strtol(argv[i], 0, 0);
+			val = strtoull(argv[i], 0, 0);
 			switch (j) {
 			case SPEED:
 				if (val < 0 || val > 15)
-					IBERROR("invalid speed value %ld", val);
+					IBEXIT("invalid speed value %ld", val);
 				break;
 			case ESPEED:
 				if (val < 0 || val > 31)
-					IBERROR("invalid extended speed value %ld", val);
+					IBEXIT("invalid extended speed value %ld", val);
 				break;
 			case FDR10SPEED:
 				if (val < 0 || val > 1)
-					IBERROR("invalid fdr10 speed value %ld", val);
+					IBEXIT("invalid fdr10 speed value %ld", val);
 				break;
 			case WIDTH:
 				if (val < 0 || (val > 15 && val != 255))
-					IBERROR("invalid width value %ld", val);
+					IBEXIT("invalid width value %ld", val);
 				break;
 			case VLS:
 				if (val <= 0 || val > 5)
-					IBERROR("invalid vls value %ld", val);
+					IBEXIT("invalid vls value %ld", val);
 				break;
 			case MTU:
 				if (val <= 0 || val > 5)
-					IBERROR("invalid mtu value %ld", val);
+					IBEXIT("invalid mtu value %ld", val);
 				break;
 			case LID:
 				if (val <= 0 || val >= 0xC000)
-					IBERROR("invalid lid value 0x%lx", val);
+					IBEXIT("invalid lid value 0x%lx", val);
 				break;
 			case SMLID:
 				if (val <= 0 || val >= 0xC000)
-					IBERROR("invalid smlid value 0x%lx",
+					IBEXIT("invalid smlid value 0x%lx",
 						val);
 				break;
 			case LMC:
 				if (val < 0 || val > 7)
-					IBERROR("invalid lmc value %ld", val);
+					IBEXIT("invalid lmc value %ld", val);
+				break;
+			case MKEY:
+				errno = 0;
+				val = strtoull(argv[i], &endp, 0);
+				if (errno || *endp != '\0') {
+					errno = 0;
+					val = strtoull(getpass("New M_Key: "),
+						       &endp, 0);
+					if (errno || *endp != '\0') {
+						IBEXIT("Bad new M_Key\n");
+					}
+				}
+				/* All 64-bit values are legal */
+				break;
+			case MKEYLEASE:
+				if (val < 0 || val > 0xFFFF)
+					IBEXIT("invalid mkey lease time %ld", val);
+				break;
+			case MKEYPROT:
+				if (val < 0 || val > 3)
+					IBEXIT("invalid mkey protection bit setting %ld", val);
 			}
-			*port_args[j].val = (int)val;
+			*port_args[j].val = val;
 			changed = 1;
 			break;
 		}
 		if (j == NPORT_ARGS)
-			IBERROR("invalid operation: %s", argv[i]);
+			IBEXIT("invalid operation: %s", argv[i]);
 	}
 	if (port_op < 0)
 		port_op = QUERY;
@@ -464,12 +517,16 @@ int main(int argc, char **argv)
 	is_switch = get_node_info(&portid, data);
 	devid = (uint16_t) mad_get_field(data, 0, IB_NODE_DEVID_F);
 
+	if ((port_args[MKEY].set || port_args[MKEYLEASE].set ||
+	     port_args[MKEYPROT].set) && is_switch && portnum != 0)
+		IBEXIT("Can't set M_Key fields on switch port != 0");
+
 	if (port_op != QUERY || changed)
 		printf("Initial %s PortInfo:\n", is_switch ? "Switch" : "CA");
 	else
 		printf("%s PortInfo:\n", is_switch ? "Switch" : "CA");
 	espeed_cap = get_port_info(&portid, data, portnum, is_switch);
-	show_port_info(&portid, data, portnum, espeed_cap);
+	show_port_info(&portid, data, portnum, espeed_cap, is_switch);
 	if (is_mlnx_ext_port_info_supported(devid)) {
 		get_ext_port_info(&portid, data2, portnum);
 		show_ext_port_info(&portid, data2, portnum);
@@ -481,6 +538,8 @@ int main(int argc, char **argv)
 		 * the SMA command will fail due to an invalid LID.
 		 * Set it to something unlikely but valid.
 		 */
+		physstate = mad_get_field(data, 0, IB_PORT_PHYS_STATE_F);
+
 		val = mad_get_field(data, 0, IB_PORT_LID_F);
 		if (!port_args[LID].set && (!val || val == 0xFFFF))
 			mad_set_field(data, 0, IB_PORT_LID_F, 0x1234);
@@ -491,11 +550,18 @@ int main(int argc, char **argv)
 		mad_set_field(data, 0, IB_PORT_PHYS_STATE_F, 0);	/* NOP */
 
 		switch (port_op) {
+		case ON:
+			/* Enable only if state is Disable */
+			if(physstate != 3) {
+				printf("Port is already in enable state\n");
+				goto close_port;
+			}
 		case ENABLE:
 		case RESET:
 			/* Polling */
 			mad_set_field(data, 0, IB_PORT_PHYS_STATE_F, 2);
 			break;
+		case OFF:
 		case DISABLE:
 			printf("Disable may be irreversible\n");
 			mad_set_field(data, 0, IB_PORT_PHYS_STATE_F, 3);
@@ -536,7 +602,17 @@ int main(int argc, char **argv)
 				      fdr10);
 			set_ext_port_info(&portid, data2, portnum);
 		}
-		set_port_info(&portid, data, portnum, is_switch);
+
+		if (port_args[MKEY].set)
+			mad_set_field64(data, 0, IB_PORT_MKEY_F, mkey);
+		if (port_args[MKEYLEASE].set)
+			mad_set_field(data, 0, IB_PORT_MKEY_LEASE_F,
+				      mkeylease);
+		if (port_args[MKEYPROT].set)
+			mad_set_field(data, 0, IB_PORT_MKEY_PROT_BITS_F,
+				      mkeyprot);
+
+		set_port_info(&portid, data, portnum, espeed_cap, is_switch);
 
 	} else if (is_switch && portnum) {
 		/* Now, make sure PortState is Active */
@@ -583,9 +659,9 @@ int main(int argc, char **argv)
 			peerportid.drpath.p[1] = (uint8_t) portnum;
 
 			/* Set DrSLID to local lid */
-			if (ib_resolve_self_via(&selfportid,
-						&selfport, 0, srcport) < 0)
-				IBERROR("could not resolve self");
+			if (resolve_self(ibd_ca, ibd_ca_port, &selfportid,
+						&selfport, 0) < 0)
+				IBEXIT("could not resolve self");
 			peerportid.drpath.drslid = (uint16_t) selfportid.lid;
 			peerportid.drpath.drdlid = 0xffff;
 
@@ -605,7 +681,7 @@ int main(int argc, char **argv)
 				get_ext_port_info(&peerportid, data2,
 						  peerlocalportnum);
 			show_port_info(&peerportid, data, peerlocalportnum,
-				       peer_espeed_cap);
+				       peer_espeed_cap, is_peer_switch);
 			if (is_mlnx_ext_port_info_supported(rem_devid))
 				show_ext_port_info(&peerportid, data2,
 						   peerlocalportnum);
@@ -663,12 +739,13 @@ int main(int argc, char **argv)
 			} else {
 				if (fdr10e & FDR10 && peerfdr10e & FDR10) {
 					if (!(fdr10a & FDR10))
-						IBWARN("Peer ports operating at  active speed %d rather than FDR10", lsa);
+						IBWARN("Peer ports operating at active speed %d rather than FDR10", lsa);
 				}
 			}
 		}
 	}
 
+close_port:
 	mad_rpc_close_port(srcport);
 	exit(0);
 }

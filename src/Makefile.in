@@ -44,14 +44,58 @@ sbin_PROGRAMS = src/ibaddr$(EXEEXT) src/ibnetdiscover$(EXEEXT) \
 	src/smpdump$(EXEEXT) src/smpquery$(EXEEXT) \
 	src/saquery$(EXEEXT) src/vendstat$(EXEEXT) \
 	src/iblinkinfo$(EXEEXT) src/ibqueryerrors$(EXEEXT) \
-	src/ibcacheedit$(EXEEXT) $(am__EXEEXT_1)
+	src/ibcacheedit$(EXEEXT) src/ibccquery$(EXEEXT) \
+	src/ibccconfig$(EXEEXT) src/dump_fts$(EXEEXT) $(am__EXEEXT_1)
 @ENABLE_TEST_UTILS_TRUE@am__append_1 = src/ibsendtrap src/mcm_rereg_test
+@ENABLE_COMPAT_UTILS_TRUE@am__append_2 = scripts/ibcheckerrs scripts/ibchecknet scripts/ibchecknode \
+@ENABLE_COMPAT_UTILS_TRUE@		scripts/ibcheckport scripts/ibcheckportwidth scripts/ibcheckportstate \
+@ENABLE_COMPAT_UTILS_TRUE@		scripts/ibcheckwidth scripts/ibcheckstate \
+@ENABLE_COMPAT_UTILS_TRUE@		scripts/ibcheckerrors scripts/ibdatacounts \
+@ENABLE_COMPAT_UTILS_TRUE@		scripts/ibdatacounters scripts/ibdiscover.pl \
+@ENABLE_COMPAT_UTILS_TRUE@		scripts/ibswportwatch.pl \
+@ENABLE_COMPAT_UTILS_TRUE@		scripts/ibqueryerrors.pl scripts/iblinkinfo.pl \
+@ENABLE_COMPAT_UTILS_TRUE@		scripts/ibprintca.pl scripts/ibprintswitch.pl scripts/ibprintrt.pl \
+@ENABLE_COMPAT_UTILS_TRUE@		scripts/set_nodedesc.sh scripts/ibclearerrors scripts/ibclearcounters
+
+
+# but only actually install them if specified
+@ENABLE_COMPAT_UTILS_TRUE@am__append_3 = $(compat_man_pages)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/infiniband-diags.spec.in $(top_srcdir)/configure \
+	$(top_srcdir)/doc/man/check_lft_balance.8.in \
+	$(top_srcdir)/doc/man/dump_fts.8.in \
+	$(top_srcdir)/doc/man/ibaddr.8.in \
+	$(top_srcdir)/doc/man/ibcacheedit.8.in \
+	$(top_srcdir)/doc/man/ibccconfig.8.in \
+	$(top_srcdir)/doc/man/ibccquery.8.in \
+	$(top_srcdir)/doc/man/ibfindnodesusing.8.in \
+	$(top_srcdir)/doc/man/ibhosts.8.in \
+	$(top_srcdir)/doc/man/ibidsverify.8.in \
+	$(top_srcdir)/doc/man/iblinkinfo.8.in \
+	$(top_srcdir)/doc/man/ibnetdiscover.8.in \
+	$(top_srcdir)/doc/man/ibnodes.8.in \
+	$(top_srcdir)/doc/man/ibping.8.in \
+	$(top_srcdir)/doc/man/ibportstate.8.in \
+	$(top_srcdir)/doc/man/ibqueryerrors.8.in \
+	$(top_srcdir)/doc/man/ibroute.8.in \
+	$(top_srcdir)/doc/man/ibrouters.8.in \
+	$(top_srcdir)/doc/man/ibstat.8.in \
+	$(top_srcdir)/doc/man/ibstatus.8.in \
+	$(top_srcdir)/doc/man/ibswitches.8.in \
+	$(top_srcdir)/doc/man/ibsysstat.8.in \
+	$(top_srcdir)/doc/man/ibtracert.8.in \
+	$(top_srcdir)/doc/man/infiniband-diags.8.in \
+	$(top_srcdir)/doc/man/perfquery.8.in \
+	$(top_srcdir)/doc/man/saquery.8.in \
+	$(top_srcdir)/doc/man/sminfo.8.in \
+	$(top_srcdir)/doc/man/smpdump.8.in \
+	$(top_srcdir)/doc/man/smpquery.8.in \
+	$(top_srcdir)/doc/man/vendstat.8.in \
 	$(top_srcdir)/include/ibdiag_version.h.in \
-	$(top_srcdir)/man/ibqueryerrors.8.in \
+	$(top_srcdir)/scripts/dump_lfts.sh.in \
+	$(top_srcdir)/scripts/dump_mfts.sh.in \
 	$(top_srcdir)/scripts/ibcheckerrors.in \
 	$(top_srcdir)/scripts/ibcheckerrs.in \
 	$(top_srcdir)/scripts/ibchecknet.in \
@@ -71,7 +115,7 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(top_srcdir)/scripts/ibqueryerrors.pl.in \
 	$(top_srcdir)/scripts/ibrouters.in \
 	$(top_srcdir)/scripts/ibswitches.in AUTHORS COPYING ChangeLog \
-	config/compile config/config.guess config/config.sub \
+	NEWS config/compile config/config.guess config/config.sub \
 	config/depcomp config/install-sh config/ltmain.sh \
 	config/missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -79,7 +123,7 @@ am__aclocal_m4_deps = $(top_srcdir)/config/libtool.m4 \
 	$(top_srcdir)/config/ltoptions.m4 \
 	$(top_srcdir)/config/ltsugar.m4 \
 	$(top_srcdir)/config/ltversion.m4 \
-	$(top_srcdir)/config/lt~obsolete.m4 $(top_srcdir)/configure.in
+	$(top_srcdir)/config/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -95,24 +139,42 @@ CONFIG_CLEAN_FILES = infiniband-diags.spec include/ibdiag_version.h \
 	scripts/ibdatacounts scripts/ibdatacounters scripts/ibhosts \
 	scripts/ibnodes scripts/ibswitches scripts/ibrouters \
 	scripts/iblinkinfo.pl scripts/ibqueryerrors.pl \
-	man/ibqueryerrors.8
+	scripts/dump_lfts.sh scripts/dump_mfts.sh doc/man/ibaddr.8 \
+	doc/man/check_lft_balance.8 doc/man/ibcacheedit.8 \
+	doc/man/ibccconfig.8 doc/man/ibccquery.8 doc/man/dump_fts.8 \
+	doc/man/ibhosts.8 doc/man/ibidsverify.8 doc/man/iblinkinfo.8 \
+	doc/man/ibfindnodesusing.8 doc/man/ibnetdiscover.8 \
+	doc/man/ibnodes.8 doc/man/ibping.8 doc/man/ibportstate.8 \
+	doc/man/ibqueryerrors.8 doc/man/ibroute.8 doc/man/ibrouters.8 \
+	doc/man/ibstat.8 doc/man/ibstatus.8 doc/man/ibswitches.8 \
+	doc/man/ibsysstat.8 doc/man/ibtracert.8 doc/man/perfquery.8 \
+	doc/man/saquery.8 doc/man/sminfo.8 doc/man/smpdump.8 \
+	doc/man/smpquery.8 doc/man/vendstat.8 \
+	doc/man/infiniband-diags.8
 CONFIG_CLEAN_VPATH_FILES =
 LIBRARIES = $(noinst_LIBRARIES)
 ARFLAGS = cru
 libcommon_a_AR = $(AR) $(ARFLAGS)
 libcommon_a_LIBADD =
-am_libcommon_a_OBJECTS = ibdiag_common.$(OBJEXT)
+am_libcommon_a_OBJECTS = ibdiag_common.$(OBJEXT) ibdiag_sa.$(OBJEXT)
 libcommon_a_OBJECTS = $(am_libcommon_a_OBJECTS)
 @ENABLE_TEST_UTILS_TRUE@am__EXEEXT_1 = src/ibsendtrap$(EXEEXT) \
 @ENABLE_TEST_UTILS_TRUE@	src/mcm_rereg_test$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(sbindir)" \
 	"$(DESTDIR)$(man8dir)"
 PROGRAMS = $(sbin_PROGRAMS)
+am_src_dump_fts_OBJECTS = dump_fts.$(OBJEXT)
+src_dump_fts_OBJECTS = $(am_src_dump_fts_OBJECTS)
+src_dump_fts_LDADD = $(LDADD)
+src_dump_fts_DEPENDENCIES = libcommon.a
+src_dump_fts_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(src_dump_fts_LDFLAGS) $(LDFLAGS) -o $@
+am__dirstamp = $(am__leading_dot)dirstamp
 am_src_ibaddr_OBJECTS = ibaddr.$(OBJEXT)
 src_ibaddr_OBJECTS = $(am_src_ibaddr_OBJECTS)
 src_ibaddr_LDADD = $(LDADD)
 src_ibaddr_DEPENDENCIES = libcommon.a
-am__dirstamp = $(am__leading_dot)dirstamp
 am_src_ibcacheedit_OBJECTS = ibcacheedit.$(OBJEXT)
 src_ibcacheedit_OBJECTS = $(am_src_ibcacheedit_OBJECTS)
 src_ibcacheedit_LDADD = $(LDADD)
@@ -120,6 +182,14 @@ src_ibcacheedit_DEPENDENCIES = libcommon.a
 src_ibcacheedit_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(src_ibcacheedit_LDFLAGS) $(LDFLAGS) -o $@
+am_src_ibccconfig_OBJECTS = ibccconfig.$(OBJEXT)
+src_ibccconfig_OBJECTS = $(am_src_ibccconfig_OBJECTS)
+src_ibccconfig_LDADD = $(LDADD)
+src_ibccconfig_DEPENDENCIES = libcommon.a
+am_src_ibccquery_OBJECTS = ibccquery.$(OBJEXT)
+src_ibccquery_OBJECTS = $(am_src_ibccquery_OBJECTS)
+src_ibccquery_LDADD = $(LDADD)
+src_ibccquery_DEPENDENCIES = libcommon.a
 am_src_iblinkinfo_OBJECTS = iblinkinfo.$(OBJEXT)
 src_iblinkinfo_OBJECTS = $(am_src_iblinkinfo_OBJECTS)
 src_iblinkinfo_LDADD = $(LDADD)
@@ -232,26 +302,30 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libcommon_a_SOURCES) $(src_ibaddr_SOURCES) \
-	$(src_ibcacheedit_SOURCES) $(src_iblinkinfo_SOURCES) \
-	$(src_ibnetdiscover_SOURCES) $(src_ibping_SOURCES) \
-	$(src_ibportstate_SOURCES) $(src_ibqueryerrors_SOURCES) \
-	$(src_ibroute_SOURCES) $(src_ibsendtrap_SOURCES) \
-	$(src_ibstat_SOURCES) $(src_ibsysstat_SOURCES) \
-	$(src_ibtracert_SOURCES) $(src_mcm_rereg_test_SOURCES) \
-	$(src_perfquery_SOURCES) $(src_saquery_SOURCES) \
-	$(src_sminfo_SOURCES) $(src_smpdump_SOURCES) \
-	$(src_smpquery_SOURCES) $(src_vendstat_SOURCES)
-DIST_SOURCES = $(libcommon_a_SOURCES) $(src_ibaddr_SOURCES) \
-	$(src_ibcacheedit_SOURCES) $(src_iblinkinfo_SOURCES) \
-	$(src_ibnetdiscover_SOURCES) $(src_ibping_SOURCES) \
-	$(src_ibportstate_SOURCES) $(src_ibqueryerrors_SOURCES) \
-	$(src_ibroute_SOURCES) $(src_ibsendtrap_SOURCES) \
-	$(src_ibstat_SOURCES) $(src_ibsysstat_SOURCES) \
-	$(src_ibtracert_SOURCES) $(src_mcm_rereg_test_SOURCES) \
-	$(src_perfquery_SOURCES) $(src_saquery_SOURCES) \
-	$(src_sminfo_SOURCES) $(src_smpdump_SOURCES) \
-	$(src_smpquery_SOURCES) $(src_vendstat_SOURCES)
+SOURCES = $(libcommon_a_SOURCES) $(src_dump_fts_SOURCES) \
+	$(src_ibaddr_SOURCES) $(src_ibcacheedit_SOURCES) \
+	$(src_ibccconfig_SOURCES) $(src_ibccquery_SOURCES) \
+	$(src_iblinkinfo_SOURCES) $(src_ibnetdiscover_SOURCES) \
+	$(src_ibping_SOURCES) $(src_ibportstate_SOURCES) \
+	$(src_ibqueryerrors_SOURCES) $(src_ibroute_SOURCES) \
+	$(src_ibsendtrap_SOURCES) $(src_ibstat_SOURCES) \
+	$(src_ibsysstat_SOURCES) $(src_ibtracert_SOURCES) \
+	$(src_mcm_rereg_test_SOURCES) $(src_perfquery_SOURCES) \
+	$(src_saquery_SOURCES) $(src_sminfo_SOURCES) \
+	$(src_smpdump_SOURCES) $(src_smpquery_SOURCES) \
+	$(src_vendstat_SOURCES)
+DIST_SOURCES = $(libcommon_a_SOURCES) $(src_dump_fts_SOURCES) \
+	$(src_ibaddr_SOURCES) $(src_ibcacheedit_SOURCES) \
+	$(src_ibccconfig_SOURCES) $(src_ibccquery_SOURCES) \
+	$(src_iblinkinfo_SOURCES) $(src_ibnetdiscover_SOURCES) \
+	$(src_ibping_SOURCES) $(src_ibportstate_SOURCES) \
+	$(src_ibqueryerrors_SOURCES) $(src_ibroute_SOURCES) \
+	$(src_ibsendtrap_SOURCES) $(src_ibstat_SOURCES) \
+	$(src_ibsysstat_SOURCES) $(src_ibtracert_SOURCES) \
+	$(src_mcm_rereg_test_SOURCES) $(src_perfquery_SOURCES) \
+	$(src_saquery_SOURCES) $(src_sminfo_SOURCES) \
+	$(src_smpdump_SOURCES) $(src_smpquery_SOURCES) \
+	$(src_vendstat_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -269,6 +343,8 @@ AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
 	distdir dist dist-all distcheck
 ETAGS = etags
 CTAGS = ctags
+am__tty_colors = \
+red=; grn=; lgn=; blu=; std=
 DIST_SUBDIRS = $(SUBDIRS)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
@@ -313,6 +389,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_DATE = @BUILD_DATE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -329,6 +406,8 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+GLIB_CFLAGS = @GLIB_CFLAGS@
+GLIB_LIBS = @GLIB_LIBS@
 GREP = @GREP@
 IBDIAG_CONFIG_PATH = @IBDIAG_CONFIG_PATH@
 IBSCRIPTPATH = @IBSCRIPTPATH@
@@ -362,6 +441,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PERL = @PERL@
 PERL_INSTALLDIR = @PERL_INSTALLDIR@
+PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 RELEASE = @RELEASE@
 SED = @SED@
@@ -393,6 +473,8 @@ datarootdir = @datarootdir@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
+have_dash = @have_dash@
+have_rst2man = @have_rst2man@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
@@ -430,26 +512,39 @@ INCLUDES = -I$(top_builddir)/include/ -I$(srcdir)/include -I$(includedir) \
 
 @DEBUG_FALSE@DBGFLAGS = 
 @DEBUG_TRUE@DBGFLAGS = -ggdb -D_DEBUG_
-sbin_SCRIPTS = scripts/ibcheckerrs scripts/ibchecknet scripts/ibchecknode \
-               scripts/ibcheckport scripts/ibhosts scripts/ibstatus \
-	       scripts/ibswitches scripts/ibnodes scripts/ibrouters \
-	       scripts/ibcheckwidth scripts/ibcheckportwidth \
-	       scripts/ibcheckstate scripts/ibcheckportstate \
-	       scripts/ibcheckerrors scripts/ibclearerrors \
-	       scripts/ibclearcounters scripts/ibdatacounts \
-	       scripts/ibdatacounters scripts/ibdiscover.pl \
-	       scripts/dump_lfts.sh scripts/dump_mfts.sh \
-	       scripts/set_nodedesc.sh \
-	       scripts/ibqueryerrors.pl scripts/ibswportwatch.pl \
-	       scripts/iblinkinfo.pl scripts/ibprintswitch.pl \
-	       scripts/ibprintca.pl scripts/ibprintrt.pl \
-	       scripts/ibfindnodesusing.pl scripts/ibidsverify.pl \
-	       scripts/check_lft_balance.pl
+sbin_SCRIPTS = scripts/ibhosts scripts/ibswitches scripts/ibnodes \
+	scripts/ibrouters scripts/ibfindnodesusing.pl \
+	scripts/ibidsverify.pl scripts/check_lft_balance.pl \
+	scripts/dump_lfts.sh scripts/dump_mfts.sh scripts/ibstatus \
+	$(am__append_2)
+man_MANS = doc/man/ibaddr.8 doc/man/check_lft_balance.8 \
+	doc/man/ibcacheedit.8 doc/man/ibccconfig.8 doc/man/ibccquery.8 \
+	doc/man/dump_fts.8 doc/man/iblinkinfo.8 \
+	doc/man/ibfindnodesusing.8 doc/man/ibhosts.8 \
+	doc/man/ibidsverify.8 doc/man/ibnetdiscover.8 \
+	doc/man/ibnodes.8 doc/man/ibping.8 doc/man/ibportstate.8 \
+	doc/man/ibqueryerrors.8 doc/man/ibroute.8 doc/man/ibrouters.8 \
+	doc/man/ibstat.8 doc/man/ibstatus.8 doc/man/ibswitches.8 \
+	doc/man/ibsysstat.8 doc/man/ibtracert.8 doc/man/perfquery.8 \
+	doc/man/saquery.8 doc/man/sminfo.8 doc/man/smpdump.8 \
+	doc/man/smpquery.8 doc/man/vendstat.8 \
+	doc/man/infiniband-diags.8 man/dump_lfts.8 man/dump_mfts.8 \
+	$(am__append_3)
+
+# define this for the dist target
+compat_man_pages = man/ibdiscover.8 man/ibcheckerrors.8 man/ibcheckerrs.8 \
+		man/ibchecknet.8 man/ibchecknode.8 man/ibcheckport.8 \
+		man/ibcheckportstate.8 man/ibcheckportwidth.8 \
+		man/ibcheckstate.8 man/ibcheckwidth.8 \
+		man/ibswportwatch.8 \
+		man/ibprintswitch.8 man/ibprintca.8 man/ibdatacounts.8 \
+		man/ibdatacounters.8 man/ibprintrt.8 \
+		man/ibclearcounters.8 man/ibclearerrors.8
 
 noinst_LIBRARIES = libcommon.a
 AM_CFLAGS = -Wall $(DBGFLAGS)
 LDADD = libcommon.a
-libcommon_a_SOURCES = src/ibdiag_common.c
+libcommon_a_SOURCES = src/ibdiag_common.c src/ibdiag_sa.c
 src_ibaddr_SOURCES = src/ibaddr.c
 src_ibnetdiscover_SOURCES = src/ibnetdiscover.c
 src_ibnetdiscover_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
@@ -468,30 +563,19 @@ src_ibsendtrap_SOURCES = src/ibsendtrap.c
 src_vendstat_SOURCES = src/vendstat.c
 src_mcm_rereg_test_SOURCES = src/mcm_rereg_test.c
 src_iblinkinfo_SOURCES = src/iblinkinfo.c
+src_ibccquery_SOURCES = src/ibccquery.c
+src_ibccconfig_SOURCES = src/ibccconfig.c
 src_iblinkinfo_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
 src_ibqueryerrors_SOURCES = src/ibqueryerrors.c
 src_ibqueryerrors_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
 src_ibcacheedit_SOURCES = src/ibcacheedit.c
 src_ibcacheedit_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
-man_MANS = man/ibaddr.8 man/ibcheckerrors.8 man/ibcheckerrs.8 \
-	man/ibchecknet.8 man/ibchecknode.8 man/ibcheckport.8 \
-	man/ibcheckportstate.8 man/ibcheckportwidth.8 man/ibcheckstate.8 \
-	man/ibcheckwidth.8 man/ibclearcounters.8 man/ibclearerrors.8 \
-	man/ibhosts.8 man/ibnetdiscover.8 man/ibnodes.8 man/ibping.8 \
-	man/ibportstate.8 man/ibroute.8 man/ibstat.8 man/ibstatus.8 \
-	man/ibswitches.8 man/ibtracert.8 man/perfquery.8 man/sminfo.8 \
-	man/smpdump.8 man/smpquery.8 man/saquery.8 man/vendstat.8 \
-	man/dump_lfts.8 man/dump_mfts.8 man/ibdiscover.8 man/ibsysstat.8 \
-	man/iblinkinfo.8 man/ibqueryerrors.8 man/ibswportwatch.8 \
-	man/ibprintswitch.8 man/ibprintca.8 man/ibfindnodesusing.8 \
-	man/ibdatacounts.8 man/ibdatacounters.8 \
-	man/ibrouters.8 man/ibprintrt.8 man/ibidsverify.8 \
-	man/check_lft_balance.8 man/ibcacheedit.8 \
-	man/infiniband-diags.8
-
+src_dump_fts_SOURCES = src/dump_fts.c
+src_dump_fts_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
 BUILT_SOURCES = ibdiag_version
-EXTRA_DIST = scripts include infiniband-diags.spec.in infiniband-diags.spec \
-	$(man_MANS) autogen.sh etc/error_thresholds
+@HAVE_DASH_TRUE@TESTS = tests/check_shells.sh
+EXTRA_DIST = doc scripts include infiniband-diags.spec.in infiniband-diags.spec \
+	$(man_MANS) $(compat_man_pages) autogen.sh etc/*
 
 all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -591,7 +675,67 @@ scripts/iblinkinfo.pl: $(top_builddir)/config.status $(top_srcdir)/scripts/iblin
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 scripts/ibqueryerrors.pl: $(top_builddir)/config.status $(top_srcdir)/scripts/ibqueryerrors.pl.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
-man/ibqueryerrors.8: $(top_builddir)/config.status $(top_srcdir)/man/ibqueryerrors.8.in
+scripts/dump_lfts.sh: $(top_builddir)/config.status $(top_srcdir)/scripts/dump_lfts.sh.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+scripts/dump_mfts.sh: $(top_builddir)/config.status $(top_srcdir)/scripts/dump_mfts.sh.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibaddr.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibaddr.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/check_lft_balance.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/check_lft_balance.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibcacheedit.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibcacheedit.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibccconfig.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibccconfig.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibccquery.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibccquery.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/dump_fts.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/dump_fts.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibhosts.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibhosts.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibidsverify.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibidsverify.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/iblinkinfo.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/iblinkinfo.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibfindnodesusing.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibfindnodesusing.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibnetdiscover.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibnetdiscover.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibnodes.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibnodes.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibping.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibping.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibportstate.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibportstate.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibqueryerrors.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibqueryerrors.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibroute.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibroute.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibrouters.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibrouters.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibstat.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibstat.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibstatus.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibstatus.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibswitches.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibswitches.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibsysstat.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibsysstat.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/ibtracert.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/ibtracert.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/perfquery.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/perfquery.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/saquery.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/saquery.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/sminfo.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/sminfo.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/smpdump.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/smpdump.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/smpquery.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/smpquery.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/vendstat.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/vendstat.8.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doc/man/infiniband-diags.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/infiniband-diags.8.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 clean-noinstLIBRARIES:
@@ -646,12 +790,21 @@ clean-sbinPROGRAMS:
 src/$(am__dirstamp):
 	@$(MKDIR_P) src
 	@: > src/$(am__dirstamp)
+src/dump_fts$(EXEEXT): $(src_dump_fts_OBJECTS) $(src_dump_fts_DEPENDENCIES) src/$(am__dirstamp)
+	@rm -f src/dump_fts$(EXEEXT)
+	$(src_dump_fts_LINK) $(src_dump_fts_OBJECTS) $(src_dump_fts_LDADD) $(LIBS)
 src/ibaddr$(EXEEXT): $(src_ibaddr_OBJECTS) $(src_ibaddr_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibaddr$(EXEEXT)
 	$(LINK) $(src_ibaddr_OBJECTS) $(src_ibaddr_LDADD) $(LIBS)
 src/ibcacheedit$(EXEEXT): $(src_ibcacheedit_OBJECTS) $(src_ibcacheedit_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibcacheedit$(EXEEXT)
 	$(src_ibcacheedit_LINK) $(src_ibcacheedit_OBJECTS) $(src_ibcacheedit_LDADD) $(LIBS)
+src/ibccconfig$(EXEEXT): $(src_ibccconfig_OBJECTS) $(src_ibccconfig_DEPENDENCIES) src/$(am__dirstamp)
+	@rm -f src/ibccconfig$(EXEEXT)
+	$(LINK) $(src_ibccconfig_OBJECTS) $(src_ibccconfig_LDADD) $(LIBS)
+src/ibccquery$(EXEEXT): $(src_ibccquery_OBJECTS) $(src_ibccquery_DEPENDENCIES) src/$(am__dirstamp)
+	@rm -f src/ibccquery$(EXEEXT)
+	$(LINK) $(src_ibccquery_OBJECTS) $(src_ibccquery_LDADD) $(LIBS)
 src/iblinkinfo$(EXEEXT): $(src_iblinkinfo_OBJECTS) $(src_iblinkinfo_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/iblinkinfo$(EXEEXT)
 	$(src_iblinkinfo_LINK) $(src_iblinkinfo_OBJECTS) $(src_iblinkinfo_LDADD) $(LIBS)
@@ -744,9 +897,13 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dump_fts.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibaddr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibcacheedit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibccconfig.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibccquery.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibdiag_common.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibdiag_sa.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iblinkinfo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibnetdiscover.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibping.Po@am__quote@
@@ -800,6 +957,34 @@ ibdiag_common.obj: src/ibdiag_common.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibdiag_common.obj `if test -f 'src/ibdiag_common.c'; then $(CYGPATH_W) 'src/ibdiag_common.c'; else $(CYGPATH_W) '$(srcdir)/src/ibdiag_common.c'; fi`
 
+ibdiag_sa.o: src/ibdiag_sa.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibdiag_sa.o -MD -MP -MF $(DEPDIR)/ibdiag_sa.Tpo -c -o ibdiag_sa.o `test -f 'src/ibdiag_sa.c' || echo '$(srcdir)/'`src/ibdiag_sa.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/ibdiag_sa.Tpo $(DEPDIR)/ibdiag_sa.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/ibdiag_sa.c' object='ibdiag_sa.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibdiag_sa.o `test -f 'src/ibdiag_sa.c' || echo '$(srcdir)/'`src/ibdiag_sa.c
+
+ibdiag_sa.obj: src/ibdiag_sa.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibdiag_sa.obj -MD -MP -MF $(DEPDIR)/ibdiag_sa.Tpo -c -o ibdiag_sa.obj `if test -f 'src/ibdiag_sa.c'; then $(CYGPATH_W) 'src/ibdiag_sa.c'; else $(CYGPATH_W) '$(srcdir)/src/ibdiag_sa.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/ibdiag_sa.Tpo $(DEPDIR)/ibdiag_sa.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/ibdiag_sa.c' object='ibdiag_sa.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibdiag_sa.obj `if test -f 'src/ibdiag_sa.c'; then $(CYGPATH_W) 'src/ibdiag_sa.c'; else $(CYGPATH_W) '$(srcdir)/src/ibdiag_sa.c'; fi`
+
+dump_fts.o: src/dump_fts.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dump_fts.o -MD -MP -MF $(DEPDIR)/dump_fts.Tpo -c -o dump_fts.o `test -f 'src/dump_fts.c' || echo '$(srcdir)/'`src/dump_fts.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/dump_fts.Tpo $(DEPDIR)/dump_fts.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/dump_fts.c' object='dump_fts.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dump_fts.o `test -f 'src/dump_fts.c' || echo '$(srcdir)/'`src/dump_fts.c
+
+dump_fts.obj: src/dump_fts.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dump_fts.obj -MD -MP -MF $(DEPDIR)/dump_fts.Tpo -c -o dump_fts.obj `if test -f 'src/dump_fts.c'; then $(CYGPATH_W) 'src/dump_fts.c'; else $(CYGPATH_W) '$(srcdir)/src/dump_fts.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/dump_fts.Tpo $(DEPDIR)/dump_fts.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/dump_fts.c' object='dump_fts.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dump_fts.obj `if test -f 'src/dump_fts.c'; then $(CYGPATH_W) 'src/dump_fts.c'; else $(CYGPATH_W) '$(srcdir)/src/dump_fts.c'; fi`
+
 ibaddr.o: src/ibaddr.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibaddr.o -MD -MP -MF $(DEPDIR)/ibaddr.Tpo -c -o ibaddr.o `test -f 'src/ibaddr.c' || echo '$(srcdir)/'`src/ibaddr.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/ibaddr.Tpo $(DEPDIR)/ibaddr.Po
@@ -827,6 +1012,34 @@ ibcacheedit.obj: src/ibcacheedit.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/ibcacheedit.c' object='ibcacheedit.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibcacheedit.obj `if test -f 'src/ibcacheedit.c'; then $(CYGPATH_W) 'src/ibcacheedit.c'; else $(CYGPATH_W) '$(srcdir)/src/ibcacheedit.c'; fi`
+
+ibccconfig.o: src/ibccconfig.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibccconfig.o -MD -MP -MF $(DEPDIR)/ibccconfig.Tpo -c -o ibccconfig.o `test -f 'src/ibccconfig.c' || echo '$(srcdir)/'`src/ibccconfig.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/ibccconfig.Tpo $(DEPDIR)/ibccconfig.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/ibccconfig.c' object='ibccconfig.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibccconfig.o `test -f 'src/ibccconfig.c' || echo '$(srcdir)/'`src/ibccconfig.c
+
+ibccconfig.obj: src/ibccconfig.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibccconfig.obj -MD -MP -MF $(DEPDIR)/ibccconfig.Tpo -c -o ibccconfig.obj `if test -f 'src/ibccconfig.c'; then $(CYGPATH_W) 'src/ibccconfig.c'; else $(CYGPATH_W) '$(srcdir)/src/ibccconfig.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/ibccconfig.Tpo $(DEPDIR)/ibccconfig.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/ibccconfig.c' object='ibccconfig.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibccconfig.obj `if test -f 'src/ibccconfig.c'; then $(CYGPATH_W) 'src/ibccconfig.c'; else $(CYGPATH_W) '$(srcdir)/src/ibccconfig.c'; fi`
+
+ibccquery.o: src/ibccquery.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibccquery.o -MD -MP -MF $(DEPDIR)/ibccquery.Tpo -c -o ibccquery.o `test -f 'src/ibccquery.c' || echo '$(srcdir)/'`src/ibccquery.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/ibccquery.Tpo $(DEPDIR)/ibccquery.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/ibccquery.c' object='ibccquery.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibccquery.o `test -f 'src/ibccquery.c' || echo '$(srcdir)/'`src/ibccquery.c
+
+ibccquery.obj: src/ibccquery.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibccquery.obj -MD -MP -MF $(DEPDIR)/ibccquery.Tpo -c -o ibccquery.obj `if test -f 'src/ibccquery.c'; then $(CYGPATH_W) 'src/ibccquery.c'; else $(CYGPATH_W) '$(srcdir)/src/ibccquery.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/ibccquery.Tpo $(DEPDIR)/ibccquery.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/ibccquery.c' object='ibccquery.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibccquery.obj `if test -f 'src/ibccquery.c'; then $(CYGPATH_W) 'src/ibccquery.c'; else $(CYGPATH_W) '$(srcdir)/src/ibccquery.c'; fi`
 
 iblinkinfo.o: src/iblinkinfo.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT iblinkinfo.o -MD -MP -MF $(DEPDIR)/iblinkinfo.Tpo -c -o iblinkinfo.o `test -f 'src/iblinkinfo.c' || echo '$(srcdir)/'`src/iblinkinfo.c
@@ -1249,6 +1462,98 @@ GTAGS:
 distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
+check-TESTS: $(TESTS)
+	@failed=0; all=0; xfail=0; xpass=0; skip=0; \
+	srcdir=$(srcdir); export srcdir; \
+	list=' $(TESTS) '; \
+	$(am__tty_colors); \
+	if test -n "$$list"; then \
+	  for tst in $$list; do \
+	    if test -f ./$$tst; then dir=./; \
+	    elif test -f $$tst; then dir=; \
+	    else dir="$(srcdir)/"; fi; \
+	    if $(TESTS_ENVIRONMENT) $${dir}$$tst; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *[\ \	]$$tst[\ \	]*) \
+		xpass=`expr $$xpass + 1`; \
+		failed=`expr $$failed + 1`; \
+		col=$$red; res=XPASS; \
+	      ;; \
+	      *) \
+		col=$$grn; res=PASS; \
+	      ;; \
+	      esac; \
+	    elif test $$? -ne 77; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *[\ \	]$$tst[\ \	]*) \
+		xfail=`expr $$xfail + 1`; \
+		col=$$lgn; res=XFAIL; \
+	      ;; \
+	      *) \
+		failed=`expr $$failed + 1`; \
+		col=$$red; res=FAIL; \
+	      ;; \
+	      esac; \
+	    else \
+	      skip=`expr $$skip + 1`; \
+	      col=$$blu; res=SKIP; \
+	    fi; \
+	    echo "$${col}$$res$${std}: $$tst"; \
+	  done; \
+	  if test "$$all" -eq 1; then \
+	    tests="test"; \
+	    All=""; \
+	  else \
+	    tests="tests"; \
+	    All="All "; \
+	  fi; \
+	  if test "$$failed" -eq 0; then \
+	    if test "$$xfail" -eq 0; then \
+	      banner="$$All$$all $$tests passed"; \
+	    else \
+	      if test "$$xfail" -eq 1; then failures=failure; else failures=failures; fi; \
+	      banner="$$All$$all $$tests behaved as expected ($$xfail expected $$failures)"; \
+	    fi; \
+	  else \
+	    if test "$$xpass" -eq 0; then \
+	      banner="$$failed of $$all $$tests failed"; \
+	    else \
+	      if test "$$xpass" -eq 1; then passes=pass; else passes=passes; fi; \
+	      banner="$$failed of $$all $$tests did not behave as expected ($$xpass unexpected $$passes)"; \
+	    fi; \
+	  fi; \
+	  dashes="$$banner"; \
+	  skipped=""; \
+	  if test "$$skip" -ne 0; then \
+	    if test "$$skip" -eq 1; then \
+	      skipped="($$skip test was not run)"; \
+	    else \
+	      skipped="($$skip tests were not run)"; \
+	    fi; \
+	    test `echo "$$skipped" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$skipped"; \
+	  fi; \
+	  report=""; \
+	  if test "$$failed" -ne 0 && test -n "$(PACKAGE_BUGREPORT)"; then \
+	    report="Please report to $(PACKAGE_BUGREPORT)"; \
+	    test `echo "$$report" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$report"; \
+	  fi; \
+	  dashes=`echo "$$dashes" | sed s/./=/g`; \
+	  if test "$$failed" -eq 0; then \
+	    echo "$$grn$$dashes"; \
+	  else \
+	    echo "$$red$$dashes"; \
+	  fi; \
+	  echo "$$banner"; \
+	  test -z "$$skipped" || echo "$$skipped"; \
+	  test -z "$$report" || echo "$$report"; \
+	  echo "$$dashes$$std"; \
+	  test "$$failed" -eq 0; \
+	else :; fi
+
 distdir: $(DISTFILES)
 	@list='$(MANS)'; if test -n "$$list"; then \
 	  list=`for p in $$list; do \
@@ -1385,7 +1690,7 @@ distcheck: dist
 	*.zip*) \
 	  unzip $(distdir).zip ;;\
 	esac
-	chmod -R a-w $(distdir); chmod a+w $(distdir)
+	chmod -R a-w $(distdir); chmod u+w $(distdir)
 	mkdir $(distdir)/_build
 	mkdir $(distdir)/_inst
 	chmod a-w $(distdir)
@@ -1441,6 +1746,7 @@ distcleancheck: distclean
 	       $(distcleancheck_listfiles) ; \
 	       exit 1; } >&2
 check-am: all-am
+	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-recursive
 all-am: Makefile $(LIBRARIES) $(PROGRAMS) $(SCRIPTS) $(MANS) config.h
@@ -1487,7 +1793,7 @@ distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
-	distclean-hdr distclean-libtool distclean-tags
+	distclean-hdr distclean-libtool distclean-local distclean-tags
 
 dvi: dvi-recursive
 
@@ -1556,16 +1862,17 @@ uninstall-am: uninstall-man uninstall-sbinPROGRAMS \
 uninstall-man: uninstall-man8
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) all check \
-	ctags-recursive install install-am install-data-am \
+	check-am ctags-recursive install install-am install-data-am \
 	install-strip tags-recursive
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
-	all all-am am--refresh check check-am clean clean-generic \
-	clean-libtool clean-noinstLIBRARIES clean-sbinPROGRAMS ctags \
-	ctags-recursive dist dist-all dist-bzip2 dist-gzip dist-hook \
-	dist-lzma dist-shar dist-tarZ dist-xz dist-zip distcheck \
-	distclean distclean-compile distclean-generic distclean-hdr \
-	distclean-libtool distclean-tags distcleancheck distdir \
+	all all-am am--refresh check check-TESTS check-am clean \
+	clean-generic clean-libtool clean-noinstLIBRARIES \
+	clean-sbinPROGRAMS ctags ctags-recursive dist dist-all \
+	dist-bzip2 dist-gzip dist-hook dist-lzma dist-shar dist-tarZ \
+	dist-xz dist-zip distcheck distclean distclean-compile \
+	distclean-generic distclean-hdr distclean-libtool \
+	distclean-local distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am \
 	install-data-hook install-dvi install-dvi-am install-exec \
@@ -1590,6 +1897,9 @@ ibdiag_version:
 		fi ; \
 	fi
 
+distclean-local:
+	$(top_srcdir)/doc/generate clean
+
 dist-hook:
 	if [ -x $(top_srcdir)/gen_chlog.sh ] ; then \
 		$(top_srcdir)/gen_chlog.sh > $(distdir)/ChangeLog ; \
@@ -1602,6 +1912,7 @@ install-data-hook:
 	fi
 	$(top_srcdir)/config/install-sh -c -m 444 $(top_srcdir)/scripts/IBswcountlimits.pm $(DESTDIR)/$(PERL_INSTALLDIR)/IBswcountlimits.pm
 	$(top_srcdir)/config/install-sh -c -m 444 $(top_srcdir)/etc/error_thresholds $(DESTDIR)/$(sysconfdir)/infiniband-diags
+	$(top_srcdir)/config/install-sh -c -m 400 $(top_srcdir)/etc/ibdiag.conf $(DESTDIR)/$(sysconfdir)/infiniband-diags
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
