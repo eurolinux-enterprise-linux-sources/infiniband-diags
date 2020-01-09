@@ -34,6 +34,6 @@
 #ifndef _IBDIAG_VERSION_H_
 #define _IBDIAG_VERSION_H_
 
-#define IBDIAG_VERSION "1.5.5"
+#define IBDIAG_VERSION "1.5.8"
 
 #endif	/* _IBDIAG_VERSION_H_ */

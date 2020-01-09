@@ -39,6 +39,7 @@
 #define _INTERNAL_H_
 
 #include <infiniband/ibnetdisc.h>
+#include <complib/cl_qmap.h>
 
 #define	IBND_DEBUG(fmt, ...) \
 	if (ibdebug) { \
@@ -52,14 +53,55 @@
 
 #define MAXHOPS         63
 
-typedef struct ibnd_node_scan {
-	ibnd_node_t *node;
-	struct ibnd_node_scan *dnext;	/* nodesdist next */
-} ibnd_node_scan_t;
+#define DEFAULT_MAX_SMP_ON_WIRE 2
+#define DEFAULT_TIMEOUT 1000
+#define DEFAULT_RETRIES 3
 
 typedef struct ibnd_scan {
-	ibnd_node_scan_t *nodesdist[MAXHOPS + 1];
 	ib_portid_t selfportid;
+	ibnd_fabric_t *fabric;
+	struct ibnd_config *cfg;
+	struct ibmad_port *ibmad_port;
 } ibnd_scan_t;
+
+typedef struct ibnd_smp ibnd_smp_t;
+typedef struct smp_engine smp_engine_t;
+typedef int (*smp_comp_cb_t) (smp_engine_t * engine, ibnd_smp_t * smp,
+			      uint8_t * mad_resp, void *cb_data);
+struct ibnd_smp {
+	cl_map_item_t on_wire;
+	struct ibnd_smp *qnext;
+	smp_comp_cb_t cb;
+	void *cb_data;
+	ib_portid_t path;
+	ib_rpc_t rpc;
+};
+
+struct smp_engine {
+	int umad_fd;
+	int smi_agent;
+	int smi_dir_agent;
+	ibnd_smp_t *smp_queue_head;
+	ibnd_smp_t *smp_queue_tail;
+	void *user_data;
+	cl_qmap_t smps_on_wire;
+	struct ibnd_config *cfg;
+	unsigned total_smps;
+};
+
+int smp_engine_init(smp_engine_t * engine, char * ca_name, int ca_port,
+		    void *user_data, ibnd_config_t *cfg);
+int issue_smp(smp_engine_t * engine, ib_portid_t * portid,
+	      unsigned attrid, unsigned mod, smp_comp_cb_t cb, void *cb_data);
+int process_mads(smp_engine_t * engine);
+void smp_engine_destroy(smp_engine_t * engine);
+
+void add_to_nodeguid_hash(ibnd_node_t * node, ibnd_node_t * hash[]);
+
+void add_to_portguid_hash(ibnd_port_t * port, ibnd_port_t * hash[]);
+
+void add_to_type_list(ibnd_node_t * node, ibnd_fabric_t * fabric);
+
+void destroy_node(ibnd_node_t * node);
 
 #endif				/* _INTERNAL_H_ */

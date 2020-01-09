@@ -1,4 +1,4 @@
-.TH PERFQUERY 8 "September 21, 2009" "OpenIB" "OpenIB Diagnostics"
+.TH PERFQUERY 8 "Jun 16, 2010" "OpenIB" "OpenIB Diagnostics"
 
 .SH NAME
 perfquery \- query InfiniBand port counters
@@ -6,7 +6,7 @@ perfquery \- query InfiniBand port counters
 .SH SYNOPSIS
 .B perfquery
 [\-d(ebug)] [\-G(uid)] [\-x|\-\-extended] [\-X|\-\-xmtsl] [\-S|\-\-rcvsl]
-[\-D|\-\-xmtdisc]
+[\-D|\-\-xmtdisc] [\-E|\-\-rcverr] [\-c|\-\-smplctl]
 [-a(ll_ports)] [-l(oop_ports)] [-r(eset_after_read)] [-R(eset_only)]
 [\-C ca_name] [\-P ca_port] [\-t(imeout) timeout_ms] [\-V(ersion)] [\-h(elp)]
 [<lid|guid> [[port] [reset_mask]]]
@@ -14,7 +14,8 @@ perfquery \- query InfiniBand port counters
 .SH DESCRIPTION
 .PP
 perfquery uses PerfMgt GMPs to obtain the PortCounters (basic performance
-and error counters), PortExtendedCounters, PortXmitDataSL, or PortRcvDataSL
+and error counters), PortExtendedCounters, PortXmitDataSL, PortRcvDataSL,
+PortRcvErrorDetails, PortXmitDiscardDetails, or PortSamplesControl
 from the PMA at the node/port specified. Optionally shows aggregated
 counters for all ports of node.
 Also, optionally, reset after read, or only reset counters.
@@ -41,6 +42,15 @@ show receive data SL counter. This is an optional counter for QoS.
 .TP
 \fB\-D\fR, \fB\-\-xmtdisc\fR
 show transmit discard details. This is an optional counter.
+.TP
+\fB\-E\fR, \fB\-\-rcverr\fR
+show receive error details. This is an optional counter.
+.TP
+\fB\-D\fR, \fB\-\-xmtdisc\fR
+show transmit discard details. This is an optional counter.
+.TP
+\fB\-c\fR, \fB\-\-smplctl\fR
+show port samples control.
 .TP
 \fB\-a\fR, \fB\-\-all_ports\fR
 show aggregated counters for all ports of the destination lid
@@ -135,4 +145,4 @@ perfquery -R 32 2 0xf000 # reset only non-error counters of port 2
 .SH AUTHOR
 .TP
 Hal Rosenstock
-.RI < halr@voltaire.com >
+.RI < hal.rosenstock@gmail.com >

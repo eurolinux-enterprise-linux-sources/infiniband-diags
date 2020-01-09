@@ -58,6 +58,8 @@
 struct ibmad_port *ibmad_port;
 static char *node_name_map_file = NULL;
 static nn_map_t *node_name_map = NULL;
+static char *load_cache_file = NULL;
+
 int data_counters = 0;
 int port_config = 0;
 uint64_t node_guid = 0;
@@ -140,11 +142,20 @@ static void print_port_config(char *node_name, ibnd_node_t * node, int portnum)
 	width_msg[0] = '\0';
 	speed_msg[0] = '\0';
 
-	snprintf(link_str, 256, "(%3s %s %6s/%8s)",
-		 mad_dump_val(IB_PORT_LINK_WIDTH_ACTIVE_F, width, 64, &iwidth),
-		 mad_dump_val(IB_PORT_LINK_SPEED_ACTIVE_F, speed, 64, &ispeed),
-		 mad_dump_val(IB_PORT_STATE_F, state, 64, &istate),
-		 mad_dump_val(IB_PORT_PHYS_STATE_F, physstate, 64, &iphystate));
+	/* C14-24.2.1 states that a down port allows for invalid data to be
+	 * returned for all PortInfo components except PortState and
+	 * PortPhysicalState */
+	if (istate != IB_LINK_DOWN) {
+		snprintf(link_str, 256, "(%3s %9s %6s/%8s)",
+			 mad_dump_val(IB_PORT_LINK_WIDTH_ACTIVE_F, width, 64, &iwidth),
+			 mad_dump_val(IB_PORT_LINK_SPEED_ACTIVE_F, speed, 64, &ispeed),
+			 mad_dump_val(IB_PORT_STATE_F, state, 64, &istate),
+			 mad_dump_val(IB_PORT_PHYS_STATE_F, physstate, 64, &iphystate));
+	} else {
+		snprintf(link_str, 256, "(              %6s/%8s)",
+			 mad_dump_val(IB_PORT_STATE_F, state, 64, &istate),
+			 mad_dump_val(IB_PORT_PHYS_STATE_F, physstate, 64, &iphystate));
+	}
 
 	if (port->remoteport) {
 		char *rem_node_name = NULL;
@@ -159,13 +170,14 @@ static void print_port_config(char *node_name, ibnd_node_t * node, int portnum)
 
 		rem_node_name = remap_node_name(node_name_map,
 						port->remoteport->node->guid,
-						port->remoteport->node->nodedesc);
+						port->remoteport->node->
+						nodedesc);
 
 		snprintf(remote_str, 256,
 			 "0x%016" PRIx64 " %6d %4d[%2s] \"%s\" (%s %s)\n",
 			 port->remoteport->node->guid,
-			 port->remoteport->base_lid ? port->
-			 remoteport->base_lid : port->remoteport->node->smalid,
+			 port->remoteport->base_lid ? port->remoteport->
+			 base_lid : port->remoteport->node->smalid,
 			 port->remoteport->portnum, ext_port_str, rem_node_name,
 			 width_msg, speed_msg);
 
@@ -205,36 +217,37 @@ static void report_suppressed(void)
 	printf("\n");
 }
 
-static int print_xmitdisc_details(char *buf, size_t size, ib_portid_t * portid,
-				  ibnd_node_t * node, char *node_name,
-				  int portnum)
+static int query_and_dump(char *buf, size_t size, ib_portid_t * portid,
+			  ibnd_node_t * node, char *node_name, int portnum,
+			  const char *attr_name, uint16_t attr_id,
+			  int start_field, int end_field)
 {
 	uint8_t pc[1024];
 	uint32_t val = 0;
 	int i, n;
 
-	memset(pc, 0, 1024);
+	memset(pc, 0, sizeof(pc));
 
-	if (!pma_query_via(pc, portid, portnum, ibd_timeout,
-			   IB_GSI_PORT_XMIT_DISCARD_DETAILS, ibmad_port)) {
-		IBWARN("IB_GSI_PORT_XMIT_DISCARD_DETAILS query failed on %s, "
-		       "%s port %d", node_name, portid2str(portid), portnum);
+	if (!pma_query_via(pc, portid, portnum, ibd_timeout, attr_id,
+			   ibmad_port)) {
+		IBWARN("%s query failed on %s, %s port %d", attr_name,
+		       node_name, portid2str(portid), portnum);
 		return 0;
 	}
 
-	for (n = 0, i = IB_PC_XMT_INACT_DISC_F; i <= IB_PC_XMT_SW_HOL_DISC_F;
-	     i++) {
+	for (n = 0, i = start_field; i < end_field; i++) {
 		mad_decode_field(pc, i, (void *)&val);
 		if (val)
-			n += snprintf(buf + n, size - n, " [%s == %d]",
+			n += snprintf(buf + n, size - n, " [%s == %u]",
 				      mad_field_name(i), val);
 	}
+
 	return n;
 }
 
-static void print_results(ib_portid_t * portid, char *node_name,
-			  ibnd_node_t * node, uint8_t * pc, int portnum,
-			  int *header_printed)
+static int print_results(ib_portid_t * portid, char *node_name,
+			 ibnd_node_t * node, uint8_t * pc, int portnum,
+			 int *header_printed)
 {
 	char buf[1024];
 	char *str = buf;
@@ -251,20 +264,32 @@ static void print_results(ib_portid_t * portid, char *node_name,
 
 		mad_decode_field(pc, i, (void *)&val);
 		if (val)
-			n += snprintf(str + n, 1024 - n, " [%s == %d]",
+			n += snprintf(str + n, 1024 - n, " [%s == %u]",
 				      mad_field_name(i), val);
 
 		/* If there are PortXmitDiscards, get details (if supported) */
 		if (i == IB_PC_XMT_DISCARDS_F && details && val) {
-			n += print_xmitdisc_details(str + n, 1024 - n, portid,
-						    node, node_name, portnum);
+			n += query_and_dump(str + n, sizeof(buf) - n, portid,
+					    node, node_name, portnum,
+					    "PortXmitDiscardDetails",
+					    IB_GSI_PORT_XMIT_DISCARD_DETAILS,
+					    IB_PC_RCV_LOCAL_PHY_ERR_F,
+					    IB_PC_RCV_ERR_LAST_F);
+			/* If there are PortRcvErrors, get details (if supported) */
+		} else if (i == IB_PC_ERR_RCV_F && details && val) {
+			n += query_and_dump(str + n, sizeof(buf) - n, portid,
+					    node, node_name, portnum,
+					    "PortRcvErrorDetails",
+					    IB_GSI_PORT_RCV_ERROR_DETAILS,
+					    IB_PC_XMT_INACT_DISC_F,
+					    IB_PC_XMT_DISC_LAST_F);
 		}
 	}
 
 	if (!suppress(IB_PC_XMT_WAIT_F)) {
 		mad_decode_field(pc, IB_PC_XMT_WAIT_F, (void *)&val);
 		if (val)
-			n += snprintf(str + n, 1024 - n, " [%s == %d]",
+			n += snprintf(str + n, 1024 - n, " [%s == %u]",
 				      mad_field_name(IB_PC_XMT_WAIT_F), val);
 	}
 
@@ -276,7 +301,7 @@ static void print_results(ib_portid_t * portid, char *node_name,
 				mad_decode_field(pc, i, (void *)&val64);
 				if (val64)
 					n += snprintf(str + n, 1024 - n,
-						      " [%s == %" PRId64 "]",
+						      " [%s == %" PRIu64 "]",
 						      mad_field_name(i), val64);
 			}
 
@@ -286,11 +311,16 @@ static void print_results(ib_portid_t * portid, char *node_name,
 			*header_printed = 1;
 		}
 
-		printf("   GUID 0x%" PRIx64 " port %d:%s\n", node->guid,
-		       portnum, str);
-		if (port_config)
+		if (portnum == 0xFF)
+			printf("   GUID 0x%" PRIx64 " port ALL:%s\n",
+			       node->guid, str);
+		else
+			printf("   GUID 0x%" PRIx64 " port %d:%s\n",
+			       node->guid, portnum, str);
+		if (portnum != 0xFF && port_config)
 			print_port_config(node_name, node, portnum);
 	}
+	return (n);
 }
 
 static int query_cap_mask(ib_portid_t * portid, char *node_name, int portnum,
@@ -314,8 +344,8 @@ static int query_cap_mask(ib_portid_t * portid, char *node_name, int portnum,
 	return 0;
 }
 
-static void print_port(ib_portid_t * portid, uint16_t cap_mask, char *node_name,
-		       ibnd_node_t * node, int portnum, int *header_printed)
+static int print_port(ib_portid_t * portid, uint16_t cap_mask, char *node_name,
+		      ibnd_node_t * node, int portnum, int *header_printed)
 {
 	uint8_t pc[1024];
 
@@ -325,14 +355,15 @@ static void print_port(ib_portid_t * portid, uint16_t cap_mask, char *node_name,
 			   IB_GSI_PORT_COUNTERS, ibmad_port)) {
 		IBWARN("IB_GSI_PORT_COUNTERS query failed on %s, %s port %d",
 		       node_name, portid2str(portid), portnum);
-		return;
+		return (0);
 	}
 	if (!(cap_mask & 0x1000)) {
 		/* if PortCounters:PortXmitWait not supported clear this counter */
 		uint32_t foo = 0;
 		mad_encode_field(pc, IB_PC_XMT_WAIT_F, &foo);
 	}
-	print_results(portid, node_name, node, pc, portnum, header_printed);
+	return (print_results(portid, node_name, node, pc, portnum,
+			      header_printed));
 }
 
 static void clear_port(ib_portid_t * portid, uint16_t cap_mask,
@@ -360,9 +391,11 @@ static void clear_port(ib_portid_t * portid, uint16_t cap_mask,
 		IBERROR("Failed to reset errors %s port %d", node_name, port);
 
 	if (details && clear_errors) {
-		mask = 0xF;
-		performance_reset_via(pc, portid, port, mask, ibd_timeout,
+		performance_reset_via(pc, portid, port, 0xf, ibd_timeout,
 				      IB_GSI_PORT_XMIT_DISCARD_DETAILS,
+				      ibmad_port);
+		performance_reset_via(pc, portid, port, 0x3f, ibd_timeout,
+				      IB_GSI_PORT_RCV_ERROR_DETAILS,
 				      ibmad_port);
 	}
 }
@@ -398,6 +431,27 @@ void print_node(ibnd_node_t * node, void *user_data)
 
 	node_name = remap_node_name(node_name_map, node->guid, node->nodedesc);
 
+	if (node->type == IB_NODE_SWITCH) {
+		ib_portid_set(&portid, node->smalid, 0, 0);
+		p = 0;
+	} else {
+		for (p = 1; p <= node->numports; p++) {
+			if (node->ports[p]) {
+				ib_portid_set(&portid,
+					      node->ports[p]->base_lid,
+					      0, 0);
+				break;
+			}
+		}
+	}
+	if ((query_cap_mask(&portid, node_name, p, &cap_mask) == 0) &&
+	    (cap_mask & 0x100)) {
+		all_port_sup = 1;
+		if (!print_port(&portid, cap_mask, node_name, node,
+				0xFF, &header_printed))
+			goto clear;
+	}
+
 	for (p = startport; p <= node->numports; p++) {
 		if (node->ports[p]) {
 			if (node->type == IB_NODE_SWITCH)
@@ -406,13 +460,6 @@ void print_node(ibnd_node_t * node, void *user_data)
 				ib_portid_set(&portid, node->ports[p]->base_lid,
 					      0, 0);
 
-			if (query_cap_mask(&portid, node_name, p, &cap_mask) <
-			    0)
-				continue;
-
-			if (cap_mask & 0x100)
-				all_port_sup = 1;
-
 			print_port(&portid, cap_mask, node_name, node, p,
 				   &header_printed);
 			if (!all_port_sup)
@@ -420,6 +467,7 @@ void print_node(ibnd_node_t * node, void *user_data)
 		}
 	}
 
+clear:
 	if (all_port_sup)
 		clear_port(&portid, cap_mask, node_name, 0xFF);
 
@@ -430,7 +478,7 @@ static void add_suppressed(enum MAD_FIELDS field)
 {
 	if (sup_total >= SUP_MAX) {
 		IBWARN("Maximum (%d) fields have been suppressed; skipping %s",
-			sup_total, mad_field_name(field));
+		       sup_total, mad_field_name(field));
 		return;
 	}
 	suppressed_fields[sup_total++] = field;
@@ -455,6 +503,7 @@ static void calculate_suppressed_fields(char *str)
 
 static int process_opt(void *context, int ch, char *optarg)
 {
+	struct ibnd_config *cfg = context;
 	switch (ch) {
 	case 's':
 		calculate_suppressed_fields(optarg);
@@ -481,6 +530,9 @@ static int process_opt(void *context, int ch, char *optarg)
 	case 6:
 		details = 1;
 		break;
+	case 7:
+		load_cache_file = strdup(optarg);
+		break;
 	case 'G':
 	case 'S':
 		node_guid_str = optarg;
@@ -500,6 +552,9 @@ static int process_opt(void *context, int ch, char *optarg)
 	case 'K':
 		clear_counts = 1;
 		break;
+	case 'o':
+		cfg->max_smps = strtoul(optarg, NULL, 0);
+		break;
 	default:
 		return -1;
 	}
@@ -509,6 +564,7 @@ static int process_opt(void *context, int ch, char *optarg)
 
 int main(int argc, char **argv)
 {
+	struct ibnd_config config = { 0 };
 	int resolved = -1;
 	ib_portid_t portid = { 0 };
 	int rc = 0;
@@ -542,12 +598,17 @@ int main(int argc, char **argv)
 		 "Clear error counters after read"},
 		{"clear-counts", 'K', 0, NULL,
 		 "Clear data counters after read"},
+		{"load-cache", 7, 1, "<file>",
+		 "filename of ibnetdiscover cache to load"},
+		{"outstanding_smps", 'o', 1, NULL,
+		 "specify the number of outstanding SMP's which should be "
+		 "issued during the scan"},
 		{0}
 	};
 	char usage_args[] = "";
 
 	memset(suppressed_fields, 0, sizeof suppressed_fields);
-	ibdiag_process_opts(argc, argv, NULL, "scnSrRDGL", opts, process_opt,
+	ibdiag_process_opts(argc, argv, &config, "scnSrRDGL", opts, process_opt,
 			    usage_args, NULL);
 
 	argc -= optind;
@@ -556,17 +617,21 @@ int main(int argc, char **argv)
 	if (!node_type_to_print)
 		node_type_to_print = PRINT_ALL;
 
-	if (ibverbose)
-		ibnd_debug(1);
-
 	ibmad_port = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 4);
 	if (!ibmad_port)
 		IBERROR("Failed to open port; %s:%d\n", ibd_ca, ibd_ca_port);
 
-	if (ibd_timeout)
+	if (ibd_timeout) {
 		mad_rpc_set_timeout(ibmad_port, ibd_timeout);
+		config.timeout_ms = ibd_timeout;
+	}
 
 	node_name_map = open_node_name_map(node_name_map_file);
+
+	if (dr_path && load_cache_file) {
+		fprintf(stderr, "Cannot specify cache and direct route path\n");
+		exit(1);
+	}
 
 	/* limit the scan the fabric around the target */
 	if (dr_path) {
@@ -584,19 +649,30 @@ int main(int argc, char **argv)
 			       node_guid_str);
 	}
 
-	if (resolved >= 0)
-		if ((fabric = ibnd_discover_fabric(ibmad_port, &portid,
-						   0)) == NULL)
-			IBWARN
-			    ("Single node discover failed; attempting full scan");
+	if (load_cache_file) {
+		if ((fabric = ibnd_load_fabric(load_cache_file, 0)) == NULL) {
+			fprintf(stderr, "loading cached fabric failed\n");
+			exit(1);
+		}
+	} else {
+		if (resolved >= 0) {
+			if (!config.max_hops)
+				config.max_hops = 1;
+			if (!(fabric = ibnd_discover_fabric(ibd_ca, ibd_ca_port,
+						    &portid, &config)))
+				IBWARN("Single node discover failed;"
+				       " attempting full scan");
+		}
 
-	if (!fabric)		/* do a full scan */
-		if ((fabric =
-		     ibnd_discover_fabric(ibmad_port, NULL, -1)) == NULL) {
+		if (!fabric && !(fabric = ibnd_discover_fabric(ibd_ca,
+							       ibd_ca_port,
+							       NULL,
+							       &config))) {
 			fprintf(stderr, "discover failed\n");
 			rc = 1;
 			goto close_port;
 		}
+	}
 
 	report_suppressed();
 

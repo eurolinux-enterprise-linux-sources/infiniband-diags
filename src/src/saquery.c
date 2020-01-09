@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2006,2007 The Regents of the University of California.
  * Copyright (c) 2004-2009 Voltaire, Inc. All rights reserved.
- * Copyright (c) 2002-2005 Mellanox Technologies LTD. All rights reserved.
+ * Copyright (c) 2002-2010 Mellanox Technologies LTD. All rights reserved.
  * Copyright (c) 1996-2003 Intel Corporation. All rights reserved.
  * Copyright (c) 2009 HNR Consulting. All rights reserved.
  *
@@ -157,7 +157,7 @@ static inline void report_err(int status)
 
 	st = status >> 8;
 	if (st)
-		sprintf(sa_err_str, " SA(%s)", ib_sa_err_str(st));
+		sprintf(sa_err_str, " SA(%s)", ib_sa_err_str((uint8_t) st));
 
 	fprintf(stderr, "ERROR: Query result returned 0x%04x, %s%s\n",
 		status, sm_err_str, sa_err_str);
@@ -461,7 +461,7 @@ static void dump_one_mcmember_record(void *data)
 	       inet_ntop(AF_INET6, mr->port_gid.raw, gid, sizeof(gid)),
 	       cl_ntoh32(mr->qkey), cl_ntoh16(mr->mlid), mr->mtu, mr->tclass,
 	       cl_ntoh16(mr->pkey), mr->rate, mr->pkt_life, sl,
-	       cl_ntoh32(flow), hop, scope, join, mr->proxy_join);
+	       flow, hop, scope, join, mr->proxy_join);
 }
 
 static void dump_multicast_group_record(void *data)
@@ -620,8 +620,8 @@ static void dump_inform_info_record(void *data)
 	uint32_t qpn;
 	uint8_t resp_time_val;
 
-	ib_inform_info_get_qpn_resp_time(p_iir->inform_info.g_or_v.generic.
-					 qpn_resp_time_val, &qpn,
+	ib_inform_info_get_qpn_resp_time(p_iir->inform_info.g_or_v.
+					 generic.qpn_resp_time_val, &qpn,
 					 &resp_time_val);
 	if (p_iir->inform_info.is_generic)
 		printf("InformInfoRecord dump:\n"
@@ -788,16 +788,18 @@ static void dump_one_mft_record(void *data)
 	unsigned block = cl_ntoh16(mftr->position_block_num) &
 	    IB_MCAST_BLOCK_ID_MASK_HO;
 	int i;
+	unsigned offset;
+
 	printf("MFT Record dump:\n"
 	       "\t\tLID........................%u\n"
 	       "\t\tPosition...................%u\n"
 	       "\t\tBlock......................%u\n"
 	       "\t\tMFT:\n\t\tMLID\tPort Mask\n",
 	       cl_ntoh16(mftr->lid), position, block);
+	offset = IB_LID_MCAST_START_HO + block * 32;
 	for (i = 0; i < IB_MCAST_BLOCK_SIZE; i++)
-		printf("\t\t0x%x\t0x%x\n",
-		       IB_LID_MCAST_START_HO + block * 64 + i,
-		       cl_ntoh16(mftr->mft[i]));
+		printf("\t\t0x%04x\t0x%04x\n",
+		       offset + i, cl_ntoh16(mftr->mft[i]));
 	printf("\n");
 }
 
@@ -1023,8 +1025,8 @@ static int print_node_records(bind_handle_t h)
 			if (!requested_name ||
 			    (strncmp(requested_name,
 				     (char *)node_record->node_desc.description,
-				     sizeof(node_record->node_desc.
-					    description)) == 0)) {
+				     sizeof(node_record->
+					    node_desc.description)) == 0)) {
 				print_node_record(node_record);
 				if (node_print_desc == UNIQUE_LID_ONLY) {
 					return_mad();

@@ -1,2462 +1,2938 @@
 
+** Version: infiniband-diags-1.5.8
+
+Wed Apr 21 17:04:02 2010 -0700 Albert Chu
+450de0f8196a855bfa1f6da7310dc399088a38a5
+
+	* support --filterdownports in iblinkinfo
+
+Tue Apr 20 10:13:05 2010 -0700 Albert Chu
+c9adf42231d0bb1fc09d361c828bbb54b3f3b2f2
+
+	* Add lid and node description diff options for --diffcheck in iblinkinfo
+
+Tue Apr 20 09:53:53 2010 -0700 Albert Chu
+20af5c37bbdb21482f2f35a0ad087e143a207c4b
+
+	* support --diffcheck in iblinkinfo
+
+Mon Apr 19 10:36:54 2010 -0700 Albert Chu
+1950038c3f71bb1eaecb77516f2022c13189fdcc
+
+	* add --diff support to iblinkinfo
+
+Fri Jul 30 14:26:39 2010 -0700 Ira Weiny
+d58cb634194c80b91bac8caf6ab34d7a1b7408fc
+
+	* ibnetdisc.c: Fix partial scan of the fabric.
+
+Mon Feb 14 10:36:13 2011 -0800 Jason Gunthorpe
+d60d71eeb9890e932472c415164b1ff400d73b12
+
+	* The shell scripts use bashism, so use bash directly.
+
+Mon Feb 14 11:56:21 2011 +0200 Alex Netes
+ff57b27e8ec02f4f92e50cbda5caa4b8e6035823
+
+	* infiniband-diags: package versions update
+
+Mon Feb 14 11:53:59 2011 +0200 Alex Netes
+6edf9877048fd050361fbccdfce69fc2c73b1b06
+
+	* infiniband-diags: update shared library versions
+
+Thu Feb 3 18:25:19 2011 +0200 Alex Netes
+b1e4531e2d10a8404cc7873c6f899494cef236c4
+
+	* Makefile: ChangeLog and version generation script path fix
+
+Wed Dec 22 11:47:07 2010 -0800 Ira Weiny
+b260cb4f276b756ded39455969028bcdcd49f60e
+
+	* Further timeout paramater verification (Was: [PATCH] infiniband-diags: Verify timeout value specified to diagnostics)
+
+Wed Dec 15 11:47:09 2010 -0800 Ira Weiny
+298998c77dad10630608374ed1915b506008e79b
+
+	* infiniband-diags: Verify timeout value specified to diagnostics
+
+Tue Aug 3 10:40:56 2010 -0700 Ira Weiny
+8ab2e41e866c27f2ce605fa0bc16b52cd96babf9
+
+	* libibmad/fields.c: Change all PortCounter names to match the Specification
+
+Wed Oct 27 08:47:07 2010 -0400 Hal Rosenstock
+07b4b1afa21a6b4157a69e82b95ad1bc709326c8
+
+	* infiniband-diags/iblinkinfo.c: Limit some queries to switches
+
+Wed Oct 27 09:06:36 2010 -0400 Hal Rosenstock
+0d7e988df53e6ebf1b86d24cebab308527c811ac
+
+	* infiniband-diags/saquery.c: In dump_one_mcmember_record, fix flow label endian
+
+Tue Sep 14 11:10:16 2010 -0400 Hal Rosenstock
+3d00c3eb9ae7019dbb8d9e4c10fdc54af9855dd2
+
+	* infiniband-diags/ibtracert: Eliminate direct route (-D) option
+
+Mon Oct 4 12:16:43 2010 +0200 Yevgeny Kliteynik
+c58dcaa92c3cce03f03a5d4e6fc6e5197ed9674d
+
+	* ibstat.c: fix core dump if wrong port phys state is reported
+
+Thu Oct 7 16:33:01 2010 -0600 Jason Gunthorpe
+f5178760dcdaeecaad9f98a28ed2d32c74908704
+
+	* Fix autotools to include the necessary M4 files
+
+Sun Sep 5 11:30:37 2010 +0300 Eli Dorfman (Voltaire)
+782fd92025d3c97d8822e95be239edd7553c7b80
+
+	* inifiband-diags: Support Voltaire switch ISR4200
+
+Sun Sep 5 11:28:57 2010 +0300 Eli Dorfman (Voltaire)
+5578a9c0b4b8d614880840305badfc81ef5a33d9
+
+	* infiniband-diags: Do not exit when unexpected node found
+
+** Version: infiniband-diags-1.5.7
+
+Sat Sep 4 14:15:33 2010 +0300 Sasha Khapyorsky
+843d2bb428f5e9fda3628252abcedd69300ee9c0
+
+	* management: packages versions update
+
+Sat Sep 4 14:13:06 2010 +0300 Sasha Khapyorsky
+3eabf4227a7267c52e7be496ffdfb857018c6c83
+
+	* management: update shared library versions
+
+Wed Aug 25 14:08:02 2010 -0400 Hal Rosenstock
+c02bdb17ef04162968e88379b5ab86f10935ba9b
+
+	* infiniband-diags/ibnetdiscover: Fix handling of CA ports in recv_port_info
+
+Thu Aug 26 16:14:16 2010 +0300 Doron Shoham
+843a0072a86afe85e053dceb402c2d62bb38e002
+
+	* ibnetdiscover: add '-f' flag to show full information (ports' speed and width).
+
+Sun Aug 1 20:26:11 2010 +0300 Sasha Khapyorsky
+a387f265398c671e9067e055bbebaa634fb4aa49
+
+	* infiniband-diags/ibstat: convert to PRIx64 macros GUID printing
+
+Mon Jul 26 11:40:30 2010 -0700 Hefty, Sean
+732bac4c01d9e6f2da203ad1a2df241cc5d70cab
+
+	* libibnetdisc: fix cast in unmarshall16
+
+Wed Jun 16 07:05:42 2010 -0400 Hal Rosenstock
+30309edcc97a452ca38cb3f3e8ae278c2a811618
+
+	* infiniband-diags/perfquery.8: Add some missing counters to description
+
+Thu May 6 13:49:55 2010 -0700 Ira Weiny
+074ef7c2578b8837428ea12bffb7803336a113eb
+
+	* ibqueryerrors.c: Optimize by querying AllPortSelect first
+
+Thu Jun 10 18:03:03 2010 +0300 Eli Dorfman (Voltaire)
+35a3ce2a8d9374e0f10f56faf8c4d86e30e38299
+
+	* fix MFT record dump
+
+Wed Apr 21 11:19:44 2010 -0700 Al Chu
+9151e22daf3f7c0ff478bc0af77d1281efa52e75
+
+	* support diffing lids and nodedesc on remoteports in ibnetdiscover
+
+Tue Apr 20 15:30:40 2010 -0700 Al Chu
+d84c9d4ea679a13e64952cf4f45862b6a90c5074
+
+	* support diffing nodedesc on remoteports in ibnetdiscover
+
+Mon Apr 19 11:43:34 2010 -0700 Al Chu
+5763f49eb3d5ba3ba33a05b34790c28d1d7ff727
+
+	* add ibcacheedit tool
+
+Mon Apr 19 11:43:15 2010 -0700 Al Chu
+08512b831eaf13f4c8e8b2d4a00b660ade8efa32
+
+	* support libibnetdisc caching no-overwrite flag
+
+Mon Apr 19 11:43:07 2010 -0700 Al Chu
+38181cf26e31a93b48e91576cc360e3d3de85e98
+
+	* make libibnetdisc default behavior to overwrite a cache
+
+Wed Jun 2 13:15:31 2010 -0700 Hefty, Sean
+e6ae86f02337167843d9e3b1011e27cb26ab8fd0
+
+	* ib/mgmt: fix build under windows stack
+
+Wed Jun 2 09:05:19 2010 -0400 Hal Rosenstock
+e8f783c5a65d1f3452b84f3a321c448c226d2bf7
+
+	* infiniband-diags/ibnetdiscover.c: Cosmetic changes
+
+Wed Jun 2 09:04:15 2010 -0400 Hal Rosenstock
+cbcde100c7eb9387aad69811f969240471b99668
+
+	* infiniband-diags/libibnetdisc/chassis.c: In group_nodes, set fabric->chassis
+
+Wed Jun 2 09:02:54 2010 -0400 Hal Rosenstock
+d6ddf46c171b2f8e38a910e75b2ff503d149450b
+
+	* infiniband-diags/libibnetdisc/chassis.c: In group_nodes, pass on all nodes
+
+Tue May 25 13:32:18 2010 -0700 Ira Weiny
+c09b93cfe52854ff8e8f2aab5177ef2c0b34e93f
+
+	* libibnetdisc: move ibmad_port out of smp_engine
+
+Mon May 24 15:45:08 2010 -0400 Hal Rosenstock
+37b6c70f7f607dd41170fee967859400ce16d553
+
+	* infiniband-diags/libibnetdisc/ibnetdisc.c: Fix compile warns on 32 bit archs
+
+Mon May 24 21:53:15 2010 +0300 Sasha Khapyorsky
+076189da8896da13a8f7eb9786768120ce1ed017
+
+	* infiniband-diags/vendstat: allow multiple config space records
+
+Mon May 24 21:53:15 2010 +0300 Sasha Khapyorsky
+dc7b66e6fb3353fcb4ecf4e98453f11163282d4b
+
+	* infiniband-diags/vendstat: add config space access options
+
+Mon May 24 20:37:29 2010 +0300 Sasha Khapyorsky
+1db6d9db939d76888568624d530293936c05a25f
+
+	* infiniband-diags/vendstat: code simplifications
+
+** Version: infiniband-diags-1.5.6
+
+Sat May 22 18:00:16 2010 +0300 Sasha Khapyorsky
+210775cb6cd383a19a5dadb42a9da97d83aaf118
+
+	* management: packages versions update
+
+Sat May 22 17:52:50 2010 +0300 Sasha Khapyorsky
+9c01c858ed5e6f0d1602315633206964e797ea07
+
+	* management: update shared library versions
+
+Sun Apr 25 14:04:07 2010 +0300 Eli Dorfman (Voltaire)
+92b4f4be3a69f95de4157c46132f1f0caeca929e
+
+	* opensm: Always set enabled speed and width
+
+Tue May 11 15:36:08 2010 -0700 Ira Weiny
+ae0675b483b7e8834b5163c15eead36162709b66
+
+	* ibnetdisc: Separate calls to umad and mad layer to avoid race condition on response MAD's
+
+Tue Apr 27 14:35:29 2010 +0200 sebastien dugue
+21ec4a345a6aff6993989b0e86620e62e1f4caf5
+
+	* libibnetdisc: Add grouping for Voltaire's ISR4700 switch
+
+Thu May 6 13:34:46 2010 -0500 Mike Heinz
+3eb3622ba70363c9975f3bb5a608e437508cbcd2
+
+	* RE: [PATCH] management: adding mad_dump_fields to libibmad
+
+Thu May 6 13:30:02 2010 -0500 Mike Heinz
+0176eec5b554dc9bb7a121482afe51e43b410de8
+
+	* RE: [PATCH] management: adding mad_dump_fields to libibmad
+
+Mon Apr 19 18:08:19 2010 +0300 Sasha Khapyorsky
+1a4b90a74be9ae47d51485e2ed29a18b1a1e26eb
+
+	* libibnetdisc: fix indentations
+
+Wed Apr 14 15:48:01 2010 -0700 Al Chu
+116e64efe8dd4e91a264778996f401cfb57a3497
+
+	* check for duplicate port guids in libibnetdisc cache
+
+Wed Apr 14 15:47:49 2010 -0700 Al Chu
+a4a7f4707734bf72ff5177397da661f0583ea158
+
+	* fix libibnetdisc cache error path memleak
+
+Wed Apr 14 10:48:03 2010 -0700 Al Chu
+e8cd82856a6cca259f0592bb4a6233eb0146d053
+
+	* fix libibnetdisc portguid hashing corner case
+
+Fri Apr 16 19:31:43 2010 +0300 Sasha Khapyorsky
+97161a8523e5e94da9f6bfc3fb555daf35fb3c7c
+
+	* libibnetdisc: remove not needed num_smps_outstanding counter
+
+Fri Apr 16 15:14:00 2010 +0300 Sasha Khapyorsky
+eea29a4b4d0fdd75c75595ffa2317fffc872dbf6
+
+	* libibnetdisc: remove not needed process_smp_queue() call
+
+Fri Apr 16 19:31:43 2010 +0300 Sasha Khapyorsky
+2c89899269aff81dce048ae9a6a7a5d17c1aad10
+
+	* libibnetdiscover: more outstanding MADs counting fix
+
+Fri Apr 16 15:10:30 2010 +0300 Sasha Khapyorsky
+a9989e08fbb9e69dc7d69ad7c96d289b01d22e16
+
+	* libibnetdisc: fix memory leak in case of send_smps() failure
+
+Fri Apr 9 04:48:15 2010 +0300 Sasha Khapyorsky
+c22a907d93a8eadde12f5af75a7c571454880986
+
+	* libibnetdisc: config struct for ibnd_discover_fabric()
+
+Tue Apr 13 20:41:59 2010 +0300 Sasha Khapyorsky
+60514dcb474325d3b8a99007efbe3ee522ede710
+
+	* libibnetdisc: don't query CA ports not connected to a fabric
+
+Tue Apr 13 19:54:45 2010 +0300 Sasha Khapyorsky
+0914ffdf6538c271d5de12a6db945796e03851c6
+
+	* libibnetdisc: don't try to cross discovery over CA
+
+Tue Apr 13 19:30:23 2010 +0300 Sasha Khapyorsky
+001dc72c15ee5329bba9966018c4ab84d436ce9b
+
+	* libibnetdisc: fix outstanding SMPs countung
+
+Tue Apr 13 17:54:38 2010 +0300 Sasha Khapyorsky
+7ff1e266c3f48c8f0bdf59b9e606ec538726ba3a
+
+	* libibnetdisc: add \n at end of error messages
+
+Tue Apr 13 15:48:30 2010 +0300 Sasha Khapyorsky
+a17e36656a53ca9363ef6b6b3ffb58a434c0f70c
+
+	* infiniband-diags/ibnetdiscover: cleanups
+
+Wed Apr 7 10:06:43 2010 -0700 Al Chu
+1b60fb0afd6383e94d0d626dbd10a12136f6b635
+
+	* support lid and nodedesc diffchecks in ibnetdiscover
+
+Wed Apr 7 10:06:32 2010 -0700 Al Chu
+f6d4848d3c7462c4140a4050e61b96bf9efb6924
+
+	* support --diffcheck in ibnetdiscover
+
+Wed Apr 7 10:05:38 2010 -0700 Al Chu
+90df93c4ec0e6bec20bef88de4c8bce3e0284362
+
+	* support --diff in ibnetdiscover
+
+Fri Apr 9 10:24:50 2010 -0700 Al Chu
+ee9cd9d43ef94454d93c77988efb0c3f0ec45d9e
+
+	* fix libibnetdisc corner case when user tries to re-cache a loaded cache
+
+Sat Apr 10 02:43:24 2010 +0300 Sasha Khapyorsky
+937eaaccc0f3a32a861333d5018e3fb8e35feb68
+
+	* libibnetdisc: no backward NodeInfo queries
+
+Sat Apr 10 02:16:40 2010 +0300 Sasha Khapyorsky
+b5c7dc59cebfcea80a7a853ace8d7e8316f0b689
+
+	* infiniband-diags/ibnetdiscover: report number of used MADs
+
+Sat Apr 10 02:07:07 2010 +0300 Sasha Khapyorsky
+c690e85eb3822b557bf0fefcf53f03ff403d8cfb
+
+	* libibnetdisc: keep total number of used SMPs
+
+Sat Apr 10 01:01:44 2010 +0300 Sasha Khapyorsky
+4f55f7cd7e8d45ca49c3e107607d5758c6ba3448
+
+	* libibnetdisc: restore hops limited discovery
+
+Sat Apr 10 00:14:27 2010 +0300 Sasha Khapyorsky
+baae94d9af69e246038f970a5b30ae6d8126aed8
+
+	* libibnetdisc: restore show_progress functionality
+
+Fri Apr 9 03:35:29 2010 +0300 Sasha Khapyorsky
+85e417e33d777cc515040b561eb6a5e3511e09b7
+
+	* libibnetdisc: code cleanups
+
+Tue Feb 2 14:06:03 2010 -0800 Ira Weiny
+f518fb5a780fcbec37b54803508abdc9e60e6ac3
+
+	* libibnetdisc: add ibnd_set_max_smps_on_wire call
+
+Fri Jan 22 17:33:30 2010 -0800 Ira Weiny
+089f028dcd5cf4a121a02bec80f3ca54c2e55494
+
+	* libibnetdisc: Convert to a multi-smp algorithm
+
+Tue Mar 9 12:41:15 2010 +0200 Yevgeny Kliteynik
+1226619d64fb4d6bbedba7d04ede5df497057fb6
+
+	* infiniband-diags/ibstat.c: print link layer for RoCEE support
+
+Tue Mar 9 12:37:38 2010 +0200 Yevgeny Kliteynik
+a6cc34bfbc10a93c823668b10bcc39191f044a81
+
+	* infiniband-diags/ibstatus: add link_layer for RoCEE support
+
+Thu Mar 4 15:01:44 2010 -0600 Mike Heinz
+b0caed9bb5f0d1fe80d0c66519bccaaa852e4dbd
+
+	* Perfquery can be too noisy.
+
+Thu Mar 18 18:35:34 2010 -0700 Ira Weiny
+30b8c9067ca388f9291e6298a65c077a568d2981
+
+	* infiniband-diags: Ignore PortInfo data on down port.
+
+Tue Feb 2 17:43:20 2010 -0800 Ira Weiny
+156cd056ab5ef0e69053f5bf324e1835cc67c6d9
+
+	* libibnetdisc: fix typo in man page for ibnd_show_progress
+
+Wed Feb 10 09:32:05 2010 -0500 Hal Rosenstock
+74d69f75fc9bdc72a604a05b9511b5d2dac256f7
+
+	* infiniband-diags/vendstat: Indicate general info for IS4 as well as IS3
+
+Mon Jan 25 08:32:45 2010 -0500 Hal Rosenstock
+17adabc46e41157ea8983ffc52ae16c34d29922c
+
+	* infiniband-diags/ibqueryerrors.c: Fix typo in counter name
+
+Tue Jan 19 15:47:12 2010 +0200 Sasha Khapyorsky
+ce85937be777a9686f58e37bdbbadc0f612bab0f
+
+	* infiniband-diags/iblinkinfo,ibqueryerrors: code refactoring
+
+Mon Jan 18 21:35:51 2010 -0800 Al Chu
+256269defbd56c5bc475f65488267db6e3f5c6b6
+
+	* support --load-cache in iblinkinfo and ibqueryerrors
+
+Tue Jan 12 20:56:20 2010 +0200 Sasha Khapyorsky
+6afc4b05e85c2864c48868a95d82da063676358d
+
+	* ibqueryerrors.c: more readable details dump function
+
+Thu Dec 31 14:10:54 2009 -0500 Hal Rosenstock
+f1d70f4a2a9d6f1d267c7f20b6fdcbd3a64e48a8
+
+	* infiniband-diags/ibqueryerrors: Add support for optional PortRcvErrorDetails counter
+
+Sat Jan 16 20:29:29 2010 +0200 Sasha Khapyorsky
+5d4f4bda8f0e96a407e4b5de9d38798b051604a5
+
+	* infiniband-diags: indentation fixes
+
+Fri Jan 15 10:23:16 2010 -0800 Al Chu
+3d5c94091ce0fc7da8ebf79affac67d1fc92b75b
+
+	* support --cache and --load-cache options in ibnetdiscover
+
+Fri Jan 15 10:23:13 2010 -0800 Al Chu
+01b8045f28f6c1fd6a4dd170e8a89b85e7ff1ad2
+
+	* add libibnetdisc caching to libibnetdiscover
+
+Thu Jan 14 09:13:24 2010 -0500 Hal Rosenstock
+cd383d54dba7e43a1f2de77382c6c31187571491
+
+	* infiniband-diags/perfquery: Add support for PortSamplesControl counter
+
+Wed Jan 13 15:23:18 2010 -0500 Hal Rosenstock
+c259589b1f75e4a6c8d9ea16e8ee0f71c828ac75
+
+	* infiniband-diags/ibportstate.8: Add new supported ops
+
+Thu Dec 31 11:58:34 2009 -0500 Hal Rosenstock
+eae275ce547dd148d7526974b601ccdaa03f9cd7
+
+	* infiniband-diags/perfquery: Add support for optional PortRcvErrorDetails counter
+
+Thu Nov 5 11:56:56 2009 -0800 Ralph Campbell
+b8bbcef89b68865f3fc522a2973131442ca06581
+
+	* infiniband-diags/ibportstate: allow changes to CA portinfo parameters
+
+Tue Jan 12 11:14:15 2010 +0200 Sasha Khapyorsky
+c7589c66ff78f72cf2817e6864b9c43e49dfbd52
+
+	* infiniband-diags: -V, --version: exit with zero status
+
+Tue Dec 29 09:30:49 2009 -0500 Hal Rosenstock
+a5427f83c976ae0bbeee6b4d3f7afe38bf87ee0c
+
+	* infiniband-diags/ibqueryerrors.c: Fix output format of counters
+
 ** Version: infiniband-diags-1.5.5
 
 Thu Dec 24 15:14:41 2009 +0200 Sasha Khapyorsky
-78153a3de43656551e57798edba53b8fde4de888
+a02a72e79fb350e23da731c313a281a6b0c0ca0d
 
 	* management: packages versions update
 
 Thu Dec 10 13:24:01 2009 -0800 Al Chu
-c1a08af33401d8d48c713b06548311f6322e2d04
+d70ab89db505c9ccaf8d0f9231cfcc6344aba038
 
 	* correct manpages for tools that are no longer scripts
 
 Thu Dec 10 11:38:38 2009 -0800 Al Chu
-0c52f7f6af219e7581fb24b0d7f1db05174bed2e
+2f0ba97a07db2bd307f589823fb6ffc7bbd479b7
 
 	* remove obsoleted option from iblinkinfo manpage
 
 ** Version: infiniband-diags-1.5.4
 
 Sun Dec 13 19:39:11 2009 +0200 Sasha Khapyorsky
-2ebf19e61bb887b226017c0ac5a7f30ea0cd9e3f
+8596afb4a92181eb2055123cbcca73715a177cf7
 
 	* management: package versions bump
 
 Sun Dec 13 19:36:19 2009 +0200 Sasha Khapyorsky
-b7f0e58ada74b4da01a39a9c5fd2f5517d70d26a
+3ef00cf4084364fd3779eb673348d525122976a3
 
 	* management: update library versions
 
 Tue Nov 17 10:17:30 2009 -0800 Al Chu
-b50540c042e503b3dbf8163d6e7a1be39b1395b1
+a498f70a59397120f1799645944255d2c1f57401
 
 	* splice out chassis scan specific from general scan in libibnetdiscover
 
 Tue Nov 17 10:17:20 2009 -0800 Al Chu
-503293fbfc78f17d001c1ff504ae4ac1dc9a0315
+8b1d334b64a7ef7451c796268332fcf15bfc882e
 
 	* use nodes/switches lists instead of nodesdist array in libibnetdiscover
 
 Tue Nov 17 10:16:14 2009 -0800 Al Chu
-629e86faef8fa0f5af61998318338005454ec240
+d365a61048d93cc9f65a9826d9b10f107d56150e
 
 	* remove unnecessary casting in libibnetdiscover
 
 Mon Nov 23 12:04:19 2009 +0200 Doron Shoham
-6882bf30e73d1d235a7dfeb830c0571eb3fd8797
+97f3fd404d39053f008e68d46c4baff8f4ce2fe1
 
 	* Add different print macros
 
 Fri Nov 13 09:52:16 2009 -0800 Al Chu
-9f5de5ab64800b1cfd6d9cc31d9e7ecf62fab97d
+0d3e5accc016609e7dfce6331d4d44252182ec16
 
 	* split out scan specific data from ibnd_node_t [attempt #2]
 
 Tue Nov 3 20:17:14 2009 -0800 Ira Weiny
-c30aa8b87bb64b70bcea685b39bd4ea0c7057de4
+e51da7bd0efedd17f4252c09c833a280e08eb1df
 
 	* infiniband-diags/ibqueryerrors: Properly exit and clean up resources when node info query fails
 
 Tue Nov 3 20:22:38 2009 -0800 Ira Weiny
-5a081e6ba49f08c8b4bc38bf8ebffd929b0cf723
+8f8736a6a6993f718ecd47c4bf3d001f68b25229
 
 	* infiniband-diags/ibqueryerrors: Change realloc of suppressed fields to a static array
 
 Tue Nov 3 19:51:32 2009 -0800 Ira Weiny
-365ebdbcf149f68636335969d33dfaf361baaf69
+587a6f8ce63933ca004f5fca216f7616fd64f342
 
 	* infiniband-diags/ibqueryerrors: Fix remote node name printing
 
 Fri Nov 6 10:14:24 2009 -0800 Al Chu
-8ce6cd42e8848e5ba71ec0c61b53e0c8571767fd
+190451c0b7ff164b198d999aeaaa30016bfa7793
 
 	* fix potential segfault in ibnd_node_t destroy path
 
 Fri Nov 6 10:14:21 2009 -0800 Al Chu
-1e0b9f82c73b0ec2209adff22aa4bdfda414d9b3
+a95d8789c55bd06ae62b80c4d32f889289893efd
 
 	* consistently type lids and lmcs libibnetdisc
 
 Tue Nov 10 13:51:41 2009 -0800 Ira Weiny
-df839a7a3b62d4537bbd6870572715cca4819601
+10861458f2b3034262bb9a01125704d9709cc6e1
 
 	* infiniband-diags/libibnetdisc: Remove nearly duplicate "get_node_info" function
 
 Tue Nov 10 14:01:37 2009 -0800 Ira Weiny
-4bb698320cc79d93fa74d09119ab18f08b7e4479
+8ad91fd22ae4b0d1bfd504218a02899d3263b576
 
 	* infiniband-diags/libibnetdisc: clean up PortInfo queries
 
 Thu Nov 12 19:20:39 2009 +0200 Sasha Khapyorsky
-9e8115e7c9311352bd4890f0beba2ba8e3b3f406
+ccf687f2949256973153c38f5e34a31ecf47337d
 
 	* infiniband-diags/ibqueryerrors: minor improvements
 
 Tue Nov 3 13:58:03 2009 -0800 Ira Weiny
-51a2c36b8eaabce98d27873f541de7ad80ddfccd
+8d673b478e78d5f0e4ff606f55c19f942cc8db4c
 
 	* infiniband-diags/ibqueryerrors: Reformat the output of the xmtdiscard details.
 
 Fri Nov 6 15:32:25 2009 -0500 Hal Rosenstock
-e8a4859d78fcae655367b85ba99481e798c0ad27
+3a3734befe391e891ae18bbb925897fe6edb4a46
 
 	* infiniband-diags/saquery.c: Change lids and port numbers to decimal
 
 Fri Nov 6 10:59:00 2009 -0500 Hal Rosenstock
-f66575b0508c5967c09ec296a6e6e573c88e740f
+e11ee0b20b01fabe91f482eb91a90e5849b824c5
 
 	* infiniband-diags/ibsendtrap.c: Add support for SysImageGuid changed trap (145)
 
 Fri Nov 6 17:54:48 2009 +0200 Sasha Khapyorsky
-7010d1042ddc6febc23748f9d2a74945a4982c16
+b363af1580ac214dfa24662285a0b4d6a5d2fecf
 
 	* libibnetdisc: remove man page of removed API
 
 Mon Nov 2 11:33:17 2009 -0800 Al Chu
-24ea04fee2f129727cc3e04eaa799e4db656c776
+2cc2bf56e95ba43cf1b8bdc7c2953e71976de331
 
 	* remove ibnd_update_node
 
 Tue Nov 3 17:03:15 2009 -0800 Ira Weiny
-0025c23b67c9cf16eaffda8321d2c446a3b1a854
+3d44880d512c76f3494037a1973ffdf45205964d
 
 	* infiniband-diags/ibnetdisc.h: Clarify "ports" member of ibnd_node_t with more descriptive comment
 
 Wed Nov 4 09:42:19 2009 -0500 Hal Rosenstock
-34c40e1cd302122ffa2c76734520a99cf685333f
+b61a2910d09a09d58a0ead85dd6db5654fb89aaa
 
 	* infiniband-diags/ibqueryerrors: Add support for PortXmitDiscardDetails
 
 Tue Nov 3 10:37:29 2009 -0800 Al Chu
-a0b3ba4251cdb949b93cb42855ad43a3f9a71e07
+abc34ab016bb8f006d394a24c2107ec08b2fab7c
 
 	* remove unused headers in libibnetdiscover
 
 Mon Nov 2 11:40:19 2009 +0200 Eli Dorfman (Voltaire)
-d09c984a5b1f7384a6ea583ed4bc78912ec66366
+84377df7ce7146b1bf6d9d702bd29d509e8b1d37
 
 	* infiniband-diags/saquery: Report SA MAD Class specific status.
 
 ** Version: infiniband-diags-1.5.3
 
 Sun Nov 1 21:55:47 2009 +0200 Sasha Khapyorsky
-46a65a2d7dc546ce1181ed9f47a8694912522de1
+0b1c91a77dec80e2d2c39e3f6484f095c0d41175
 
 	* management: bump package versions
 
 Sun Nov 1 21:42:56 2009 +0200 Sasha Khapyorsky
-80e9377a523c2f6216b95306b650e5d1774adfd7
+8baf219009567aacb067764323d006cbbd9f69f7
 
 	* management: update libraries version information
 
 Mon Nov 2 02:09:14 2009 +0200 Sasha Khapyorsky
-86debe9612d21ffdc3573bbbe06afc8e67cf7bb3
+edb6c696d5570ed77da48fda8813b1d79604261d
 
 	* management: update/add Voltaire copyright
 
 Fri Oct 30 00:49:36 2009 +0200 Sasha Khapyorsky
-8724c1194ec71df876bc4d35012159686478ae93
+929e69b5de0b131d66ab15356e2dd386b870e81c
 
 	* infiniband-diags/perfquery: merge some code
 
 Wed Sep 23 09:29:43 2009 -0400 Hal Rosenstock
-f6d51d3031eaab94a210e97ccacfebfde6f12316
+3b0b12cd867006e2e918b9a97b6721dfb5025fed
 
 	* infiniband-diags/perfquery: Add support for optional PortXmitDiscardDetails counter
 
 Thu Oct 29 23:34:27 2009 +0200 Sasha Khapyorsky
-83ce0b747aa0df1a09aef958a5a1fc0f0a83f426
+d557de94aa4ca0f4fdaca8948d49e37cbae215e2
 
 	* libibnetdisc: some cleanups
 
 Thu Oct 29 23:11:29 2009 +0200 Sasha Khapyorsky
-477c9a04df6051112b6b76514809f849acb14ae8
+80c220bd2c8fe3c8abb8b9d10a23b1377d744fbb
 
 	* libibnetdisc: rename ibnd_scan variable to scan
 
 Wed Oct 28 16:52:11 2009 -0700 Al Chu
-ae9999d27f1ea80c8c31165dcb53bd873348852f
+9e92e25de600c088034351c83088e6a4e5d8cc11
 
 	* remove 'dist' field from ibnd_node_t, which was virtually not used
 
 Wed Oct 28 16:52:09 2009 -0700 Al Chu
-094f922a34d6378d6a3bd1d137f90d6530685f94
+29003140079845c69888622ababf200e424fdf5f
 
 	* split out ibnd_fabric_t fields that are only used during a scan
 
 Tue Oct 27 10:22:36 2009 -0700 Ira Weiny
-3bfb91b1b2cfebda8a9cf00dc55bad572b353dd8
+2d237d0b99560b44f41ce8716a39edc31abdf7e6
 
 	* infiniband-diags/ibqueryerrors: Use remap'ed node name in clear port error message
 
 Fri Oct 23 13:57:46 2009 -0400 Hal Rosenstock
-2c1a469f564de936c406b0b4cb55da7a87fa9667
+7107a106aeb0a283da875e7bbe955b3e4c28f781
 
 	* infiniband-diags/ibqueryerrors.c: Cosmetic changes
 
 Wed Oct 14 09:44:35 2009 +0530 Keshetti Mahesh
-c413b4a8e5a0695c4bbe26e10087d79ce6d6178b
+609e037c3723bc759293ec9c343969daf236a8fc
 
 	* infiniband-diags/libibnetdisc: Removed trivial comments
 
 Fri Oct 23 18:20:59 2009 +0200 Sasha Khapyorsky
-78fe2074e11b12e9587942a0ffa55590df2086da
+fb9503355addb8e01b0903ba2fab21ec7f98fc1a
 
 	* infiniband-diags/ibqueryerrors.c: use common node_name
 
 Fri Oct 23 17:08:29 2009 +0200 Sasha Khapyorsky
-3306b1a67ab3459a74558705c129e7d497c3e8ff
+7a0d07dc019b206b8c98e85bf10707fa0dd8fec1
 
 	* infiniband-diags/ibqueryerrors.c: use common portid in query_cap_mask()
 
 Fri Oct 23 17:02:22 2009 +0200 Sasha Khapyorsky
-30d6ecaca9144cb3daf15740b2f884207934c0b0
+2aca4b06068a049781387d240a85f468cf9b8633
 
 	* infiniband-diags: minor cosmetic fixes
 
 Fri Sep 25 09:33:58 2009 -0700 Ira Weiny
-30a97ece274faab1b2f29305da3cc3e993efd6e9
+21b42954dceeb4924b7f4e57c37250b3bdcd7f0b
 
 	* infiniband-diags/src/ibqueryerrors: Add clear errors and counters options
 
 Wed Oct 7 10:35:25 2009 -0700 Ira Weiny
-d2a4a273e594801e978d65ba8109814f9d2edd69
+de9d8f08fc127f09e6f3825686806f59b5c821b4
 
 	* infiniband-diags/libibnetdisc/ibnetdisc.c: fix bug in single node processing.
 
 Tue Oct 13 09:04:54 2009 -0400 Hal Rosenstock
-382178eb1d8b42201faee2b040f7bc786a5ef399
+65f305cc51d07aa53437e961b43f69005361d0a8
 
 	* infiniband-diags/saquery.c: Modify dump_path_record
 
 Tue Sep 29 14:22:46 2009 +0200 Sasha Khapyorsky
-0abb828175450b873521d4917c3edb0a7b57c337
+642160c80693b4f8fd038e04dd728da1431734dc
 
 	* infiniband-diags/ibqueryerrors: simplify node_type_to_print setup.
 
 Wed Sep 23 11:38:11 2009 -0700 Ira Weiny
-0c88b068fd52dcc0160d1e6a7a35afa919465039
+e426d5b7f495550f28b558917eae074bea75600f
 
 	* infiniband-diags/src/ibqueryerrors.c: Remove --all option and replace it with --switch, --ca, --router
 
 Wed Sep 23 14:26:55 2009 -0700 Ira Weiny
-923c3d5d8c90fba371604b278761531ccb0c40f7
+c92b21e9a15fbdabc7f37b986cb036276f02e939
 
 	* infiniband-diags/src/ibqueryerrors.c: fix bug when attempting a sub-fabric scan
 
 Tue Sep 22 19:59:36 2009 -0400 Hal Rosenstock
-23418df174a2b45e8091b6c5c3c65ab07119c40e
+a74d1210266cc8aca0169f5a1e9b43bbf7673948
 
 	* infiniband-diags/ibportstate.c: Eliminate uninitialized variable compile warning
 
 Mon Sep 14 12:59:33 2009 +0200 sebastien dugue
-c145043bf3d92eb9dd93ae4231fbd0b6acc908de
+f80eefd7c31e0c511794d582d05611fb30f83be4
 
 	* infiniband-diags/ibnetdiscover: Add separator when printing chassis type
 
 Sun Sep 13 19:23:13 2009 +0300 Doron Shoham
-cdc6452b0f8e2cd85dd61d5b43c9c65bfd5cc1a8
+59d05a9509ae337b7d5786c0970dce88a4fa9b1a
 
 	* ibportstate: fixes for width option
 
 Tue Sep 8 18:11:37 2009 -0400 Hal Rosenstock
-ed19ab9b4c976e4949b9eb4bc1352eebdb6db1d2
+0987cc1e8cbdc683838794429d873b07d72a7077
 
 	* infiniband-diags/ibportstate: Support changing of link width
 
 Wed Sep 16 09:12:14 2009 +0530 Keshetti Mahesh
-e62d440ca8fa5250a9536756ab99319d04d2b7cf
+31710227062002f12b1c2b2ca51878f98e6d7bcb
 
 	* 'ibcheckportwidth' : Exit if LWS is 1X
 
 Tue Sep 15 17:09:29 2009 +0530 Keshetti Mahesh
-77a4e9fd0423146cf2f6736c03ced94527f99320
+d8b07f4ca62f6167698e83a8afcef08d424ffa44
 
 	* infiniband-diags/: Cosmetic changes, mostly typos
 
 Mon Aug 31 19:45:44 2009 +0300 Sasha Khapyorsky
-6bfd6a35a8c3f081dd0e4158299d8fb3593ed976
+fe9319b87d22f139b0c6c58c364b0c4c0974b0ba
 
 	* infiniband-diags/ibroute: minor flow optimization
 
 Sun Aug 30 12:32:07 2009 -0400 Hal Rosenstock
-b7d7bc9e52444d611723494e6972a18b48008e2f
+127ddeb0b59f9996d45fba20175b844b466a7342
 
 	* infiniband-diags/ibroute: Add support for MulticastFDBTop
 
 Sun Aug 30 15:39:33 2009 +0300 Sasha Khapyorsky
-6d0200646d0ef6ead79aa1930bdbce7a9d13aa27
+946624a269122d579c7bdd52dc80596c83384e7f
 
 	* libibnetdisc: fix compilation warning
 
 Wed Aug 26 09:25:00 2009 -0700 Ira Weiny
-8b097742afa51640ee2feb71549f310f10c325b5
+c0d2f74c6f8ac227f9eecffd4905fe60b73e3a20
 
 	* libibnetdisc: add retract_dpath function
 
 Fri Aug 21 15:01:00 2009 -0700 Ira Weiny
-9c4cab58c0d8af5afb36cc2ae378a50966331598
+b50abf9bbca002a79aa4b80327cd42c8287ea74c
 
 	* infiniband-diags/libibnetdisc: add missing '\n' to error message
 
 Sun Aug 30 15:29:24 2009 +0300 Sasha Khapyorsky
-5bcef13458a4a3cca87d49baf0e8c441d0a4cde2
+4e7655c49bc612215b379f3f171490c0f20be123
 
 	* infiniband-diags/perfquery: indentation fixes
 
 Wed Aug 26 12:12:23 2009 -0400 Hal Rosenstock
-55168bc975b5b391008ceea9b5927a67a49aa135
+7400343098e38dc9a22b80914a803a30bd6aeae0
 
 	* infiniband-diags/perfquery.c: Indicate whether PortXmitWait counter is supported
 
 Wed Aug 26 17:37:30 2009 +0300 Eli Dorfman (Voltaire)
-3557eb275efdb448b180bed38164e5210215db2a
+1ddb09cf33e08068e813f4fb7038c6addadea3b2
 
 	* Fix IB network discovery from switch node.
 
 Mon Aug 17 14:03:38 2009 -0700 Ira Weiny
-a42a5154898b450c98d6dfd83758421ba317b8e0
+2180add45e2b95ea69d0c14eb09d609b637b0e14
 
 	* libibnetdisc: make all fields of ibnd_fabric_t public
 
 Sun Aug 16 07:02:24 2009 -0400 Hal Rosenstock
-124689161cfffd91c9791e2edfc6ff6971400def
+4bf42172903fa14c6c21eea125623434bdfb3ccc
 
 	* infiniband-diags/saquery.c: Allow pkey and qkey to be hidden
 
 Sat Aug 15 09:46:24 2009 -0400 Hal Rosenstock
-e100443ddaab69862d1ab0060cc95c6d78ff7456
+12504d1532991c680212eacd3af1cbfa995c9f88
 
 	* infiniband-diags/saquery.c: Fix CHECK_AND_SET_VAL macro
 
 Thu Aug 13 19:54:00 2009 -0700 Ira Weiny
-8b180a6e947e6203e1d5313d21d581e19fa5f487
+efbce75536679fe07c4dd2f9e9cc494a26c2cd9f
 
 	* libibnetdisc: make all fields of ibnd_port_t public
 
 Sun Aug 16 13:22:09 2009 +0300 Sasha Khapyorsky
-58aca99d5c97953bf9a0789c8eea594c5b396c11
+fb94a681aaa1d56e69fe9975b07b0ca05c9be14b
 
 	* libibnetdisc: fix again typo in dump_node()
 
 Tue Aug 11 15:15:21 2009 -0700 Ira Weiny
-f8bad0494c588eed3a473bf0f5fd0f8ee3a44df8
+d6f2d1fd279f39fd0243a1e10c13ef9ed1950db2
 
 	* libibnetdisc: make all fields of ibnd_node_t public
 
 Fri Aug 14 10:52:49 2009 -0400 Hal Rosenstock
-c92af6574b5621e4b4b894b429ec6ad453aa45da
+32c65e163cf4ca64b4db4adb68afb5962d3c1d23
 
 	* infiniband-diags/saquery.c: Fix typo in option name
 
 Fri Aug 14 13:15:03 2009 +0300 Sasha Khapyorsky
-2f1633b1dc54ccf4db65d10ab4285416216b04e0
+832b9162b84741f9288f0427a24c1a06493f7f60
 
 	* infiniabnd-diags: indentation fixes
 
 Fri Aug 14 04:40:54 2009 +0300 Sasha Khapyorsky
-6c8b7e2d09d4722ba2a8c86cb39374fe756539f7
+898ffb9f282e1cc1de5a0d17ede549383a4733e7
 
 	* infiniband-diags/ibportstat.c: simplify conditions
 
 Fri Aug 14 04:36:24 2009 +0300 Sasha Khapyorsky
-deac0211bfad24eb36c1889ba70ee97cc7e1a5bc
+ea58a37aac5158be2b8a2d7b267eef29e0469956
 
 	* infiniband-diags/ibportstate.c: consolidate flows
 
 Thu Aug 13 15:37:50 2009 +0300 Sasha Khapyorsky
-58bad28a23b65106fbfc922a14f78ac66b72a0e6
+4e0fb746fa86be7badb067d5f75b92dc362885e4
 
 	* libibnetdisc: indentation fixes
 
 Thu Aug 13 15:25:50 2009 +0300 Sasha Khapyorsky
-69b4a583e1bff97923faa079a22db4b1a85215a9
+0c033c2da354c20afe805d3f3f145b6c867180a5
 
 	* libibnetdisc/ibnetdisc.c: typo fix
 
 Wed Aug 12 16:53:20 2009 -0700 Ira Weiny
-58fd2ff97f49a6a7c580e275ae4e8b449e7ce10c
+676bd9f565fb6a8ab72cdc77c03ccf734a1b6917
 
 	* infiniband-diags/libibnetdisc: remove all IBPANIC's and clean up error handling
 
 Fri Aug 7 09:05:44 2009 -0700 Ira Weiny
-fe95828395b5cb07dc093828fb2fa89b85bf63a0
+db808b6ecfab52fbeb75816092263033de96d307
 
 	* libibnetdisc: fix potential memory leak of port object
 
 Wed Aug 5 10:29:31 2009 +0300 Sasha Khapyorsky
-9a50e2e0be5d8abb2015bfd891919f937defcf63
+cf5922b9bd38f545ef33963fd32896ca25f4b04e
 
 	* infiniband-diags/ibsendtrap.c: code consolidation
 
 Wed Aug 5 10:24:32 2009 +0300 Sasha Khapyorsky
-83afb4e5468cbc62103dd8f597c2b5de7c52b07d
+7c5b3323b29f25e6baaac7934d4f540e41b5eb11
 
 	* infiniband-diags/ibsendtrap.c: fix array size
 
 Tue Aug 4 08:50:09 2009 -0400 Hal Rosenstock
-8211c5944d6e3d728064f54bc297183eaa384d77
+4b78754846dfe7ebd0ee86d074b4c6662d657e7f
 
 	* infiniband-diags/ibsendtrap.c: Add support for link_speed_enabled_change trap
 
 Mon Aug 3 16:39:57 2009 -0400 Hal Rosenstock
-2709a893495b9ac738c15b6dc9897e5d3fc28f4e
+395d4d003d63fa5005c4418bf3c6055ca80705be
 
 	* infiniband-diags/ibsendtrap.c: Fill in capability mask on trap 144
 
 Mon Aug 3 15:22:56 2009 +0300 Sasha Khapyorsky
-2dca7acc91cf2e7d2f40c62c780731642c56fe78
+9d60102edae3f9dbfe20686aa6df34e1219e9504
 
 	* infiniband-diags/man: break long lines
 
 Sun Aug 2 20:15:32 2009 -0400 Hal Rosenstock
-85526f5cc7a6d390c39c97a26407aa30365d6593
+17b317ae81ec6999c608f81b422159bc4194fe11
 
 	* infiniband-diags/ibnetdiscover.8: Add max hops option
 
 Sun Aug 2 10:55:37 2009 +0300 Sasha Khapyorsky
-c75cd4b436a242ff4b90e0bdf54cebc70eabcf50
+fbc728662320140a66db48bded71c7e1a3d94949
 
 	* infiniband-diags/ibnetdiscover: remove not used var
 
 Mon Jul 27 10:13:01 2009 -0700 Al Chu
-b51bb3f918bfbb5a3438c269f2de02f8bc6abef7
+dfbb9603f8f87c5709573f6f031da256153f9e02
 
 	* fix libibnetdisc API consistency and bugs
 
 Mon Jul 27 10:12:59 2009 -0700 Al Chu
-cfc00874f5a1ee8d231813ca9ced5574a0a49293
+3eb0af51f36c75691afbd46e1a8eca2d86143cf3
 
 	* fix libibnetdisc API consistency and bugs
 
 Sat Aug 1 02:59:50 2009 +0300 Sasha Khapyorsky
-316caa661a3cf8367e615b078fcb69b8e1ab56fa
+5d06b65f612802565e7fc7cf1bf8fc84f3d96806
 
 	* bibnetdisc/ibnetdisc.c: fix parameter incompatibility warning
 
 Mon Jul 27 10:12:51 2009 -0700 Al Chu
-829caf1441de40ff1f9480faff725ce6e53480e8
+8092614f5309ed111516dde50bd3390a611d155b
 
 	* fix libibnetdisc API consistency and bugs
 
 Mon Jul 27 10:12:41 2009 -0700 Al Chu
-897dd19bb7cff9476990f2afc178eaf59a024bee
+3fa0a9d8db3430fa7e21b1d528db85ab6833639b
 
 	* fix libibnetdisc API consistency and bugs
 
 Mon Jul 27 10:12:36 2009 -0700 Al Chu
-b51159b56a192067e9d47dc082431b37cda1cef6
+47323f3b253593863a3862c18b3ffb4c0aa42e89
 
 	* fix libibnetdisc API consistency and bugs
 
 Mon Jul 27 10:12:32 2009 -0700 Al Chu
-19ef763c50d0b566e2e3c3b02a560567ab31b7c2
+a150500a3451689bf0eb82203762e8dad4c07522
 
 	* fix libibnetdisc API consistency and bugs
 
 Thu Jul 30 18:40:12 2009 -0700 Ira Weiny
-960608889e85e51731135a05d5784dfaf6d22c1a
+ab70ff96ebf87a63c0dc1aaeb947ababb2125d5e
 
 	* infiniband-diags/libibnetdisc: fix DBGFLAGS variable
 
 Mon Jul 20 08:58:47 2009 -0400 Hal Rosenstock
-634cdc720b6082b0ab6282a0c1297af73be9281e
+a6fbe5f00a3331bf79fc28c37f3d648ec0bb3cc5
 
 	* infiniband-diags/ibtracert.c: Fix linearcap test in switch_lookup
 
 Tue Jul 7 15:24:26 2009 -0700 Al Chu
-feefff30442dfdb6bd45f6b5aa4a544b43eb7173
+b0e2e5c901f342c7813ac91486e474afd2a65204
 
 	* libibnetdisc cleanup patches
 
 Thu Jul 16 09:32:38 2009 -0400 Hal Rosenstock
-17e8ca451d699698673b6935aef848f7cd52ed3c
+5dd30ca90a66cd77d6653deefedffc0cbeac651f
 
 	* infiniband-diags/ibroute.c: Fix typo in IBWARN message
 
 Thu Jul 16 09:31:58 2009 -0400 Hal Rosenstock
-785e50bb70c7e1632b0b82ba4dca529e4fc7e01a
+b26200734f13cdb2c7d2f1e4d7acc39599b849e7
 
 	* infiniband-diags/ibtracert.c: Fix comparison to SwitchInfo.MulticastFDBCap in switch_mclookup
 
 Tue Jul 14 13:28:52 2009 -0400 Hal Rosenstock
-43baa8be18538f7bde131b0244b0ff162d0b734a
+7937993a10638a8d57b80506f040a6cd1ec0413f
 
 	* infiniband-diags/README: Update saquery dependencies
 
 Tue Jul 14 04:26:20 2009 +0300 Sasha Khapyorsky
-639e87e07806db7ef2153c598eaceb316bac7ed1
+c91986c7f354065c42ce70f2dc9fee59d1c73bce
 
 	* infiniband-diags/libibnetdisc: add man pages to EXTRA_DIST
 
 Thu Jul 9 15:39:15 2009 -0400 Hal Rosenstock
-e33dbaf192d085c4342c376c98e6da2dd3ba6b4f
+ba92f994d43a360cb7fa47d6976e370e9471a005
 
 	* infiniband-diags/ibroute.c: Fix format and typo in printf
 
 Tue Jul 7 06:43:57 2009 +0300 Sasha Khapyorsky
-d3b47d7fb90a9a414a1a6163801a05700b7047e2
+579be1dbd8096f4b42faae75c4070057a614a105
 
 	* libibnetdisc/Makefile.am: add internal.h to SOURCES list
 
 Wed Jun 24 18:22:14 2009 -0700 Ira Weiny
-bc347ece75274966b629c005da4dc63f0b19c56b
+3123b272c1d3a7e06223bedd5a9cdcc2be7cfa61
 
 	* iblinkinfo, ibqueryerrors: clean up ibdiag_process_opts call
 
 Tue Jun 23 13:29:19 2009 -0700 Ira Weiny
-baa46f7cf8e5f86885474d5c3aa4cd3f912f6261
+c2a119da5ef4f2c99c07a5e7230812ab038717da
 
 	* ibprintca.pl: fix corner case: print switch information for CA's found at the end of the cache file.
 
 Wed Jun 24 17:52:37 2009 -0700 Ira Weiny
-97efe3fe428080512adac6168616c090d4130bb6
+314008b45efea52c471e5e0ec86dadc47cba698f
 
 	* ibqueryerrors: optomize -D operation
 
 Thu Jun 18 14:07:13 2009 -0700 Ira Weiny
-9ef48f7643e1f95d514c4aad803b3806ba76dc4d
+2df69c8f20a57ac4ccc501f447fc70e7e3dc8cb4
 
 	* iblinkinfo: optomize -D operation
 
 Thu May 14 17:24:29 2009 -0700 Ira Weiny
-c94fd74cb41ee465348e2e60af8730b5fff5668c
+9da2a098863c6633bd9d4a7f48446593904e77a8
 
 	* ibqueryerrors: fix custom opts string
 
 Thu May 14 17:23:22 2009 -0700 Ira Weiny
-a8f8926e8fb2e0b422549ea952810504550f2c42
+ab82af39c6b7376739d7c813cd6dba7522405745
 
 	* iblinkinfo: convert to ibdiag_process_opts
 
 Thu May 14 16:39:52 2009 -0700 Ira Weiny
-4dc38f2a70eceed654016834dfcd7a3d2af0987f
+1b6b85aba85ed0a9249ffcb33ee3c4c9d262ee11
 
 	* iblinkinfo: remove unused file pointer.
 
 Thu May 14 15:52:42 2009 -0700 Ira Weiny
-0ae9e3255297e06b5aeb8ce4276621a6b80cb6d6
+5d6a05b24c6116759a45e4a7fa5632b940682bd0
 
 	* iblinkinfo, ibqueryerrors: prevent core when switch is not found
 
 Wed May 13 09:30:20 2009 -0700 Ira Weiny
-76f21b40405517ea5815a0318eb4c957e7247974
+8022ccc98bc83cb59a08cc8ce3a621a80cd7ed91
 
 	* ibnetdiscover: only report max hops discovered when requested
 
 Thu Jun 4 11:08:27 2009 -0700 Ira Weiny
-6fbf33bf41fefc1e53a19740dfdef6968b188c26
+443ef9a59d4447d7753e0dc7ddeaec167932c8c8
 
 	* Move _with_node_name_map rpm spec option from infiniband-diags to opensm.
 
 Mon Jun 8 13:03:01 2009 +0300 Eli Dorfman (Voltaire)
-ab662e47c430124fe42177b75ceb11ae094ac8cd
+76f74f789656dac2707f0f34933b76955cbac368
 
 	* infiniband_diags/ibportstate.c perform reset in a single mad
 
 Wed Jun 3 17:12:56 2009 +0300 Eli Dorfman (Voltaire)
-72c89f246e227fa5fba9ce72570856857b75c3bb
+9d832c6596bf1ad50814aa3533f4e8706a03404f
 
 	* infiniband-diags: Do not change port state on SubnSet
 
 Fri May 29 15:31:12 2009 -0400 Hal Rosenstock
-7ae9dd995f94da388d7904cb97ba5174ad67a71a
+dbb68b43fd64ae30f013e929dc9e06c9a9c9ee12
 
 	* infiniband-diags/ibdiag_common.c: Eliminate compile warning on x86_64 archs
 
 Wed May 27 11:08:10 2009 -0700 Sean Hefty
-0c1c269b586f02f4147cb8c72d5b13950652625b
+4348825c9a1f964f17d0d06eeefc600b81de0a3f
 
 	* ib-mgmt/libibnetdisc: fix typecast warning
 
 Sun May 10 14:30:13 2009 +0300 Doron Shoham
-983114d4a189b8a3ee058da3e9243d4fa252d732
+71a382ef541de82fe1aec80dcc6aac0a972859b3
 
 	* saquery: fix -c arguement
 
 Wed May 6 09:53:03 2009 -0700 Ira Weiny
-ac9738fec0f28ec1588f806cf6f2050efdb65a69
+3917867db504d6aefbe7ca27bcbd3ac5507c8a55
 
 	* Clean up printing of switch heading when printing "down links" only.
 
 Wed May 6 09:51:14 2009 -0700 Ira Weiny
-a2b8626d06fc1fb8ee202e7e46148723807be959
+ce9635bda568014f391a6bd2aa165115004c4161
 
 	* Fix 2 formatting diff's from old ibqueryerrors.
 
 Tue Apr 28 16:38:38 2009 -0700 Ira Weiny
-974fc3f587e21afc94860fce2a4a546fc93e3381
+e5c1b9659adf803bd01bf908a52be5ea374e1307
 
 	* Modify '-S' option of iblinkinfo and ibqueryerrors to do a limited scan of the
 
 Wed May 6 09:33:47 2009 -0700 Ira Weiny
-b1f953db1d208fa22d7af7c96f249625186ec4ec
+c6f03b72633aff494ac0572ae7bf051d854fff90
 
 	* Add combined routing support to libibnetdisc
 
 Mon May 4 15:49:49 2009 -0700 Sean Hefty
-47ae866e1a25724f0d41e253a3729692fcf23d8e
+750c7d1ee5c4850a9533dbd003e6873d1e0a8c53
 
 	* ib-mgmt: fixup ibsendtrap for windows
 
 Fri May 1 22:47:51 2009 +0300 Sasha Khapyorsky
-90292fb3414a77180086be45ae4cb3f30726436a
+4f784b38fb9628e35a2a0b1378b6e530206f7aff
 
 	* ibstat.c: use htohl() for 32-bit capmask conversion
 
 Mon May 4 15:17:32 2009 -0400 Hal Rosenstock
-a35dd19b1fd01a800cc8dadde8973188dd24c6e0
+03b311f8a46a7d9c88c176480de807e29866107b
 
 	* infiniband-diags/ibnetdiscover.c: Cosmetic formatting changes
 
 Mon May 4 12:58:09 2009 +0200 Nicolas Morey-Chaisemartin
-8878fece69f152050a2c5c052a1c91b9800430ee
+984b98326378702e50dffb854cc72853274cd700
 
 	* infiniband-diags: Added libibnetdiscover to .spec file
 
 Mon Apr 27 14:17:53 2009 -0400 Hal Rosenstock
-6b7ce4b0c1477d68401dc19e6b198cb94fbb5c6d
+0b33c91abdb02403764ca2e4d889a1d14b2d4bac
 
 	* infiniband-diags/saquery.c: Display attribute ID in hex rather than decimal
 
 Mon Apr 27 12:59:05 2009 +0200 Nicolas Morey-Chaisemartin
-9f8bd4a4ad06ede184b38eac68dbb9d337a6892e
+bfc1992705db38f2fda331d3cd0ce4acd48aa277
 
 	* management: Fixed custom_release in SPEC files
 
 Mon Apr 27 14:50:26 2009 -0700 Ira Weiny
-c73088089e34312483341dcb5adf64553ea2e22b
+24741af2301ae8aa2772a35c405212ede4c0a6c8
 
 	* ibqueryerrors: switch_guid_str is required for the string resolve function.
 
 Sat Apr 25 20:10:59 2009 +0300 Sasha Khapyorsky
-8a502bea7909ab233d72004da9e293b13caf3288
+76e4fb8b76d1ab240728c5c7bfa7d94a4d803469
 
 	* ibdiag_common: remove duplicated ibdebug variable
 
 Sat Apr 25 19:51:06 2009 +0300 Sasha Khapyorsky
-a3334b19abe668f5c4e0d3876a4a21f1405e1198
+466fbe3e786598904e7cad9cb99abe7ea81f69f5
 
 	* infiniband-diags: remove not used ibnetdiscover.h
 
 Sat Apr 25 14:36:43 2009 +0300 Sasha Khapyorsky
-1e27967e1268d2c4bcb741551fd0de4af994b22a
+0d0c89063dfe8d5ef8ec9ac836e48c8a7d1008bb
 
 	* infiniband-diags: cosmetic fixes
 
 Thu Apr 23 10:57:10 2009 -0700 Ira Weiny
-d3c40d1881523fe895a60fe08b0f58159ed71956
+bff90d580d150cab5f741400fce88ce244cd1ddf
 
 	* Convert ibqueryerrors.pl to C and use new ibnetdisc library.
 
 Wed Apr 22 18:54:46 2009 -0700 Ira Weiny
-3251cf9c3dbf86fb849e71f02ea2943a6122d016
+5d5734e58b6f73bb1ab7810a63c7ca32b7dfb5cf
 
 	* libibnetdisc: change ibnd_discover_fabric to receive ibmad_port
 
 Sat Apr 25 15:00:13 2009 +0300 Sasha Khapyorsky
-50fcc8c5549be1963cacb66abeedd324adec0fd1
+0d1e27e38285e242d438ff6a658363821e583135
 
 	* ibnetdiscover: fix types to avoid portability castings
 
 Tue Apr 21 12:06:42 2009 -0700 Sean Hefty
-2d663bc42821d444c5cf6ec3fce48df4e0dab70c
+b0b97a684d0133c30571b4e16bc0d31a56bdc446
 
 	* ib-mgmt/ibn3 branch: libibnetdisc add windows support
 
 Tue Apr 21 12:02:18 2009 -0700 Sean Hefty
-fe69ff8e6c6152b3a0bd637eb3c1366559b4b0e3
+3ef7d3de4ebcd6519899b51e4b1b17c0007c180b
 
 	* ib-mgmt/ibn3 branch: diags updated for continued windows support
 
 Thu Apr 23 10:57:10 2009 -0700 Ira Weiny
-e45ed6784447a4c419162dbb89169541f81c96d0
+51401a3ed834f5369dc0c98f134db75a2b6e8ee0
 
 	* Convert ibnetdiscover to use new ibnetdisc library
 
 Thu Apr 23 10:57:10 2009 -0700 Ira Weiny
-3baec875b190c4a7f051115c97b63c0b6f552496
+339cf92d36a47c2c50727d5ab1c3fd03c409d3fc
 
 	* clean up iblinkinfo conversion
 
 Fri Apr 3 15:42:54 2009 -0700 Ira Weiny
-ccd01188914cd2604a2051d5c8ed6f0d4003a37a
+392a032eda0243931d2b82b8bc8174293ba11e44
 
 	* Convert iblinkinfo.pl to C and use new ibnetdisc library.
 
 Fri Apr 3 15:42:51 2009 -0700 Ira Weiny
-b3849142a804a988ae84b4c95120d1aba902ae53
+a626de1abde7223348ed88474e168c3e68f86565
 
 	* Create a new library libibnetdisc
 
 ** Version: infiniband-diags-1.5.2
 
 Sun Apr 26 17:05:13 2009 +0300 Sasha Khapyorsky
-7804058463fb55c4329265051b0c88a966593269
+186fa39842b64785eb572a69ddeddc5613419782
 
 	* management: bump package versions
 
 Sat Apr 25 20:10:59 2009 +0300 Sasha Khapyorsky
-aa24ce655af997d8e6a4961eefb5193023a59e40
+bbee6691e502306397f7be2593293a0baaa90c40
 
 	* ibdiag_common: remove duplicated ibdebug variable
 
 Sun Apr 19 06:32:41 2009 -0400 Hal Rosenstock
-2256b847523f87e9fbc499bc8a83c886bc7ebbe0
+a9acc85489ea27649d726f338a044cc989d5b173
 
 	* infiniband-diags/man/vendstat.8: Indicate IS4 config group config not persistent across IS4 reboot
 
 Sat Apr 18 09:11:36 2009 -0400 Hal Rosenstock
-aa34ba46269789d4e54ad1b54672113549941c61
+34fe5e885707ccf06fb77086a849d0d73a485ae4
 
 	* infiniband-diags/ibsendtrap.c: Set producer type according to node type
 
 Thu Apr 16 09:01:45 2009 -0400 Hal Rosenstock
-909bd63c229e9a95350aca5c535fd6fd95ad3c75
+668fb55fc9cb98c1242ff1f7e7305fd6d9c2362e
 
 	* infiniband-diags/man/vendstat.8: Fix PortXmit/RcvDataSL examples
 
 Wed Apr 15 19:38:30 2009 +0300 Sasha Khapyorsky
-803219f41578de59e3d603a156aa47ce5825dac3
+8b8a9f0cf5cdae9a0d2552d4d8e5742d10ba385d
 
 	* infiniband-diags/perltidy.sh: option to format a single file
 
 Fri Apr 3 16:02:49 2009 -0700 Ira Weiny
-c26922f0b7807f904964a4b0464446164fced911
+e34a45c85df471dc11a43107dabe1cf6186bf422
 
 	* Fix ibidsverify.pl to use the correct cache file
 
 Wed Apr 15 09:05:18 2009 -0400 Hal Rosenstock
-4cf4b3622ed223b4421123f3859e4a48b42eb6f5
+02e69153449f8ed17b3b98a8754734f9a5058d7d
 
 	* infiniband-diags/ibsendtrap.c: Local link integrity is an "urgent" trap
 
 Tue Apr 14 15:11:18 2009 +0300 Sasha Khapyorsky
-ad5be42d00f0f0efb1551721690f8ce102913fbd
+347e4ffb4d8297ce656cc1daa6ced0e2a4bd9afe
 
 	* infiniband-diags/ibsendtrap: code consolidation
 
 Mon Mar 16 11:20:38 2009 +0200 Julia Volynsky
-8afacf3c46572caca63bbf91d3914b7fad584243
+441ece311d51c8a30d27a7b45dc176c98fd23534
 
 	* Added send trap for trap 129 (local link integrity)
 
 Wed Apr 8 11:04:45 2009 -0400 Hal Rosenstock
-8b6698b19418a9121581adb472cdffdffc69bdb1
+6c2a373455e37c3488bc0f90e8ab0b3a6ffa1f16
 
 	* infiniband-diags/vendstat: Update man page and examples for PortXmit/RcvDataSL counter support
 
 Tue Mar 24 03:09:15 2009 +0200 Sasha Khapyorsky
-efa0de26b330e2657ced1a80b5650fde58889284
+c73f168ca22d40cabb3bb88e827bfb077080cf05
 
 	* infiniband-diags/vendstat.c: code moving
 
 Thu Mar 19 14:27:25 2009 +0200 Or Gerlitz
-3cf03989425a6707981a8413dcf2515717090940
+c10e955f68414381d81c5400559281cbf14e1283
 
 	* ib-diag/vendstat: counter-group-info & config-counter-group vendor mads
 
 Fri Mar 20 18:12:22 2009 -0500 Hal Rosenstock
-365343e21606b7ab429184ae6a43dd7f3ab98dba
+fc3d02c9871820f35a34b331046b1fa81b055291
 
 	* infiniband-diags/perfquery.8: Fix typo in short option for PortXmitDataSL counters
 
 Fri Mar 13 15:37:18 2009 -0500 Hal Rosenstock
-7839ef873cd6dc28cbedae013ae43792213795f3
+71113b0100ad0236abdc1bfa4868a89b47387880
 
 	* infiniband-diags/perfquery.c: Label PortXmit/RcvDataSL counters in headings
 
 Thu Mar 12 11:38:56 2009 -0500 Hal Rosenstock
-00e0af062e693932af6292e4b5b670c8c0b7e19f
+9e2416c1e1bf0b95db675844e7d4592db8cb1115
 
 	* infiniband-diags/perfquery.8: Extended counters are now -x rather than -e
 
 Wed Mar 11 08:29:19 2009 -0500 Hal Rosenstock
-d80039ce40d16244825b6b02e578e24f3045f05e
+90ef4ffcf239cd82e88a5cbccefb60356be8d250
 
 	* infiniband-diags/vendstat.c: Add missing mad_rpc_close_port call
 
 Tue Mar 10 17:50:01 2009 -0500 Hal Rosenstock
-2e436eeae1100a487929cade39ddcc0c40fa4d68
+21478a728ef32a4863866c18e52b64306a86ec73
 
 	* infiniband-diags/perfquery.c: Fix some memory leaks on exit
 
 Tue Mar 10 15:50:23 2009 -0500 Hal Rosenstock
-ad193f024ac734c91fba3c34379adc9b319874bd
+680bafcf16c7b34c58a20af4b08350d07767dc81
 
 	* infiniband-diags/perfquery.8: Update man page for PortXmit/RcvDataSL
 
 Wed Mar 11 12:43:47 2009 +0200 Sasha Khapyorsky
-91774cc5924a86bf94680e70581cbc52554e0d28
+52c956f91512ded86a2c072074d07269d870128b
 
 	* libibmad: add mad_rpc_class_agent() call
 
 Mon Mar 9 13:53:21 2009 -0700 David A. McMillen
-f5df8cd85697f7040154d8095d24bea50f5e4aef
+05d7a879e3e59675a80c8250a1f53c53cf1766ee
 
 	* infiniband-diags/ibnetdiscover: Apply --node-name-map remapping to names printed by --ports option
 
 Mon Mar 9 18:01:02 2009 +0200 Or Gerlitz
-8da0d508e6284dbde71830340e77db99389c6460
+c236d1f91b9e6cccc3c30aec2dfcf050f0ac792a
 
 	* infiniband-diags/perfquery: add srcport param
 
 Fri Feb 20 14:45:29 2009 -0800 Ira Weiny
-225399fe7aa9f3f0004695fe9c4a2a942bd29b5f
+9ef2ac0417237d757875a31572274be3f9a90f08
 
 	* infiniband-diags: convert ibnetdiscover to "new" ibmad interface
 
 Thu Feb 19 18:53:10 2009 -0800 Ira Weiny
-f375fcb0f6d21ae40f893a7d5d4c0520a4fb070a
+37a39ee80e8d59ed3c3ee1f0d6dddddbed20708a
 
 	* infiniband-diags: Convert perfquery, saquery, sminfo, smpquery, and vendstat to "new" ibmad interface
 
 Thu Feb 19 18:24:56 2009 -0800 Ira Weiny
-763e5ef1555eebc2259cf61d38c0f19e08c5c26e
+a76c09bc5779dad91e44e862ba48bf9ad63455e7
 
 	* infiniband-diags: Convert mcm_rereg_test to "new" ibmad interface
 
 Thu Feb 19 18:14:49 2009 -0800 Ira Weiny
-98b6946aaf4b3dad3ea4c12f04a0e8780943b7ed
+b34db7fbae6f36db0d426019df64a289b894a293
 
 	* infiniband-diags: Convert ibsysstat to "new" ibmad interface
 
 Thu Feb 19 17:58:36 2009 -0800 Ira Weiny
-3466d4f55fd1240f5ef418fb9bdf82bf8e34b53d
+20a6a5bbd9b0faed3d36a4e02cc00a576df08d3e
 
 	* infiniband-diags: Convert ibtracert to "new" ibmad interface
 
 Thu Feb 19 17:53:30 2009 -0800 Ira Weiny
-68cf8af50114a9aa4f9599b9f7b208626f7caff0
+be317ec69458e453b7c13aba7adef1bdba770d96
 
 	* infiniband-diags: Convert ibsendtrap to "new" ibmad interface
 
 Thu Feb 19 17:30:14 2009 -0800 Ira Weiny
-50eca5572fa3a7dfca59c9b931510bf183e59fef
+63205b22834d97de1135647198d26655882a4a34
 
 	* infiniband-diags: Convert ibroute to "new" ibmad interface
 
 Thu Feb 19 17:27:21 2009 -0800 Ira Weiny
-afa52fdd267d84b0ab86cfe21a8bc46a1e288c2b
+37808bc670ef219c12d1aab22e30582babd5da4d
 
 	* infiniband-diags: Convert ibportstate to "new" ibmad interface
 
 Fri Mar 6 10:48:08 2009 -0800 Ira Weiny
-50f93933d36a75d10b60d71695d53e84b772590a
+481279ff94de844a99ecd7c88f11365bad495c8d
 
 	* infiniband-diags: Convert ibaddr to "new" ibmad interface
 
 Fri Feb 27 13:46:53 2009 -0500 Hal Rosenstock
-294a25bdc40835f36d1f8c7333d32ae3fa17d47f
+45131fc051fc69fb3190a895345c15e57bb5c13f
 
 	* opensm/infiniband-diags: Changes for C rather than C++ style comments
 
 Mon Mar 2 11:35:54 2009 +0200 Or Gerlitz
-1f5fdf3dfc69733a427520198bcbdd03645bb326
+aa877e7dbd691589bfd45ddfc032514c08831580
 
 	* infiniband-diags: update configure.in check for libibmad API
 
 Sun Mar 1 14:41:51 2009 +0200 Or Gerlitz
-1220e57db51bb7ba1418c80ef8bdae205f4e4990
+08775eda007eab489247542cb492663f7aea1f63
 
 	* perfquery PortXmtDataSL/PortRcvDataSL support
 
 Sun Mar 1 14:39:48 2009 +0200 Or Gerlitz
-6961ab9e34332f88a2688866b37e6268f9d587f6
+3116fb5902642fb8cebbfb1c2f64c5a8cb3a7eb2
 
 	* generic libibmad perf query/reset api
 
 ** Version: infiniband-diags-1.5.1
 
 Sat Feb 28 18:50:54 2009 +0200 Sasha Khapyorsky
-b67cfc045fd9056eae0ed8bac1529503c8a38220
+d5f23acbcbfe8ee51818ab364007d5b0a7387d01
 
 	* management: bump all package versions
 
 Fri Feb 27 10:34:19 2009 +0200 Sasha Khapyorsky
-9d3fa3ed166e58e754667f2cf8009678b5d42f6b
+1cb94c303b0a195d766e1d0eb39d87c18425cd4c
 
 	* infiniband-diags/ibroute: fix warning
 
 Thu Feb 26 13:08:23 2009 -0800 Sean Hefty
-ee21309fe1ca751a833cc27cd9a798761778d4d6
+bf861ff2118831d99231e2458132571ec30a01aa
 
 	* [ib-diag] saquery: add support for WinOF
 
 Thu Feb 26 12:33:49 2009 -0800 Sean Hefty
-1b9159969628cc13790b6e158f5fb3d1f26ac26c
+9cb8cf81780c66e529bb275f180d1b734694031c
 
 	* [ib-diags] saquery: set correct pkey table field
 
 Thu Feb 26 12:22:04 2009 -0800 Sean Hefty
-753f9fec18bc9485c261261ab9453463165f1f43
+d8b1999aee4635f6522947bb4bf036799d5869c9
 
 	* [ib-diag] ibsysstat: add support for WinOF
 
 Thu Feb 26 10:12:23 2009 -0800 Sean Hefty
-8d63ef6f3854868904931019987e3c068977657c
+aaf13343ee26d4c5e597ddf69a8e3b2341291b98
 
 	* [ib-diag] mcm_rereg_test: add support for WinOF
 
 Thu Feb 26 10:12:19 2009 -0800 Sean Hefty
-d65d573089a32b7a60c42d50cd9068d32b350f98
+3bc107e9c72908bbd51ebaf29389f142e3da72e9
 
 	* [ib-diag] ibsendtrap: add support for WinOF
 
 Thu Feb 26 10:11:58 2009 -0800 Sean Hefty
-957a7ddf79f538ac6b85df4c3fc9c7d8e746c516
+02b7f2ed3e52cbaa39f1d6033a76b970b42ce949
 
 	* [ib-diag] ibtracert: add support for WinOF
 
 Thu Feb 26 10:10:58 2009 -0800 Sean Hefty
-a27f7bc3fb59368cff4538a4100456803affe2ac
+9b59ad68b2b1976d5c1111531f3f3aacf867d2ab
 
 	* [ib-diag] ibroute: add support for WinOF
 
 Thu Feb 26 09:48:58 2009 -0800 Sean Hefty
-9cd09f9d2375da833c92aeeb7aa307692167e097
+f3cf4703a3c421657ccd2a6a0a5cc6807bf5dd2f
 
 	* [ib-diag] ibnetdiscover: add support for WinOF
 
 Fri Feb 20 16:59:38 2009 -0500 Hal Rosenstock
-001af0ee6f04587d0f1306d9ec8bad16f37e59ba
+8f526856100acd3206ae7c268bb0cadc9c6a7088
 
 	* infiniband-diags/saquery.c: Convert more LID prints to unsigned decimal
 
 Wed Feb 18 12:19:32 2009 -0500 Hal Rosenstock
-c30938c38308e4bf38acb966e4467bdf95bf79b6
+1f6243a43bb429a50e3453178e9b456763cc78ef
 
 	* infiniband-diags/smpdump.c: Release umad resources on exit
 
 Wed Feb 18 10:55:37 2009 -0500 Hal Rosenstock
-b4d9285cf0b20455f46bc34c1f7c54a6c8326d19
+cf6e7dcf310786a51deac8191df5a4307c2d5a3d
 
 	* infiniband-diags/smpdump.c: Fix usage examples
 
 Sun Feb 22 06:19:44 2009 -0600 David McMillen
-b3ece816beac4507ff6299a23b064664aa04705c
+b75064b33c4faa157a0efb52d6498fa905fed4ff
 
 	* infiniband-diags/src/ibnetdiscover.c missing LID information on --ports
 
 Wed Feb 18 10:00:21 2009 -0800 Sean Hefty
-c4d9bcf8e2c59f296e089f30b9ac65e051c95b82
+99225e635ae4a1abeb4f33185c394bc6f40d5db9
 
 	* smpquery: add support for WinOF
 
 Tue Feb 17 16:05:45 2009 -0800 Sean Hefty
-569d0fdb187f540a16a05c314dd3d680dcc283ec
+d82c0b8f7bad0f618ddcc19644f196e4fc6e8879
 
 	* ibping: add support for WinOF
 
 Tue Feb 17 14:36:20 2009 -0800 Sean Hefty
-63378c8a5a3f41544373b95e3c5885f079996f32
+7dbf78d97d95da1ad7769b8ed97496f0f56f55c2
 
 	* smpdump: add support for WinOF
 
 Tue Feb 17 14:35:40 2009 -0800 Sean Hefty
-722b6c6428c9e4921a81f4a6db2838bcee660bb7
+799a70838ebae1519f6cdc6980327988a3e59057
 
 	* ibstat: add support for WinOF
 
 Tue Feb 17 14:33:09 2009 -0800 Sean Hefty
-4f236aabd02527bf6ae403b61096279d050583d5
+61fb971b57dffbc10f83f51e28b4a67fb0c581cb
 
 	* ibportstate: add support for WinOF
 
 Tue Feb 17 14:32:38 2009 -0800 Sean Hefty
-39da0765ca6ab6c064232f16eea53c7f85c7e6ca
+518d5459663cb7367afac4e2255aa759d48b9889
 
 	* perfquery: add support for WinOF
 
 Tue Feb 17 14:32:05 2009 -0800 Sean Hefty
-0bbf1afa7001cd0d031abdaa998c9c7d0b357cae
+43524e038a5fd95339fd5c43e2fedc32ac76c8f4
 
 	* ibaddr: add support for WinOF
 
 Tue Feb 17 14:31:31 2009 -0800 Sean Hefty
-cd80120c0d5e8d3b102682949d6dd01e88ae76f1
+0524c25610ea927053d7bf1144d1b06e7b969a80
 
 	* vendstat: add support for WinOF
 
 Tue Feb 17 14:30:54 2009 -0800 Sean Hefty
-99ecc7e20ff0727c3f1d39ec083f04ddfcfbd9eb
+43e6dfa72170309ef5f20100ec1119abdb2e2327
 
 	* sminfo: add support for WinOF
 
 Sat Feb 14 17:19:02 2009 +0200 Sasha Khapyorsky
-8cb9b7153583cfe0b4db978b944ba4bb72432cd0
+8219070572684307a500347ca0220e1b79640a5b
 
 	* infiniabnd-diags/common: wrap debug macros with do {} while (0)
 
 Wed Feb 11 18:37:24 2009 +0200 Sasha Khapyorsky
-ddf75ef298e8214e21c6de331ab57e5604344554
+68daa74daf262ee17cabf3a019348c7def662e3c
 
 	* infiniband-diags: some code consolidation
 
 Wed Feb 11 04:53:46 2009 +0200 Sasha Khapyorsky
-ddb7a9122ceed0fdacf6001d8df107a7bf4e6e66
+f2920cc66f525850f61d4ceaf87e05db8fab17cf
 
 	* infiniband-diags/saquery: fix types and some cleanup
 
 Wed Feb 11 02:11:30 2009 +0200 Sasha Khapyorsky
-acf369a7c3011804991fe3bd53e70c01c8d4edd8
+ce8e82d5d53e698bf3ca41eb7295b8a19038dc72
 
 	* infiniband-diags/saquery: remove osm vendor layer
 
 Thu Feb 5 17:00:02 2009 -0700 Hal Rosenstock
-edfc7df003ea49e1078e2631f1c0e1ce20f47924
+f13f0a25f22e1c9f2ad0e10bda830b83d0edcb80
 
 	* infiniband-diags/perfquery: Change option name for extended counters
 
 Thu Feb 5 20:18:10 2009 +0200 Sasha Khapyorsky
-1061d4e43c2ef78e355b5d9560f695b26aac1681
+6079cc21e9df4851ed5fe2a7e474642cd7b7ee78
 
 	* infiniband-diags/common: use enum MAD_DEST as ibd_dest_type type
 
 Fri Jan 30 15:51:05 2009 +0200 Sasha Khapyorsky
-d7b34421aae6b8f2baa6fa552ef5e5fb7678cb70
+5b6ba15dd1dfd5c0664cb3b4f820c10828b9add7
 
 	* infiniband-diags/saquery: merge PathRecord query functions
 
 Wed Jan 28 20:23:02 2009 +0200 Sasha Khapyorsky
-06ca8889c777ed8fcb1e803531734594fa8b7d3f
+2305370eccc5891d310fa3b42c93a5257b390d18
 
 	* infiniband-diags/saquery: more params for Path and MCMember Records
 
 Wed Jan 28 20:23:02 2009 +0200 Sasha Khapyorsky
-057585b796bf38b792b3d450691b3fc28b40de06
+db4dd2cbe5131ef240307cdf5df9c4031ed90376
 
 	* infiniband-diags/saquery: adding query params
 
 Thu Jan 29 14:34:45 2009 +0200 Sasha Khapyorsky
-e00ba053f88c09dce56ee9e13876a8f7ef20dd88
+d85205d7c14697b9777d13da39b1137f0db07636
 
 	* infiniband-diags/saquery: CHECK_AND_SET_VAL() macro
 
 Thu Jan 29 13:24:59 2009 +0200 Sasha Khapyorsky
-affed6528488b1dd6111591d53b46811f09fef2f
+21de45df81e77ac214e355cf7f6861f83b2fc59f
 
 	* infiniband-diags/saquery: cosmetic
 
 Thu Jan 29 14:42:55 2009 +0200 Sasha Khapyorsky
-d2148694e042fbcea60c948faadd557c00a290ec
+6d2909c11245777ce44e5b5716c6dc3c877b6a92
 
 	* infiniband-diags/saquery: fix encoding of SA queries
 
 Wed Jan 28 20:10:06 2009 +0200 Sasha Khapyorsky
-c8db511b8fc04a995c0e0ce582a2af6827387de5
+b2191875823de79245cbd6105307d98780f45d6b
 
 	* infiniband-diags/smpdump: fix SL value encoding
 
 Wed Jan 28 15:14:07 2009 +0200 Sasha Khapyorsky
-c67c3c6b36a414ecc98541ecb555e78070330a7f
+2e11ae51da524bffa49434e1aea1fc471f2a42b3
 
 	* infiniband-diags/saquery: fix backward compatibility bug
 
 Tue Jan 27 14:36:02 2009 +0200 Sasha Khapyorsky
-c1611db54984ee1f75a0f4aee99e4366d0dfa65b
+e478ef0b30fd7b7a889c1afb7d94553de15e4693
 
 	* infiniband-diags/ibsysstat: backward compatibility fixes
 
 Mon Jan 26 23:03:29 2009 +0200 Sasha Khapyorsky
-69770d2855c4b20701877bbf90f8b75630fd3900
+7d1b0a3d6aca0c5f96f3354a9e4a3ef40b25f300
 
 	* infiniband-diags/ibsysstat: use RMPP for client/server communication
 
 Mon Jan 26 16:35:51 2009 +0200 Sasha Khapyorsky
-8ae4ec4eb751ac9eb223bdbc47ce2f37747acdd4
+a58765c29649fbf8ae8868e161a4285438c0bd95
 
 	* infiniband-diags/saquery: add lid parameter to NodeRecord query
 
 Mon Jan 26 10:49:43 2009 +0200 Sasha Khapyorsky
-3025780c3e3d1d101d8ae95bfad90577cd730921
+c5f90ddff99b8d8e6a63bd8a248ff9ab1ec160b6
 
 	* infiniband-diags/smpquery: usage improvement
 
 Sat Jan 24 11:19:30 2009 +0200 Sasha Khapyorsky
-a789036776704a040516657b8c3cbf6f7fa2625f
+f1db964fd7316ac1900545078524f0ee5f71620a
 
 	* infiniband-diags: remove unneeded includes
 
 Sat Jan 24 10:50:50 2009 +0200 Sasha Khapyorsky
-12e79d4e28bddec59cf91b4b86155026c3f0acc8
+cff14be7d5daa56c11177769ea736a654fc94869
 
 	* infiniband-diags: make get_build_version() static
 
 Sat Jan 24 10:11:08 2009 +0200 Sasha Khapyorsky
-95180ca1f0eb9bc07d873206c1a5befa748085f3
+0628026b304becf2c46ccc9ac7b30b02fafa2219
 
 	* infiniband-diags: remove argv0 global variable
 
 Sat Jan 24 00:31:01 2009 +0200 Sasha Khapyorsky
-e73625068db0827462051eabfcbd8c4d41ba915c
+3ccf4d576c28854a2c40237179f39185f2c1b5d3
 
 	* infiniband-diags: using common command line option processing
 
 Sat Jan 24 00:31:01 2009 +0200 Sasha Khapyorsky
-f8d3622b41b5601e41947351e03fc1ee142bb6bd
+cd5a13772d750e8828e48fd1e921d972894c8d68
 
 	* infiniband-diags: command line option processing framework
 
 Sun Jan 25 11:45:03 2009 +0200 Sasha Khapyorsky
-a546100f322571fecd930d2e68dd1505e6f2ff4a
+591081b4ca2fe3d60e08545d4148e2ef68b6665e
 
 	* infiniband-diags/dump_mfts.sh: fix -D format parsing
 
 Sun Jan 25 11:45:03 2009 +0200 Sasha Khapyorsky
-f6b6403e6ad8706e454590729f113b6b4790889f
+26680730ec79303a32f0950dc3b6733172a9cd61
 
 	* infiniband-diags/dump_lfts.sh: fix -D format parsing
 
 Sat Jan 24 00:12:28 2009 +0200 Sasha Khapyorsky
-845974df991db0d11730c34ebd7cd37a71bf16c6
+1fa3b32eba4218ab0fdce5a101624b007a82aad3
 
 	* infiniband-diags/ibdiag_common: cleanup argv0 prototype
 
 Sat Jan 24 00:06:11 2009 +0200 Sasha Khapyorsky
-8b25dd86adf52333773645461fc02ed6e2cbaee3
+7ea0dba08aaf94830e5ebabc83eb8ec5add689bb
 
 	* infiniband-diags/smpdump.c: use common ib definitions
 
 Thu Jan 22 22:32:34 2009 +0200 Sasha Khapyorsky
-19f8324248fbc14884c37ebe2cc54d3b81df8fb7
+bc4d17133d6677cec5e87079f5918e23ba81959f
 
 	* infiniband-diags: remove duplicated ibdebug prototype
 
 Thu Jan 22 15:00:58 2009 +0200 Sasha Khapyorsky
-c758e33cbb53f262cd06b68d3035c8c46f719565
+40061e8db2192d7731f54bd12317e18def7f0062
 
 	* infiniband-diags/ibdiag_common: move get_build_version()
 
 Thu Jan 22 14:57:11 2009 +0200 Sasha Khapyorsky
-9b3c4560edcf97215b728074f6e77fbb0ba76ca6
+383afee5b334a83cce7030c8ce592b34439ab56e
 
 	* infiniband-diags/ibdiag_common: cosmetic
 
 Thu Jan 22 14:46:25 2009 +0200 Sasha Khapyorsky
-74c1dc14cd14e915cbe95513df76b62d7dbe83b0
+20bf9d37f8181acc0bac3aa8bbb41f275027c90e
 
 	* infiniband-diags/Makefile.am: use common library
 
 Thu Jan 22 14:37:11 2009 +0200 Sasha Khapyorsky
-bc7eafd0e783dc49cbd522cdca5aadfc760cbcd4
+e1ea13aa0655ab431677505823d5ba28dafff02e
 
 	* infiniband-diags/Makefile.am: merge CFLAGS
 
 Thu Jan 22 14:32:35 2009 +0200 Sasha Khapyorsky
-ccb9478516517d0fbfb51d0afe49cb3cf86a4571
+4318758cbb23f3e8a7136cc0efcc9345f590a982
 
 	* infiniband-diags/Makefile.am: kill -rpath
 
 Tue Jan 20 13:29:25 2009 +0200 Sasha Khapyorsky
-59011376108b99e715311ffc58bbc73ae216ed95
+c002711719cc7e83210d4a8b3fe05f349e9d8bb2
 
 	* infiniband-diags/perfquery.c: fix typo
 
 Tue Jan 13 16:56:57 2009 +0200 Eli Dorfman (Voltaire)
-d3d073e2ff76dc7b757b6d73839bd65cbc712986
+7dd16a49f1934d9912a7699bde63744b961564ff
 
 	* infiniband-diags support PortXmitWait get and set
 
 Mon Jan 5 14:31:07 2009 +0200 Sasha Khapyorsky
-6fdec8b14e3e0a8d2d0d0593918fd0a8224774f7
+69743b5082ed4bc11e211ae3081dbbb4f2feae81
 
 	* infiniband-diags/perfquery: indentation fixes
 
 Mon Dec 22 02:26:31 2008 +0200 Sasha Khapyorsky
-45a941d1943538d82408ee36cf329477a075f77e
+7e2d9e40c5d0d4d52056d6c17d65c3c9161aff79
 
 	* management: remove libibcommon dependencies
 
 Mon Dec 22 00:24:30 2008 +0200 Sasha Khapyorsky
-9b2d20096b75a5dcee4e305ff0dcb4f3adf4df0f
+c01c74074db2e9c170f67969c020363fb3500f41
 
 	* management: move sysfs()_* function to libibumad
 
 Sun Dec 21 17:28:25 2008 +0200 Sasha Khapyorsky
-928db25238d3c434fd2aad0bc9c4c3873f6352d1
+916e7571b49953360bc28fc53e0e1345c7fd5f3f
 
 	* infiniband-diags/ibstat,smpdump: kill unused includes
 
 Thu Dec 18 23:45:42 2008 +0200 Sasha Khapyorsky
-05f22aff1c98709faaebcbfa1752e77289e55493
+0a7b21b279f6221b9e0629c9d23c1185ab323948
 
 	* infiniband-diags/saquery: minor indentation fixes
 
 Sat Dec 13 22:46:56 2008 +0200 Sasha Khapyorsky
-3927c022bb8ec7a569cab480db54dc15bd84529a
+656614a4a7a92765db698fa2c5a8a87f905473c3
 
 	* infinabd-diags: convert type uint -> unsigned int
 
 Fri Dec 12 17:30:25 2008 +0200 Sasha Khapyorsky
-fbaff9e7084e21dba9fa9c22428ec83fc110e79c
+75990408ac7cc42fede93581543caa7d63984de3
 
 	* infiniband-diags/saquery: PortInfoRecord query
 
 Fri Dec 12 16:11:52 2008 +0200 Sasha Khapyorsky
-180406b9b33f3f4b1d301c97010d0dbdee186e73
+07d702886ff10bc984e2cb1a0b509d67579ecee6
 
 	* infiniband-diags/saquery: separate queries and commands
 
 Wed Dec 10 19:50:35 2008 +0200 Sasha Khapyorsky
-0b61c9429348a2b9262e5b12477b184525087d47
+4e858dc99c87fe68a2edfcdf0886fa5ae33dd6e1
 
 	* infiniband-diabs/saquery: unify SA queries processors
 
 Wed Dec 10 16:12:44 2008 +0200 Sasha Khapyorsky
-39ff03c0ad25021c11d39635e7d114455447d360
+7fd2c792e433f53630f4055c0816f142296d8670
 
 	* infiniband-diags/saquery: indentation fixes
 
 ** Version: infiniband-diags-1.5.0
 
 Sat Dec 13 19:46:15 2008 +0200 Sasha Khapyorsky
-67ef3251a49fca0b0b97a1ec1ec5af4e8ba0edf0
+f0ce6ce0c60165e80003c3e62ea07d399e7c8e06
 
 	* management: bump all package versions
 
 ** Version: infiniband-diags-1.4.4
 
 Sun Dec 7 00:16:36 2008 +0200 Sasha Khapyorsky
-b6d92f16d846bf55528502e3fa77429d3277fad5
+bbf5ee9cfbc23930530d105799c7fc8f6bf892fd
 
 	* management: update package versions
 
 Wed Nov 26 12:51:30 2008 +0200 Sasha Khapyorsky
-a92a5e56d353706c6a47038aceaafa1c991aec2d
+ed48f26b346d449a14927463edd7a4b2da9ec3ac
 
 	* infiniband-diags/grouping: add 10G IP router devid
 
 ** Version: infiniband-diags-1.4.3
 
 Tue Nov 18 06:20:46 2008 +0200 Sasha Khapyorsky
-dd5aa2cebc760f239b965c87388ffe9b0401c5d2
+cbd77598741234f36af5f7ab6bd1915951151967
 
 	* management: update versions
 
 Sun Nov 16 11:37:31 2008 -0700 Hal Rosenstock
-0cc9ca1a5f9ced7d6673d6c2d503375034cf629e
+abeb73d092aa649b9f4b9ba1c967276be4b3b15b
 
 	* infiniband-diags/ibstat.c: Use UMAD_MAX_DEVICES define
 
 Sun Nov 16 14:23:10 2008 +0200 Sasha Khapyorsky
-b38e9df37b422201e128b9d974feb2551e3227be
+4949d1fc818c6d5e09c7e5507ed3d7d879dcccbf
 
 	* infiniband-diags/ibstat.c: remove casting
 
 Fri Nov 14 14:54:06 2008 -0800 Ira Weiny
-75cc7a2547da09e57b882718dfac28e0ff19435e
+485d94520e2aa762f6d7f878e6372bf2397f56fe
 
 	* Fix max parameter passed to umad_get_cas_names
 
 ** Version: infiniband-diags-1.4.2
 
 Sun Oct 19 20:53:23 2008 +0200 Sasha Khapyorsky
-6556babd612d54e0cb2a7428099cc7d18d58ae16
+46f65ae24efbbe01e50d192df5aad52ce2d3e1af
 
 	* management/*/configure.in: bump all versions
 
 Wed Oct 8 12:28:44 2008 +0200 Sasha Khapyorsky
-307665fd72c00e1f404d8d921b47c2ec7fe04214
+bfe012a31e6661439aa605449ec06f6e660f85d8
 
 	* management: update Voltaire copyright
 
 Sun Oct 19 08:54:32 2008 -0600 Hal Rosenstock
-088606c588fb0bce51bac9fe0cee559485ddeb8c
+8daa6f9b0cc008fc9d8b3b87c3c1e8b3b30c5497
 
 	* infiniband-diags/saquery.8: Update saquery man page
 
 Sun Oct 19 08:54:30 2008 -0600 Hal Rosenstock
-e38190c2f13e7e8fac9e1ef93d489ee2c2e5cd9d
+9def498100790ad773d7a94123f33217fa7acd8c
 
 	* infiniband-diags/saquery: Support MFTRecord
 
 Sun Oct 19 01:13:15 2008 +0200 Sasha Khapyorsky
-64a25be1dae6819ef82a783c49433e645ad296bb
+32fa8fcc642590f37a8c8197dc87886f1be3dfea
 
 	* infiniband-diags/saquery: add LFT Record handling
 
 Fri Oct 17 13:04:39 2008 -0400 Doug Ledford
-45518277eff7957087fb5cfde35f54e45f4a142b
+2d556cd0fcc73fdb63e0cc5dfe979b7598378ac8
 
 	* Trivial: update usage info for ibaddr.c in infiniband-diags-1.4.1
 
 Wed Oct 8 12:28:44 2008 +0200 Sasha Khapyorsky
-d5590dba6e80f66455b2407176df177f79849227
+1b6e86e26f819ea40ca23bd0837ff71b84ab3e16
 
 	* management: add Voltaire copyright
 
 Sat Oct 11 22:02:38 2008 +0200 Sasha Khapyorsky
-fe87c79ca2699a7b4c0c88c3926e7377b981e2be
+80b3f33f1dede4d201146beb969a95459aaf2049
 
 	* infiniband-diags/perfquery: fix constant size warning
 
 Fri Oct 10 16:03:05 2008 -0700 Al Chu
-9892269e734342909503359737e0bd1bff46b302
+54f611b91bd7999378d3bddcb06f8e5614b5f396
 
 	* infiniband-diags/perfquery: if -a is specified loop through ports if required and aggregate output
 
 Fri Oct 10 15:58:20 2008 -0700 Al Chu
-c3059721f199b8e718710627f17a8855d8cf82b1
+12b8d91501e1088619aac720ee12f6be1aaaf836
 
 	* perfquery code cleanup
 
 Fri Oct 10 16:35:43 2008 -0700 Al Chu
-5ae14377a6b9bad68d2ec77086ac1897623b9464
+01f93e42ccc6c9953197641eb04b236a54d1d7be
 
 	* infiniband-diags/perfquery: if --loop_ports is specified always loop through all ports if desired
 
 Fri Oct 10 15:57:45 2008 -0700 Al Chu
-a2b18dead3869a7e2c266762857d9e4695631ff7
+e7b0a62d9afd5a5958a7aea50a1114577e5f6ada
 
 	* infinibanf-diags/perfquery: remove single port CA AllPortSelect workaround
 
 Fri Oct 10 15:57:02 2008 -0700 Al Chu
-77ac0f852492c5609dd9d3c455d2f4a7f7e735c3
+c77bfecaaf332c6e48ebe93a4561db9bb10005c9
 
 	* infiniband-diags/perfquery: error out if AllPortSelect is not supported
 
 Fri Oct 10 15:56:54 2008 -0700 Al Chu
-85a93ef902b5a0698b8133f9779bec5ddfd5be54
+3e83004adec8fb54b4a39e04870c646a222f9084
 
 	* tweak notes about port 255 in perfquery manpage
 
 Fri Oct 10 15:56:46 2008 -0700 Al Chu
-5bb40c443b0d07ed3be3348c8a2f43fe03e91ee4
+d7730efcb0f152f42439508a96be43af8ef84c88
 
 	* infiniband-diags/ibclearerrors: specify -a in call to perfquery
 
 Wed Oct 8 17:40:52 2008 -0700 Al Chu
-dfb16406bf375aa9d1313379240d82c69b3e0ae7
+88fe58c5987874f876a647fb1580f8dec8b7f5f3
 
 	* infiniband-diags/perfquery: fix comments
 
 Wed Oct 8 17:40:51 2008 -0700 Al Chu
-61f46ef3a1125748603797923be6df6195d63786
+0ee221d5c169096cba8f5c9841d71a2d631d976d
 
 	* infiniband-diags/perfquery: support ehanced port 0 with --loop-ports
 
 Mon Sep 29 14:25:01 2008 -0600 Hal Rosenstock
-1786eb01cf738ee059838a0c9d7112ba44d69db4
+7193fae14dbd197ebc0679aa44184376c387fe7f
 
 	* infiniband-diags/ibsysstat.c: Fix a couple of latent bugs
 
 Tue Oct 7 15:54:05 2008 -0700 Al Chu
-c828f5bc00e452cb70ceb9913793dca4a4b2445f
+c56710398f5c90d7c28d0f9d83eef0531518fb30
 
 	* add --loop_ports option to perfquery
 
 Tue Oct 7 15:38:51 2008 -0700 Al Chu
-c6d360bf29e557b8c08fd10465969610751ebe55
+b6d240c2e30128f15e51af75c1678e7442b3db9e
 
 	* add more detail to error message on perfquery workaround
 
 Tue Oct 7 15:38:27 2008 -0700 Al Chu
-bdcae9dff01b3dfade5b33a4d5bbb267cbc7e4a8
+d2409b5673e1e9608054462c12224bf90bd155f6
 
 	* use 0xff vs. 255 consistently in perfquery
 
 Tue Oct 7 15:38:17 2008 -0700 Al Chu
-2503f2506176a1fa104a88d1272ac4851de6e5f1
+adbbf1e9e88ec646f36e0f06326a2e8ff4fc8c9f
 
 	* add clarification in perfquery manpage
 
 Wed Sep 24 16:59:23 2008 +0300 Jack Morgenstein
-abce33c5d8cf70adb55c166648a384acf2b2c531
+8e6f693a356cd76669efc28009207307b78b5155
 
 	* infiniband-diags: eliminate compiler warnings
 
 Sat Sep 13 04:07:54 2008 +0300 Sasha Khapyorsky
-fcf80bd8bcd5bc1bc31f7a4c1016d6b52c04ad48
+372998d988c22c1fbfbc44465c56f9d995c6b513
 
 	* infiniband-diags/ibtracert: fix port by direct path resolving
 
 Fri Sep 12 22:07:56 2008 +0300 Sasha Khapyorsky
-d5ea43abb524028bedfcb1fd2cd26d1ebeed9064
+f959ff0a5c134761d04c427502539449bb85961e
 
 	* man/ibtracert: remove non-existing -e option
 
 Fri Sep 12 22:03:42 2008 +0300 Sasha Khapyorsky
-5d1d1b0a52c5ee86406ddf75a83335e83e66d878
+251ddae270fb411db838cb04cbe82faaa194bd38
 
 	* infiniband-diags/ibclearcounters: remove unrelated -N option
 
 Fri Sep 12 21:49:19 2008 +0300 Sasha Khapyorsky
-3052cdf05393185a704f0df1a1dd60b6c98f1a6a
+ad37a027ceac3923378dca830130a5de73456503
 
 	* man/ibnetdiscover: cleanup non-existing options
 
 Fri Sep 5 15:47:16 2008 -0700 Ira Weiny
-c162d3fb8fadb0ce93901c3e19fc5c7274bf0a1b
+8a09e0bfdf2aa9e5f939247bfe7a18f6656f9a6b
 
 	* ibnetdiscover.c: continue processing other ports even if smpquery fails on one port
 
 Mon Aug 18 15:46:51 2008 -0700 Ira Weiny
-ffd5eded83d3ff5e83e742f069ae4c579f5edbe7
+cf7517aafac9a7fbd441edb08e00151b62cad091
 
 	* Fix some missing node name map substitutions
 
 Thu Jul 24 07:05:05 2008 +0300 Sasha Khapyorsky
-30aec68c3d36491ddf0366473d9bab306c1b8edf
+be288b2384a6ace9dff1fe39d95c9fe97afa89f6
 
 	* infiniband-diags/src/ibaddr.c: remove unused variables
 
 Thu Jul 10 17:44:08 2008 -0700 Ira Weiny
-d05a70dc0727abd45bb4b0d63f4bf2dd55b09bd5
+10f82e3df67d5000c029caa218097f174724b9c5
 
 	* infiniband-diags/src/ibaddr.c: convert GID prints to use inet_ntop
 
 Thu Jul 24 07:00:51 2008 +0300 Sasha Khapyorsky
-3af7f1c03d3a5a02f6449055789adfe3591d0446
+779d2b88d7bca5e5799ad613c8fd14b295dbcfe7
 
 	* infiniband-diags/saquery: remove unused variable
 
 Thu Jul 10 17:44:07 2008 -0700 Ira Weiny
-54e5019b471a97391ccc6870457df9c924151eb9
+2fd9b7f64327d1bdb10bebbace3b9e4740edfa52
 
 	* infiniband-diags/src/saquery.c: convert GID prints to use inet_ntop
 
 ** Version: infiniband-diags-1.4.1
 
 Tue Jul 8 07:22:02 2008 +0300 Sasha Khapyorsky
-2f3df5655164d7cca3b8fefdaca40da6c1b47d9e
+e43349f373da5275259d095df21696d666feab7f
 
 	* management: bump management versions
 
 Mon Jul 7 14:12:58 2008 -0700 Hal Rosenstock
-39229a521b8f455acc23ebd9ed93d5eb6fa8e499
+ab61af409d8d99f56d4bd8b04e46110da224d7d7
 
 	* infiniband-diags/mcm_rereg_test.c: Cosmetic formatting change
 
 Sun Jul 6 23:07:38 2008 +0300 Sasha Khapyorsky
-54de7d74303519cf2bca3089cbeca366ccbfc542
+91671f93e01d199d8ff9f0047b79910317f174ec
 
 	* management: revert configure.in update configure.in on 'make dist'
 
 Mon Jun 30 15:11:29 2008 -0700 Al Chu
-d054ca23d2e34ee47f0654b1554abb3156bc6367
+66862733a42d0d425306a866cb6856cc83e31c0a
 
 	* Fix regenerate cache corner case.
 
 Sun Jun 29 17:20:23 2008 +0300 Sasha Khapyorsky
-9fa29ad5eddabf3824232bcf629d218bb6fe1ddf
+b1178b0dbcaaa15edb8d5dbc54cfbb5d00ee4005
 
 	* infiniband-diags: fix snprintf() usage
 
 Thu Jun 12 22:38:02 2008 +0300 Sasha Khapyorsky
-7e0b9202c8bff67bb993cbb31ca8e5a5851de244
+60e7e24ecd223ab4ad37b3399e37638b09e46655
 
 	* infiniband-diags/saquery: split print_multicast_group_records() function
 
 Tue Jun 10 13:18:03 2008 -0700 Ira Weiny
-158e67973dead82709db3434d1ec709607fa923d
+8e33e60e86f5d01d3db519df6f6866f0e73a0b61
 
 	* infiniband-diags/src/saquery.c: fix potential core dump
 
 Tue Jun 10 11:12:31 2008 -0700 Hal Rosenstock
-b9d46c1dfbce751f6d3b2056c3dfc69b1e3315d0
+bbeed16b0a5d5d00d4ea7986ff4ee874d45e0623
 
 	* infiniband-diags/saquery.c: In print_multicast_group_records, only query NodeRecords when needed
 
 Sun Jun 8 13:17:50 2008 -0700 Hal Rosenstock
-55ecb093dd9afd3f1697145cb5fe5454786d3502
+2e5e1e6ea1b4e3dcacce899399f1979d6e879d53
 
 	* infiniband-diags/saquery.c: In dump_results, use query_result rather than query_svc_rec
 
 Thu Jun 5 19:12:51 2008 -0700 Ira Weiny
-496b83de4c4175ef3f8e4517708e1cbb8ee782f3
+7ab6e63cf28eaaa8dac4dcd0a55dff1f7a92695f
 
 	* infiniband-diags/src/ibnetdiscover.c: Fix the PortInfo data on the port we discover a switch on.
 
 Sun Jun 8 07:14:42 2008 +0300 Sasha Khapyorsky
-ced317ba22763ecfe72874acb8e3ec4ebd96fc6e
+98dcc64c4628c5335f1f0a41532de9caffd0f5c0
 
 	* infiniband-diags/man/saquery: add --smkey option to the man page
 
 Thu May 22 16:50:39 2008 +0300 Sasha Khapyorsky
-9347232959b1683ed1fd8072e89876174ed89c46
+ac99fcb8367da5baf8078b6012aeb41a9ffe92f5
 
 	* saquery: --smkey command line option
 
 Thu Jun 5 12:51:53 2008 -0700 Hal Rosenstock
-698b2f60a7066b36c25b4be1fafb13f8e4767c23
+9ea58ce81448c61db2a79e719f5b9bb056c1ba5f
 
 	* infiniband-diags/ibsendtrap.c: Support CA and port num
 
 Thu Jun 5 12:51:49 2008 -0700 Hal Rosenstock
-3f4f1a476a2ff2afe63d4d9a21a4d82525bb45ad
+3a0ccf24cf3e83ca13cf70e015d167be70675ced
 
 	* infiniband-diags/mcm_rereg_test.c: Handle error when guid file not found
 
 Tue Jun 3 06:01:28 2008 -0700 Hal Rosenstock
-f644a54e2774321b5ad4fa519305eadcfaef290b
+1562103b9f3ce6aee323c6ae5dc4fc37c2f03197
 
 	* infiniband-diags/saquery.c: Update for change to osm_mad_pool_init API
 
 Thu May 29 06:22:52 2008 -0700 Hal Rosenstock
-cb86ea31a7d6de7021668cbafddbfe5b2f8af201
+7b08c94b4113e3951c5f73e52d49360dfcf440e5
 
 	* management: Support separate SA and SM keys as clarified in IBA 1.2.1
 
 Sun Jun 1 19:48:17 2008 +0300 Sasha Khapyorsky
-4f221a0f9332af596450f63bd4a947051efd09ff
+327fb32649f89740bbfb215882c860d0b42ba422
 
 	* infiniband-diags/scripts/*.pl: prevent some zero exists on errors
 
 Sun Jun 1 19:47:22 2008 +0300 Sasha Khapyorsky
-e59718b4022b4bbaff73038b1b30a28a129297ae
+89544a6d93b76d344ac897a6812ce59bddd2c331
 
 	* infiniband-diags/scripts/*.pl: exit 2 on usage errors
 
 Wed May 21 16:48:28 2008 -0700 Matthias Blankenhaus
-fa9860edcd845804200ffa0477337d1b5a7ad907
+95a60ca0020e76753d5d6b359939a3162aad1426
 
 	* saquery: port selection problem
 
 Wed May 28 17:59:41 2008 -0700 Ira Weiny
-21ca85589225f145bbbc4f6ddb9ad968869b0dc8
+90df7e65ee4ae6528984bb9fd8b81132a4e79598
 
 	* infiniband-diags/scripts/ibprint[ca|switch|rt].pl: allow printing of multiple matches but print warning to user that multiple matches were found
 
 Wed May 28 17:57:19 2008 -0700 Ira Weiny
-c2aac5b5bc0ae9b533713e3f89bb89e632b5f978
+a061013fab2ad036b312112934dd935143a8b3bb
 
 	* infiniband-diags/scripts/ibprint[ca|switch|rt].pl: fix printing by name
 
 Thu May 1 15:50:45 2008 -0700 Ira Weiny
-a07137b53905eb6a9052905db88cc476270e2e26
+4ec25884064a0a5c1e9bcd02188bf1b857449a2a
 
 	* infiniband-diags/scripts/iblinkinfo.pl: fix printing of switch name when port 1 is down.
 
 Sun May 11 15:37:11 2008 +0300 Yevgeny Kliteynik
-afd0a2c761418524b88aeb86cb7cc898ca869fbd
+34f90df7e623b9eea858dae1171584457074a558
 
 	* infiniband-diags/Makefile.am: fix location of ibdiag_version.h
 
 ** Version: infiniband-diags-1.4.0
 
 Thu Apr 3 20:07:55 2008 +0300 Sasha Khapyorsky
-6fe887c1561bea3d62d54ec7b13259de07bf3e8a
+7ecfb0746d6e11bf1510fc79fed5e9bf1ea97341
 
 	* management: bump all versions
 
 Sat Mar 29 14:51:00 2008 +0300 Sasha Khapyorsky
-1085a97296d9981433bafd03dd7329fb02918ab0
+e364674d7a6bf4288e26709fdbbe0f387f6cfd8a
 
 	* infiniband-diags: pass valid VLArb table size to dump func
 
 Tue Mar 25 13:35:25 2008 -0700 Hal Rosenstock
-23313e7dcaab3d6f93770a971efdf2366d2efb24
+6efbae44e1537838d38f0dd88018ca980554b88c
 
 	* infiniband-diags/vendstat.c: Fix port xmit wait handling
 
 Tue Mar 25 13:54:48 2008 +0200 Dotan Barak
-b78f726d9a91bcfad80841e94c2f1e8214a54afe
+04dd90f7cb0cb23d181bd77d4424ef6d62597a56
 
 	* management: Remove extraneous semicolon from several files
 
 Mon Mar 24 08:54:31 2008 -0700 Hal Rosenstock
-a46bf97cc1b28a7e754e3f2ae26c51a2ba2fff99
+fe928d2d08a113f85ef4fbf812af35064a3fe82c
 
 	* infiniband-diags/ibping.c: Remove extraneous semicolon
 
 Mon Mar 24 02:18:42 2008 +0000 Sasha Khapyorsky
-39c886df1f433a059996ee5ecea056ef9e48cf02
+44c58ef9a9fa8c9b0362e5a047c7a7ca80f57999
 
 	* infiniband-diags/ibsendtrap.c: indentation fixes
 
 Fri Mar 21 15:51:19 2008 -0700 Ira Weiny
-4c41ce7384585f21046d0d2ea0b0844e4b9ef966
+56814f52b7a590f1e6fa941661d0315eb56c8fe6
 
 	* Add mcm_rereg_test to test-utils option.
 
 Mon Mar 24 02:00:08 2008 +0000 Sasha Khapyorsky
-0467b0bf8bedb737d0cd7af8e4ce81fd4f5182c4
+2670e10e9969c6a2fdc281d119c6d82d59d61829
 
 	* infiniband-diags/ibsendtrap.c: add include files
 
 Fri Mar 21 15:51:17 2008 -0700 Ira Weiny
-ca07c3e9e2c93c1eebcfe8d0a14130bb1ecfe284
+bd49fb360158eb5809fc6507d1aa1423158fa296
 
 	* Add an optional test utility 'ibsendtrap'
 
 Fri Mar 21 15:51:15 2008 -0700 Ira Weiny
-d136e9ccab1941f8c2c4e04470a9da5f4fa4914d
+41591a1ab4567e4aee7afca7503d2e4a66b34048
 
 	* infiniband-diags/scripts/set_nodedesc.sh: enhance to be able to set names other than hostname and to provide feedback on the names assigned
 
 Thu Mar 20 20:01:33 2008 +0000 Sasha Khapyorsky
-7e1d5f987082e910335a75d054df29ac434b75f9
+63cc3c0b45d8b99d57db2d360facc20a2fc638cd
 
 	* saquery: trivial: remove empty line
 
 Thu Mar 20 12:00:49 2008 +0200 Yevgeny Kliteynik
-707f5e33f9b0b1d3b75616195ebc0d498a34db6c
+d2bde9575485384d8a6c94410f646f9c09c42cc1
 
 	* infiniband-diags/saquery: print SL in MCast groups
 
 Thu Mar 20 11:50:36 2008 +0200 Yevgeny Kliteynik
-ec49c62943b725c04139811965c708ca92c0f33d
+bc4041a177d7c243d4ce7623e6cf3ad249727e34
 
 	* infiniband-diags/Makefile.am: fix 'make install'
 
 Thu Mar 13 14:51:31 2008 -0700 Albert L. Chu
-75054484a23c8116e96992fcfce33e13c101613e
+4512462cd8b21de965b9988a246349f4469080d4
 
 	* add router support to check_lft_balance.pl
 
 Tue Mar 11 04:41:34 2008 -0700 Hal Rosenstock
-188e5b435308ddd001c1d9bcb49efb9ddd1a8ae7
+c195fac07db10d1842264b36b8f9c9f9280863c4
 
 	* infiniband-diags: Fix install of IBswcountlimits.pm script
 
 Thu Mar 6 18:30:37 2008 -0800 Ira Weiny
-05829e73b4cb34ffee22a93123fe7cba102a18a9
+872ec30a11b7396ed6d95c4de5f4eea76a880601
 
 	* Rename ib_gid_t in mad.h to mad_gid_t to prevent name collision with ib_types.h
 
 Sun Mar 2 10:53:41 2008 -0800 Albert Chu
-55b291048ab8646c0a63cd223aae90ca63393e86
+72dfdeca12c17debb440339babf7f022dae5e8fe
 
 	* check_lft_balance script
 
 Mon Mar 3 11:02:06 2008 -0800 Ira Weiny
-405f631bfe98306eacd3594c8146eb33ac059102
+5930ed33e4820778ae59e9208c9f6d4e0ae826ef
 
 	* Update documentation for guid format
 
 Mon Mar 3 10:59:23 2008 -0800 Ira Weiny
-5b64468efaa22fcf6458f2d0a50909186ba2e6d9
+14de5552507c2307fe6c73e22d125d5d04d047f1
 
 	* infiniband-diags/scripts/ib[linkinfo][queryerrors].pl: report switch not found
 
 Mon Mar 3 10:58:33 2008 -0800 Ira Weiny
-4f140d7402a0f0cf07e04035d61e317bdd2744e0
+1c833d172b06a741ce26c55de87931149a021d8a
 
 	* Fix bug which prevented some GUIDs from being found due to formating issues.
 
 Fri Feb 29 11:34:58 2008 -0800 Ira Weiny
-6be802f9b38f4731ee2a5f2949e8b2fdab8f5440
+cf9ce22d02c6e3ee21a0bd592279752fbed0c092
 
 	* infiniband-diags/scripts/ibprintswitch.pl: fix printing of ports
 
 Thu Feb 28 15:21:10 2008 -0800 Ira Weiny
-e6c207d81cbbcd571e8123a70846a7fb65ca649a
+fd389c5989017d04b962276b48d33aa6ab82663d
 
 	* Create script to automate perltidy command
 
 Tue Feb 12 16:33:21 2008 -0800 Jeremy Brown
-c994885813dc1160e9ce9252f2015fb9b3ee6e13
+9b82613dd0cce2b5299adc9b578f35bdbb67de02
 
 	* ibstatus - small script change
 
 Mon Feb 11 20:17:54 2008 +0200 Sasha Khapyorsky
-124ab2fefb1dcdfc009ce89634a8f4f489c3a791
+8579e3deb9020dd038f2b01ab8dfcc9ce20e67dc
 
 	* management: bump versions in master branch
 
 Thu Jan 31 20:03:04 2008 +0200 Sasha Khapyorsky
-798e8d88937d60e1454f058db2f4c705b41ec9df
+7d3bd9adbb163ea108f6890e34680a3413a51b35
 
 	* infiniband-diags: perl scripts formatting
 
 Wed Jan 30 16:05:50 2008 -0800 Timothy A. Meier
-6972276aab52479428a0f689907bcb40d95ca2ec
+55e569deee08be6c5cec6afa28844efaacc5df06
 
 	* opensm: diags bug fix in iblinkinfo.pl
 
 Wed Jan 30 14:03:50 2008 -0800 Tim Meier
-7c89dabe933d36dca1b6e7d7f1a11437a44bbaee
+45f9c2140c44c421c6cb2e25db48d07be6daf43b
 
 	* opensm: diags better error checking for DR option
 
 Wed Jan 30 14:03:50 2008 -0800 Tim Meier
-ce528a1f172ee87b48f97db375d3227ba5ecaf9b
+d1eb43f7e41736d803001d994621112253691e8b
 
 	* infiniband-diags: formatting some perlscripts
 
 Sun Jan 27 08:01:40 2008 -0800 Hal Rosenstock
-976fb99a31b97aee5cea16ecce6b1bafba137950
+a8d47f30da9490c3fae599b484d19bbe0b335cbe
 
 	* management: Update License: field in management spec files
 
 Sun Jan 27 09:31:25 2008 -0800 Hal Rosenstock
-d5ce419e2cff4c788e43aaecbf05a6c6662af26a
+16272fceb91d29b1716c81836c171a642d0cbc64
 
 	* infiniband-diags: Add missing COPYING file
 
 Sat Jan 26 22:45:09 2008 +0200 Sasha Khapyorsky
-c789beb503e0a9ad5e41be2893d66be5f4b66ea6
+986e59353da4fe5bbeee83b958cf317eec838183
 
 	* infiniband-diags: remove trailing whitespaces
 
 Thu Jan 24 18:50:38 2008 -0800 Ira K. Weiny
-6a973296ece09cbfa20954af43d8aa59a44206ae
+00257a079e8d639a001d8b836010f6b4cf4c642d
 
 	* infiniband-diags/scripts/iblinkinfo.pl: Fix switch to switch output with new
 
 Thu Jan 24 15:20:31 2008 -0800 Tim Meier
-b244f8dc9ef4c9761e89057569c4ad5e599aa497
+5eae6ab79ab30e3ab3d0d65a05bd1c3085bf9307
 
 	* opensm: update man pages for diags DR support
 
 Thu Jan 24 14:49:02 2008 -0800 Tim Meier
-604e74d3e935c6fe6f7393a892b8bf3bffab3112
+3dde3917a4f1a0710bbbeae29ee6c5477b76490c
 
 	* opensm: diags add DR path support to some utils
 
 Sun Jan 20 20:18:24 2008 +0000 Sasha Khapyorsky
-9b093e04dedb54c78d74d0567e85b3a59f88badd
+8626bfe8b1682512d5175b16f2f7744ba7175dbd
 
 	* infiniband-diags/saquery: code consolidation
 
 Sun Jan 20 19:54:33 2008 +0000 Sasha Khapyorsky
-f559875dfdbacb17221042c77aa4c8b9554ff75b
+ce5943ba4cacd6c2d8791a21d8fdebdc91dd0b98
 
 	* infiniband-diags/saquery: usage field to struct query_cmd
 
 Fri Jan 18 16:37:22 2008 -0800 Ira Weiny
-c9ccc473cb622f9b0e0a2d1a5492749d3c185484
+aeee7ee3283c6715a7cb2d9bc261bee11d617b3e
 
 	* infiniband-diags/scripts/ibprintca.pl: fix regex when searching for node by name
 
 Fri Jan 18 16:37:18 2008 -0800 Ira Weiny
-8ec0449937ae309a08bdfe7dced141f38a0dfbb7
+d681ab1613217cca52cd761143654091769e4b3f
 
 	* infiniband-diags/scripts/ibprintrt.pl: fix regex when searching for router by name
 
 Fri Jan 18 16:37:10 2008 -0800 Ira Weiny
-ddf4390479fa543b3e73f307e3c1573c46d96af7
+39761738830b335bb37e6231d093b9fcd72b7517
 
 	* infiniband-diags/scripts/ibprintswitch.pl: fix regex when searching for switch by name
 
 Fri Jan 18 17:01:10 2008 -0800 Ira Weiny
-462b55ffe4f35c8f327e950b7a0ba219cb880422
+d25693819e1ece5fda6423d4be9d53036b5e4948
 
 	* Update perl script man pages for -C and -P options
 
 Fri Jan 18 16:37:36 2008 -0800 Ira Weiny
-50d08db966b60c2d3daa899b342267a7b6937ea3
+e9a17075ba00937d60025a345b7eb2a900dd8fd1
 
 	* Add -C <ca_name> and -P <ca_port> to ibprint[ca|rt|switch].pl
 
 Fri Jan 18 16:37:28 2008 -0800 Ira Weiny
-a90a2d8e42b9444f023b9da080539af82e803e6f
+6f1d1dc3ead6fdd2315f2e925bdb5b66ddfa0bd5
 
 	* infiniband-diags/scripts/iblinkinfo.pl: clean up output format
 
 Fri Jan 18 14:38:12 2008 -0800 Ira Weiny
-178a7ad3d568ef6bbee668e4f1e29d049d4a3b59
+606a2e2cbaef7350e2809fe9195232689e3e9c1e
 
 	* infiniband-diags/scripts/IBswcountlimits.pm: clean up long lines
 
 Fri Jan 18 14:37:56 2008 -0800 Ira Weiny
-d23475aa4465e6cd8ac60871becdaec7bd1bc31f
+42109662b63e13c1e49afaf8e8e171b7a7cf247f
 
 	* infiniband-diags/scripts/IBswcountlimits.pm: Fix comment
 
 Wed Jan 16 21:16:25 2008 +0000 Sasha Khapyorsky
-fa983b2413934a86658da3e5a03413341819dcf4
+1abaf688b3d7e5c53ab320e11167076626ebbc32
 
 	* infiniband-diags/infiniband-diags.spec.in: add Obsoletes rule
 
 Tue Jan 15 17:16:25 2008 +0000 Sasha Khapyorsky
-9d38e597194d9109d48c45add71a2006366a8604
+fa584067ae4a7a0d56670ed67a56f4b223d60741
 
 	* infiniband-diags/configure.in: complib doesn't have opensm dependencies anymore
 
 Thu Jan 10 03:48:16 2008 +0200 Sasha Khapyorsky
-7bb2045bd9f659f8466a4494f4ec983f0edbf96a
+62155ca6bfd4478ff70dae2f38002f08be5d18ac
 
 	* infiniband-diags/saquery: support for VLArb and PKey Table Records
 
 Wed Jan 9 23:31:59 2008 +0200 Sasha Khapyorsky
-a099d621cf7c90b5e4c8741c22a64a94baa96e77
+e7ad26383fa8c7771da7df4ed1e196069f5743b4
 
 	* infiniband-diags/saquery: support ports with LinkRecord query
 
 Wed Jan 9 21:59:02 2008 +0200 Sasha Khapyorsky
-6756299ca62e2faafe7b6872ed536bd7223d5de0
+efaec253c4c3c57bf77362f84b29cbd3a4f66e61
 
 	* infiniband-diags/saquery: support for SL2VLTableRecord attribute
 
 Wed Jan 9 05:43:17 2008 +0200 Sasha Khapyorsky
-1e3f6d3ce5a1d1fb97559066207c20db1ac926d7
+d6d902f39837292d623a7617ff9273e936bbd0e9
 
 	* infiniband-diags/saquery: attribute names support
 
 Mon Jan 7 04:52:47 2008 +0200 Sasha Khapyorsky
-7d7dd1e173aad973e5e8fecf3b5a9f67d02ce375
+c03c2c3370fb30aca72e12657d5ca145bdfca689
 
 	* infiniband-diags: update version according to the tree state
 
 Mon Jan 7 04:32:24 2008 +0200 Sasha Khapyorsky
-c67a97b238958cf19de7013f54c027311bcde470
+c479145850752d46221b7e2d6a132ca5ce628674
 
 	* infiniband-diags: remove not needed anymore __BUILD_VERSION_TAG__
 
 Mon Jan 7 04:25:37 2008 +0200 Sasha Khapyorsky
-a4d09ecf39c32cf59460a1569c4ab8a8ae013560
+db0ca96adfec3080443ca03a75e572f6ab492e8e
 
 	* infiniband-diags: use common build version
 
 Mon Jan 7 01:40:19 2008 +0200 Sasha Khapyorsky
-c374d319d67bbc77eb885131f5136446dcc51865
+78258492afdb8d274f063670ffb9c7485a44f964
 
 	* management/*/Makefile.am: update configure.in version on 'make dist'
 
 Sun Jan 6 21:33:44 2008 +0200 Sasha Khapyorsky
-5a03b648b03235ff3ab311d61e93766d8d6bd924
+3868f7190a8d8a94d012b04f1bd1b483aedb0023
 
 	* management/*/Makefile.am: fix ChangeLog generation rule
 
 Thu Jan 3 04:20:57 2008 -0800 Hal Rosenstock
-d1470d92223f94fb3f60d5a6f549ed91e1d9d627
+b8e575f8f72c6a922117d41450c561f8f6e0c9f1
 
 	* infiniband-diags/man/ibnetdiscover.8: Add newly added ports report option
 
-** Version: infiniband-diags-1.3.5
-
 Thu Jan 3 09:44:46 2008 +0200 Sasha Khapyorsky
-97d199fc80d87dcc57865cbc06755baf9c8265a4
+738a86c5e64decc2b1d3882a0a986be77eb9ed5b
 
 	* management: bump versions
 
 Thu Jan 3 10:52:38 2008 +0200 Sasha Khapyorsky
-0cdb81012d451b27346711bc724c458dd3e01a20
+d1785f3aa8228e2dc5459afecd3d9349d69f3c5e
 
 	* infiniband-diags/dump_lfts.sh: fix switch DR Path parser
 
 Thu Jan 3 10:52:38 2008 +0200 Sasha Khapyorsky
-df191bed4f3437fa454e9e80faea601953dfec1a
+0ad9eaec6d2f2fa68dfd5713f199fbb3753b0437
 
 	* infiniband-diags/dump_lfts.sh: adopt DR Path parser
 
 Tue Dec 25 09:06:00 2007 +0200 Erez Strauss
-f9870eeac88e224f51e69bf9e5710b825e8d9ccd
+0b1d918fe0f7298b9a900d9ce08fb5d5fb463eda
 
 	* ibnetdiscover - ports report
 
 Fri Dec 21 18:32:28 2007 +0200 Sasha Khapyorsky
-0e72223889cf34ad6808792e95d4e660b472a86f
+15d6199f680e509038e20d0b338884108d35e3a3
 
 	* manangement: kill __WORDSIZE macro checks
 
 Thu Dec 13 02:09:07 2007 +0200 Sasha Khapyorsky
-f12a2ec1b41e4d670814a883b849c2e0cfdeae6c
+fb3b1e753d527faa08f863a55f7f8392fb01f2ed
 
 	* infiniband-diags/scripts: fix perfquery usage
 
 Thu Dec 13 01:57:37 2007 +0200 Sasha Khapyorsky
-0624c79cc91e800414d0813cb6b060db13bd1f47
+6ab573fc99065007dea0f460bbc374f1eca086ac
 
 	* infiniband-diags/ibcheckerrors: fix port errors count
 
 Tue Dec 11 03:55:20 2007 +0000 Sasha Khapyorsky
-3a9e90568ad06c7efbd150b1c341d14d83811ea1
+0e2ab5e8bd7242dcb28063018ee13e2c0352e21e
 
 	* infiniband-diags/ibcheckerrors: for CAs query only single ports
 
 Tue Dec 4 01:22:12 2007 +0200 Sasha Khapyorsky
-0aff2384cab4bd2e749193d92bc3155576d399b9
+aafcba658fbfaf97eede499de78b20b00f3a4819
 
 	* infiniband-diags/man: add -x option to saquery man page
 
 Mon Dec 3 19:50:44 2007 +0200 Sasha Khapyorsky
-d56fd87901b709379f2e762e0bfd13e98a247229
+b4193760335915df74256cd4dae744996f75b9bb
 
 	* infiniband-diags/saquery: allow empty src and/or dst with --src-to-dst option
 
 Mon Dec 3 19:33:10 2007 +0200 Sasha Khapyorsky
-24d6d60f327968b0eb0dcd44657405ba81b0157e
+3dccb526d62ef839f4d5bb527ea64504a745a07b
 
 	* infiniband-diags/saquery: LinkRecord query support
 
 Mon Dec 3 19:28:43 2007 +0200 Sasha Khapyorsky
-4b8fc481c6154fe61768df54ab2d4924b02cd463
+9af21edccd6d79cf0754f7ffcb4cbb0fdb71435b
 
 	* infinibad-diags/saquery: move lid resolving functions
 
 Mon Dec 3 19:24:27 2007 +0200 Sasha Khapyorsky
-c15f6491f3e1102c18670ae87b4fb884ab913e8f
+ad5628bd4c23b97921901e1c3831c44b37710f97
 
 	* infiniband-diags/saquery: add get_any_records() function
 
-** Version: infiniband-diags-1.3.4
-
 Tue Nov 20 00:04:13 2007 +0200 Sasha Khapyorsky
-6b8a7c5ebb648a6aa054c7ec69a9e804e772f416
+b0d9a6a768064891dec5c89f3e62ee6192c25ac8
 
 	* infiniband-diags: version 1.3.4
 
 Fri Nov 16 16:32:22 2007 -0700 Rolf Manderscheid
-c487cf9ad0fd133feaa28047b7902aea124db2aa
+af3f61cffeaa9d0d333c7ff6203bc5cfa406fbb4
 
 	* PATCH diags: add saquery option to get path records by GIDs
 
 Thu Nov 15 13:05:15 2007 +0200 Sasha Khapyorsky
-aff6477df60d26a4c710cbec2d49cecb89b754c2
+20695d724fbec0505556f294597296bd696cef2c
 
 	* infiniband-diags/ibtracert: print lids in decimal form
 
 Thu Nov 15 00:17:45 2007 +0200 Sasha Khapyorsky
-6e5056e36c6a5df755731628afc781f707b0ebb2
+c97a2026b62aaaa4fc67ff026abd0f9c3a7a97db
 
 	* infiniband-diags: remove utf-8 characters from sources and man pages
 
-** Version: infiniband-diags-1.3.3
-
 Tue Nov 6 19:09:16 2007 +0200 Sasha Khapyorsky
-dcad36c34e71a25d328e8c2c6fc7862751b24a34
+a192c1c6ebf253569a52129e1bf5974db0fbaae9
 
 	* infiniband-diags: version 1.3.3
 
 Thu Nov 1 19:29:02 2007 -0700 Ira K. Weiny
-7f11165e66ea42660d4103c05df166024d5ceed4
+ccb098b5f3ca59cb88d643aca24b012cfe583f03
 
 	* Change node name map implementation to use qmap in memory storage
 
 Sat Nov 3 14:58:36 2007 -0700 Hal Rosenstock
-a95cd8ff78c5436dc33f26828aa480dbed6f9c75
+7d4d4a6495a830ca338ea91b649e686f3a5ab769
 
 	* infiniband-diags/grouping.c: For Xsigo grouping, fix seg fault when no peer port
 
 Thu Nov 1 20:15:08 2007 -0700 Ira Weiny
-0c17ee47ce432099d5ae6b3ae186e867637fd2d9
+0e003f0eaa7c78e7a452437c5977aec9bc2281f2
 
 	* Move nodenamemap out of infiniband-diags into libosmcomp
 
 Fri Nov 2 20:55:22 2007 +0200 Sasha Khapyorsky
-e032988e75abbd9d6007136254dfc14bab2ec9b4
+599db496b60dd369141e39f3beb0be0aa63ab0eb
 
 	* infiniband-diags/man/smpquery: fix typo
 
 Thu Nov 1 20:15:02 2007 -0700 Ira Weiny
-a1e6f04f116333dee2cbe8dd9f3589995297ec20
+360f999d6485bce8bde53ae0fee7a202b07a641e
 
 	* Change switch map function names to reflect the new functionality of a simple node name map.
 
 Thu Nov 1 20:14:56 2007 -0700 Ira Weiny
-59fb2fdb567b5b78e033475bb87491f68792260e
+160bf41e1ae206ea89f23681cc0c9fbc5fe813f4
 
 	* use lookup_switch_name for all node types.
 
 Thu Nov 1 20:15:18 2007 -0700 Ira Weiny
-7502b025c3f94f59d327b9ef46be3900a74b0db5
+022d2f1084db70b615a284939d98e04a2a9e7b10
 
 	* infiniband-diags/src/smpquery.c : special case situation where nodename len is >= 32
 
 Thu Oct 25 11:43:17 2007 -0700 Ira Weiny
-d9d8255b392e72e2f0fd33c561637bfa015379cc
+782933071981177d04931a4230a95665e728a57e
 
 	* infiniband-diags/configure.in: fix comment
 
 Tue Oct 23 14:08:09 2007 -0700 Hal Rosenstock
-e2f29cdcc3c71891fe33135c741a94565087a1e5
+8d7a5a0fecf564301669608085f9bccd56e61666
 
 	* infiniband-diags/sminfo: Fix activity count display
 
 Tue Oct 23 06:05:44 2007 -0700 Hal Rosenstock
-b8dcfc321de09ac445fb239b59790d5a48cec137
+3d0fe12820b662304953fba895b9262a0233cdad
 
 	* infiniband-diags/scripts: Eliminate some duplicated messages
 
 Tue Oct 23 11:03:32 2007 +0200 Yevgeny Kliteynik
-5f492db6bc022ea4e5e94c224e271bdd0c82c3b9
+5b233eff723c309f700950fc004a536a98e2a1bb
 
 	* osm: QoS - adding CPI:CapabilityMask2 and turning on QOS_SUPPORTED bit
 
 Fri Oct 19 11:11:36 2007 -0700 Ira Weiny
-069413f3c0d0e657d1a0cec0bfc0b50a4d41b446
+d219fae95e053409f97117f38b7e7675c0ececdb
 
 	* infiniband-diags: Formalize BuildRequires for rpmbuild
 
 Tue Oct 16 16:30:57 2007 -0700 Hal Rosenstock
-1ad759c3d840a2c5ea0639e7ef9d9de7fd39b122
+b4d808b08ed07f68cdd185cd155049a292f876d8
 
 	* infiniband-diags/scripts: Updated for perfquery support of no AllPortSelect option
 
 Tue Oct 16 16:25:37 2007 -0700 Hal Rosenstock
-199f20e5c02a41aea674c5efd5b147eefc13f0b9
+05bc2ced372d8b31f36c8803c50982e628aee269
 
 	* infiniband-diags/perfquery.c: Support PMAs which don't support AllPortSelect option
 
 Sun Oct 14 20:11:37 2007 +0200 Sasha Khapyorsky
-a6631765dc920cbecdaf74bc57d35e1a9a45eefa
+66866e09c1da86ec5e6c8f011a42acd7ddc4d3d7
 
 	* libibcommon,infiniband-diags: move get_build_version() to diags
 
 Fri Oct 12 06:30:57 2007 -0700 Hal Rosenstock
-f7f9b89b221f226be0592af23fd1e28b0cf6a715
+0648a3e39bcf983116e34c88b7477d564004ff0a
 
 	* infiniband-diags/perfquery.c: Fix issues when checking PerfMgt:ClassPortInfo.CapabilityMask
 
-** Version: infiniband-diags-1.3.2
-
 Thu Sep 20 19:41:12 2007 +0200 Sasha Khapyorsky
-4864ac0e838199065002b6896d0096ff670a9cf4
+a9e9021fdbc306d7d4b6bce1f69904e9c17eb6cb
 
 	* infiniband-diags: update version to 1.3.2
 
 Thu Sep 20 18:04:12 2007 +0200 Sasha Khapyorsky
-eda4ed05438c494e4e529441458b46e1c87dbcd3
+dfd2c903eeae56aed470bbfb6f6e59cd5331e328
 
 	* management/*/*.spec.in: change Source field to OFA paths
 
 Wed Sep 19 03:37:03 2007 +0200 Sasha Khapyorsky
-a0364d5bf62bcda019ef3c1c74cd51583fda632d
+9176134f1a979ca880f7413b3a81c8e1f72d527b
 
 	* management/*/configure: RELEASE and TARBALL for spec files
 
 Wed Sep 19 03:42:52 2007 +0200 Sasha Khapyorsky
-5abefe48a7553251238b1f8cb123a2a200b4d147
+f971305587c9d44ddb20542d2a46af7be0838bfb
 
 	* management/*/Makefile.am: generate ChangeLog files when distributed
 
 Wed Sep 19 03:28:43 2007 +0200 Sasha Khapyorsky
-08b7f02ea643b45e42534c61f58fae5b3348bb06
+01af39b2b79c7457b39ebeae829de74829fa024f
 
 	* management/*/Makefile.am: clean dist-hook target
 
 Wed Sep 19 02:00:08 2007 +0200 Sasha Khapyorsky
-07b65d1277d2d4a6ac6240ba5c7c3c691292001c
+a435c184928ad672dad014ed8c9d41d6194b12d0
 
 	* management/*/*.spec.in: don't run autogen.sh
 
 Wed Sep 19 12:39:44 2007 +0200 Sasha Khapyorsky
-61db22fe367266955af97c3cdb402a5ce3fc4c55
+803fec08da4b069c47e3e0684d878437f455d9b4
 
 	* management/*/Makefile.am: fix include paths
 
 Wed Sep 19 06:36:00 2007 +0200 Sasha Khapyorsky
-ce8ff1a1b269be80bba9badd7b2cdd9dc51e78ab
+53de3e14348eff17e8354f2d527f13d0af284f2a
 
 	* libibmad,infiniband-diags: fix include paths
 
 Wed Sep 19 03:00:44 2007 +0200 Sasha Khapyorsky
-40ef7db43d2117456cd6aa9e97f56d5f3a29e1a1
+807865b7d12fbb58e52757638475e8fe59b657c6
 
 	* management/*/ChangeLog: trivial spacing fixes
 
 Wed Sep 19 02:05:57 2007 +0200 Sasha Khapyorsky
-063ff2ecb12fe0c94e472fad27b8c40371904113
+59bcb7ce564a940e0fad68cfd08ba360e6705507
 
 	* management/*/Makefile.am: add autogen.sh script to 'make dist'
 
 Tue Sep 18 04:31:56 2007 -0700 Hal Rosenstock
-57697c31cb165fca7cc14692e0b14bc2b4b6e062
+83a1d77451c43326cea6a47bbb0378ad434af803
 
 	* infiniband-diags/ibnetdiscover: Bump build version
 
 Tue Sep 18 00:41:21 2007 +0200 Sasha Khapyorsky
-5afb358d162f5cfe3f8390d49463e79245dbdba2
+7fbcedce265ae759f5475474333e8dbece640808
 
 	* infiniband-diags/ibnetdiscover: trivial code simplifications
 
 Thu Sep 13 17:36:34 2007 -0700 Hal Rosenstock
-ff68d1caa0a7c094f51a084c1fffac3e86c1b4e2
+12da31ea6580928639a389a644a067f4492e61e4
 
 	* ibnetdiscover: Support Xsigo chassis grouping
 
 Mon Sep 17 20:53:30 2007 +0200 Sasha Khapyorsky
-5a307143f9e6c0a6170d4be76e6d0513fe9d3622
+adfe1178860a6d552a4c65883bf43ae3dee3f828
 
 	* opensm and all: fix Source field in spec.in files.
 
 Thu Sep 6 13:22:23 2007 +0300 Sasha Khapyorsky
-f58db63ee8cfae2486da92a8b094f87c3dd4aa4c
+bea13ae0456af09e00e29716dfd33bd0e8d586f4
 
 	* infiniband-diags: use shared ibdebug var
 
 Fri Sep 7 15:21:21 2007 -0700 Ira Weiny
-cd6b9f66456baade868048f5a93d6ce0d8680255
+d1f3b1a2a4e90238ac0b9ae6d48e5289e4242e3a
 
 	* Fix regexp's for new ibnetdiscover output
 
 Fri Sep 7 15:19:25 2007 -0700 Ira Weiny
-8dbbcf4f5248259cd9d469ea3dd5ede1c7135099
+eeca1cde7278f76a7fb66b1a6794dbc9b0164dde
 
 	* infiniband-diags/src/ibdiag_common.c: do not print warning of failed default switch map open
 
 Fri Sep 7 15:19:24 2007 -0700 Ira Weiny
-64f4da18538ec678890d1977ea484533f45f6b83
+874741bffe3461c0efe8fa1aaaa9239d56344891
 
 	* infiniband-diags/src/smpquery.c: fix compiler warning
 
 Fri Sep 7 15:25:41 2007 -0700 Ira Weiny
-a8870e99349a471292ee874d6f7b2bd9a287f6d5
+05b0cd513c1caaf804d54bd344c0fc823e3b30a3
 
 	* Add -C and -P options to perl diags to be able to use alternate CA's and ports
 
 Thu Aug 30 09:24:35 2007 -0700 Ira Weiny
-f5cd4b34449ebb3dda2926b3e5dbf2b2ccc55d27
+69b63fa34ebb7870353eb1232375be9c78d74a11
 
 	* infiniband-diags/Makefile.am: clean up extra directives
 
 Thu Aug 23 14:46:48 2007 -0700 Ira Weiny
-05cae48f68250346dc02b3583044664d6ca6474e
+eb35d7d55199ce6496bbfff3522d6d37ad66ec7b
 
 	* infiniband-diags/src/smpquery.c: Add switch-map support for nodedesc query
 
 Tue Aug 21 14:44:58 2007 +0300 Yevgeny Kliteynik
-159497a11b9d01de37bbfe82e80c5e685cafdf8b
+ef8c0b37c2d7569941647555d1f1f9b0a75b3772
 
 	* osm: QoS - adding new PathRecord fields
 
 Tue Aug 14 18:06:14 2007 -0700 Ira Weiny
-f49671595a41fc18c9fa780bb71a0c9c8b08950e
+8a93339145383e48e61dcabfd0483729d930e00b
 
 	* iblinkinfo.pl: Remove annoying double quote around switch name.
 
 Thu Aug 9 19:03:32 2007 -0700 Ira Weiny
-9b2202bb79b153e51fda06860fcb8e45aaf43718
+de992988200185aaa97f17d5e49f648bb16dc3c0
 
 	* infiniband-diags/set_mthca_nodedesc.sh: change to work for all HCA's
 
 Thu Aug 9 19:03:31 2007 -0700 Ira Weiny
-dd25b7227341d94cec03dc4d3b5c603c288a79d8
+eb1a85399667b3a78e233898d91b3d3bfd8bbd5b
 
 	* infiniband-diags/set_mthca_nodedesc.sh: change to work for all HCA's
 
 Wed Aug 8 22:48:15 2007 +0300 Bernd Schubert
-83d1f5ea339704f30e26918a897f9ead5a10678e
+fdcb7763408d40261623b026a12bdbe636c805bc
 
 	* ibnetdiscover: man page improvement
 
 Tue Jul 31 19:09:54 2007 -0500 davem@systemfabricworks.com
-00621927883f14da4bb8e289d03478af89109b59
+d4a17c49fbeb6a08553b57f83ca58c35aba327de
 
 	* infiniband-diags/scripts: Fix Bug 239 Error Reporting
 
 Tue Jul 31 15:39:27 2007 -0500 davem@systemfabricworks.com
-ab4d5ad9161d9d48bc0c9fe91cac5a8cf221a377
+4fcb80fc9ac33873bd03eefdbe25609f87bdf7c2
 
 	* infiniband-diags: Add common flags -P, -C, and -t
 
 Thu Aug 2 16:10:19 2007 +0300 Yevgeny Kliteynik
-6d9161ec35df7b517b511322a2827e680f9f5187
+3518ece979a687bf14e5ec5d0f0b2d4d31230462
 
 	* osm: cosmetics - removing trailing blanks
 
 Fri Jul 20 10:12:03 2007 -0500 davem@systemfabricworks.com
-3ef34b1e7a30910256b9a5bb046492ece778d157
+50c5fdb9a45816590a8e2fb4c882327319896cad
 
 	* infiniband-diags/ibnetdiscover: Fix DDR link speed decode
 
 Fri Jul 20 10:09:50 2007 -0500 davem@systemfabricworks.com
-1f06b344e924e17ae02d5fc12145eaf19ee8a18d
+a1d599fa9ba35dd1b3a4774ab1483ba63d2420ef
 
 	* infiniband-diags/scripts: Handle new and old topology file format
 
 Thu Jul 19 07:28:09 2007 +0300 Sasha Khapyorsky
-2cd643633e2e89f7e45879c9a8066544d5a258d7
+fd158762068cb105b9b3379b48f9aa14d0ef3d18
 
 	* infiniband-diags: remove trailing whitespaces
 
-** Version: infiniband-diags-1.3.1
-
 Tue Jul 10 17:23:06 2007 -0400 Hal Rosenstock
-f70a56612537aced5262c45ba8a6e4649309c72b
+7c33825faf3927e4dfc0fe599884a1a4bbb1c183
 
 	* infiniband-diags: Updated to version 1.3.1
 
 Wed Jun 20 08:44:33 2007 -0400 Hal Rosenstock
-2129dc03a3e359a4b06886a3f9c85ff4ae8e3ed6
+25448da98b8e5bc99e6381200e438e8e47392288
 
 	* infiniband-diags: Use diag common code ib_error routine
 
 Mon Jun 18 06:58:20 2007 -0400 Hal Rosenstock
-987b30e8b5c9f3ae4979d107b1ef4f4ffb2da50c
+183a433ed832d3eff9eaddfa1028e75ccb4132bb
 
 	* infiniband-diags/src/ibtracert.c: Cosmetic change to IBWARN message
 
 Mon Jun 18 06:11:57 2007 -0400 Hal Rosenstock
-c4a826dd5ffcc9b56f0c74786b4ff9432f3decfa
+4e2bded53687ffc12cc31b82d648ef296dc6c471
 
 	* infiniband-diags/man/ibaddr.8: Improve description
 
 Thu Jun 7 09:49:16 2007 -0400 Hal Rosenstock
-382d0c07593a5076882a21e3e6731fadfc4c78c0
+40dc7d4e19ac9d7017bc8abb8ad1cca3e850c893
 
 	* infiniband-diags/scripts/ibidsverify.pl: Validate port GUID against node GUIDs Note only one port GUID can duplicate a node GUID
 
 Thu Jun 7 09:00:31 2007 -0400 Hal Rosenstock
-8b3b297d59169b0e74876dc6d853453abf4fa3a8
+0ff55b33b23afe4925fd617f8eaeb8531421d67c
 
 	* infiniband-diags/scripts/ibidsverify.pl: Normalize portguid format to be the same as nodeguid format (0x preceeding the guid)
 
 Thu Jun 7 08:55:18 2007 -0400 Hal Rosenstock
-4b0dd04ea03ad5c62ebe9c1e86f948d32d8de3e2
+8adc2f85ab9ee788b7e69a4190b18968550ac184
 
 	* infiniband-diags/scripts/ibidsverify.pl: Fix parsing of node and port GUIDs for switches
 
 Thu Jun 7 08:38:05 2007 -0400 Hal Rosenstock
-302d1717a95bf33a83455ae6e0e3d8a2f49ae796
+762dab1bc92d195e7a09f632051947ae8051aa06
 
 	* infiniband-diags/scripts/ibidsverify.pl: Cosmetic formatting changes
 
 Tue Jun 5 15:07:43 2007 -0400 Hal Rosenstock
-d994e007156287f0794dd15b17f0dfa0782ea106
+f9e45b389c08d4033d258139dae3d064501c2ae7
 
 	* infiniband-diags/ibidsverify.pl: Support port GUID validation
 
 Tue Jun 5 15:07:08 2007 -0400 Hal Rosenstock
-f242dfb98c7ea73cbe8503061e28e6792c6a6e34
+d3732ecd9f1a17b73756b61e4d42cb9db7cc0580
 
 	* infiniband-diags/ibnetdiscover: Add port GUIDs to topology file
 
 Tue Jun 5 14:29:34 2007 -0400 Hal Rosenstock
-4bb50d9b65331103c1884ceb54d3044364586dff
+b351940ef1fcc80da83787a69c9a87af529c20ce
 
 	* infiniband-diags/man/ibnetdiscover.8: Fix a typo
 
 Tue Jun 5 14:10:32 2007 -0400 Hal Rosenstock
-8996ae8bd0343db98538993e761f70579acaf3a3
+a8fab72f6698d67e7af3af6da1d6f4ae19fd3635
 
 	* infiniband-diags/scripts/ibidsverify.pl: Generalize validate_non_zero_guid for GUID rather than NodeGUID to ready for adding PortGUID verification
 
 Tue Jun 5 13:36:11 2007 -0400 Hal Rosenstock
-fbe0ab70a78941553308f4a6054ad1c42b5cb831
+1332c73b0ccb369aaec9a4d5701e2044ff189986
 
 	* infiniband-diags/src/ibnetdiscover.c: Minor changes to minimize differences for adding port GUID into topology file
 
 Tue Jun 5 13:29:58 2007 -0400 Hal Rosenstock
-c3e9d741b149b73c01d3cdd0ca962e399fe84498
+94f0079e9b47f168f5852a35ff6c35e7ba523435
 
 	* infiniband-diags/src/ibnetdiscover.c: In get_node, set portguid to NodeInfo PortGUID rather than NodeGUID
 
 Tue Jun 5 09:11:56 2007 -0400 Hal Rosenstock
-3ac744235eda8db4af35a599db50f5457adb305d
+6641029b5da88ee80ad5fbaa1cd52d1eddae1f15
 
 	* infiniband-diags/man/ibnetdiscover.8: Added text description for active link width and link speed
 
 Mon Jun 4 12:10:10 2007 -0400 Hal Rosenstock
-04ba39a8da9eea069d674ad1717892d51e223485
+88db7275231eff0591b7f9b8a0158f6f5e81a81d
 
 	* ibnetdiscover: Add link width and speed to topology file output
 
 Mon Jun 4 08:33:26 2007 -0400 Hal Rosenstock
-e2d932d209b44c3302f200fca7e4ead55358e74b
+bea47292bf3e841426e0848885ee5b3d8db65f29
 
 	* infiniband-diags/src/ibnetdiscover.c: Cosmetic formatting change
 
 Sat Jun 2 05:58:01 2007 -0400 Hal Rosenstock
-ddf458c596bf6f76c0e8eee93370b5f5add51151
+1af3748277e853a55f0761e6304a7da179a16cdf
 
 	* infiniband-diags/man/ibnetdiscover.8: Add topology file format section
 
 Fri Jun 1 23:30:36 2007 -0400 Hal Rosenstock
-c228c1482bccd3a5a5f4d4b24e9b7c899dcecb76
+041fbe3708c74298ecf698e65ba9c51e27e28a7a
 
 	* infiniband-diags/man/ibnetdiscover.8: Add grouping information
 
 Fri Jun 1 19:36:08 2007 -0400 Hal Rosenstock
-ffe687edd1a3b283b45cbb731b957eafc07e4578
+160e22380610dbcb25466eaba2a3eee1ab64735a
 
 	* infiniband-diags/ibnetdiscover: Fix list by nodetype operations
 
 Fri Jun 1 15:52:26 2007 -0400 Hal Rosenstock
-ac006797463f7c92f1063ef8f5135f8db83231e4
+f6fa70500e4590d9cbf3f8ff3a9b2ef4f28cba79
 
 	* infiniband-diags/man/ibnetdiscover.8: Cosmetic changes
 
 Fri Jun 1 15:39:23 2007 -0400 Hal Rosenstock
-434001f5cc089528a8a4887704150f0831350445
+f8b4af2d3e42f4b7b15556bb714760ba4f1f40dc
 
 	* infiniband-diags/ibnetdiscover: Add supporti for -R(outer_list) option
 
 Fri Jun 1 11:12:07 2007 -0400 Hal Rosenstock
-6e408400647b8005173f6cf2a859ea86a0565df2
+ff9957480ed5b975d6c0c093c00d4f20088f2aa1
 
 	* infiniband-diags/Makefile.am: Add ibidsverify
 
 Fri Jun 1 11:08:14 2007 -0400 Hal Rosenstock
-a6e068d911bcbfdfaa0e08381cca987d71bd7a84
+84861fa8674c2daa48e788f78f1fdbfc1a8f354e
 
 	* infiniband-diags/scripts/ibidsverify.pl: Add initial version of ibidsverify.pl script
 
 Fri Jun 1 11:05:29 2007 -0400 Hal Rosenstock
-cf9de8a5777d28b131fa169b5c9613f0aa21e1c7
+403dc8cd132d8acb27b4950a6c6dd023c0cee0b5
 
 	* infiniband-diags/scripts/IBswcountlimits.pm: Fixed typo and other cosmetic changes
 
 Fri Jun 1 09:18:18 2007 -0400 Hal Rosenstock
-57ed02cf529bbd51bfec69b14dd4b5be6bc98013
+e381c6a96b70fccbc17472d7d2362de95bdb28da
 
 	* infiniband-diags/scripts/iblinkinfo.pl: Cosmetic formatting change
 
 Fri Jun 1 08:22:35 2007 -0400 Hal Rosenstock
-31706f2c67e889ece29c182da695fcac1477fb07
+bcaebf3d1c860aab92678f68ea2a67f3c8cd7faf
 
 	* infiniband-diags/scripts/ibqueryerrors.pl: Cosmetic change
 
 Fri Jun 1 08:12:04 2007 -0400 Hal Rosenstock
-def0e28c62b523986ea0e728f08c28774b42b40f
+d39af4afab4957f4e5d38004546f1a5245e86b62
 
 	* infiniband-diags/man/ibidsverify.8: Add man page for ibidsverify.pl script
 
 Thu May 31 12:33:39 2007 -0400 Hal Rosenstock
-7e1de26737a976d8caed4cc8a777cb8912281e89
+343e890726faa50c61aae171f45cd0f382e07dbd
 
 	* management/*.spec: Remove *.spec files from management git repo as committed files. They are generated files.
 
 Thu May 31 11:41:16 2007 -0400 Hal Rosenstock
-f95d24b405eb9da8d9c32b088107aec1fd94acf7
+d01f5e1398e971e4cb6a32dcd1ccfe2fcc975283
 
 	* management/*.spec: Latest daily versions of .spec files (prior to removing these due to build changes)
 
 Thu May 31 08:19:16 2007 -0400 Hal Rosenstock
-57cf01dadae4128e93cbd826f5f8942da0be777c
+913311ad7451f461e55b15e96890bf67cb83a945
 
 	* infiniband-diag/man/(ibprintca ibprintswitch ibprintrt).8: Add description of list capability to man pages
 
 Thu May 31 06:34:52 2007 -0400 Hal Rosenstock
-bee435ac8e7c87d98fa61842447e0b7e145ca92d
+a8c7e71e332ee9f387a251513c8bc14de5200daf
 
 	* infiniband-diags: Add ibdatacounters
 
 Thu May 31 06:30:56 2007 -0400 Hal Rosenstock
-4dfb000eea846fa8b771a07d5aa037bc876ec776
+b1c72b6d21c5363fe3f47bf8fb1e0bcff4355519
 
 	* infiniband-diags/ibdatacounters: Add script and man page for subnet wide data counters
 
 Thu May 31 06:19:07 2007 -0400 Hal Rosenstock
-96c4081f5fd2f71d065ba1f8e0e6b836f6f1819b
+152d8bbba98aa8b6544a0f822802c1afd95a8dd6
 
 	* infiniband-diags/configure.in: Change IBSCRIPTPATH from bindir to sbindir
 
 Wed May 30 17:24:23 2007 -0400 Hal Rosenstock
-520481d0ee8efd843fb37b8bd810a83ffb862380
+90ef0643c4d9ee3ffbff5a4465dc3c5603c71ebf
 
 	* infiniband-diags/(Makefile.am configure.in): Add ibrouters and ibprintrt.pl
 
 Wed May 30 17:18:45 2007 -0400 Hal Rosenstock
-1965910937d8a9234ad29d8a20593e078dd321aa
+01ff4ad34a92182e237d039ae080328523103967
 
 	* infiniband-diags: Add scripts and man pages for display of IB routers (ibrouters.in, ibprintrt.pl, ibrouters.8, ibprintrt.8)
 
 Wed May 30 17:14:04 2007 -0400 Hal Rosenstock
-4b5109f567c4bea99f39f367d74932462aea167d
+ad1acd658f8b824fb4278119bd04351e9e517350
 
 	* infiniband-diags/scripts/ibprintca.pl: Fix bug introduced in last commit which caused compilation error
 
 Wed May 30 13:36:29 2007 -0400 Hal Rosenstock
-70a0fc4bcd88d9628d49248984e0351b3ed16b28
+a3305b761e0828a26f4ae02407f39c75b462e6d0
 
 	* infiniband-diags/scripts/ibqueryerrors.pl: Add GUID to output line for ports
 
 Wed May 30 13:25:16 2007 -0400 Hal Rosenstock
-822d47411cb00b556ee6538f42e1aa50e6e2e414
+c521a155f3e62065fea3b06008b577d13e5208ba
 
 	* infiniband-diags/scripts/(ibcheckerrs ibcheckport ibcheckportstate ibcheckportwidth ibdatacounts).in: Add lid and port into verbose output
 
 Wed May 30 11:18:08 2007 -0400 Hal Rosenstock
-6e205b80e9a257c9e53343d61a8b3c84d7cd377d
+459536621c993926ffbbf538c9c16d4b362a04a1
 
 	* infiniband-diags/scripts/(ibcheckerrs ibcheckport ibdatacounts).in: Changed portnum to port in output
 
 Wed May 30 10:00:24 2007 -0400 Hal Rosenstock
-07a3845b10029a7d74d75fb4aad49dabc6b7af5b
+5a14e8fa23513799587a097ec059fb699020c470
 
 	* infiniband-diags: Updated configure.in and Makefile.am for ibdatacounts script and man page
 
 Wed May 30 09:55:57 2007 -0400 Hal Rosenstock
-01768eab686ce471b46bd2294c99da748c71c19d
+01952b41745424c2ddb978960504a775c55c58b6
 
 	* infiniband-diags/man/ibdatacounts.8: Cosmetic change
 
 Wed May 30 09:22:40 2007 -0400 Hal Rosenstock
-f869b25f79fac528d4a48949306740575cc84c71
+bfaff30da5769c73a5af392e218a7e404dcdd187
 
 	* infiniband-diags/ibdatacounts.(in 8): Add script to display only data counters and associated man page
 
 Sat May 26 15:54:58 2007 -0400 Hal Rosenstock
-f0dae399a615e5454c4a5628d71ec8fb6788e473
+a9f3b186120184df96bc8ea341e215c138071500
 
 	* infiniband-diags/scripts/IBswcountlimits.pm: Fix node description parsing for switches
 
 Sat May 26 07:47:44 2007 -0400 Hal Rosenstock
-d822781280d4e4768dea641ea3e84a7bf9862eff
+78111b4ca8d37f29703546b0f650b1c4b40aba34
 
 	* infiniband-diags/scripts/iblinkinfo.pl: Add peer port link width and speed validation
 
 Fri May 25 19:32:38 2007 -0400 Hal Rosenstock
-2886865fbc8b24fe3e079c72f4d28b2f1d9cbe96
+caa39fc6d9732396bdbf1948bd7171fa4af5cd66
 
 	* infiniband-diags/ChangeLog: Add log entry for change to IBswcountlimits.pm for router support
 
 Fri May 25 19:31:35 2007 -0400 Hal Rosenstock
-4b7043b1a0ddb1e42056fa7d5b1a81b772d71e31
+c156628cb66af6273299cf25d2df3b467c3034c8
 
 	* infiniband-diags/scripts/IBswcountlimits.pm: Add support for routers
 
 Fri May 25 12:55:28 2007 -0400 Hal Rosenstock
-df284845acc64c54b3c24cd65b090f5c8548802d
+90a529b4faa74570976084c1e276d1e6f7eb298d
 
 	* infiniband-diags/ChangeLog: Add log entries for script changes to IBswcountlimits.pm and iblinkinfo.pl
 
 Fri May 25 12:52:20 2007 -0400 Hal Rosenstock
-27cf9e7978ca34acf986943f6f1753dbf7245d33
+2c146e65b010a3e8db27f6f55116f2aec168e93a
 
 	* infiniband-diags/scripts/iblinkinfo.pl: Display remote LID with peer port info
 
 Fri May 25 12:51:53 2007 -0400 Hal Rosenstock
-23314ec4e5ce47f95470d76aaa67ccb165b06fab
+df8acd9eb2589979a435996258828553136c1c1f
 
 	* infiniband-diags/scripts/IBswcountlimits.pm: Add support for rem_lid in get_link_ends subroutine
 
 Fri May 25 09:10:18 2007 -0400 Hal Rosenstock
-2539d125121efdbe05057082c0abc1a027a3aacd
+1d1530fb215273f91b6eaa1c783b7c8291054a43
 
 	* infiniband-diags/src/ibportstate.c: Handle peer ports at 1x that should be wider and 2.5 Gbps that should be faster
 
 Fri May 25 08:48:08 2007 -0400 Hal Rosenstock
-124eafc527b5b4e7c5803ebc2099c52bd8e130dc
+13490070db00c145b7f0a2225ed7ace10451bdb8
 
 	* infiniband-diags/src/ibportstate.c: Add LinkSpeed/Width related components to output
 
 Thu May 24 08:43:27 2007 -0400 Hal Rosenstock
-c9b96ed731be173c225a4ab05356580d255e5303
+9d10ef557cd6edd06780c7451d4848a3f816a6b8
 
 	* infiniband-diags/scripts/ibprintca.pl: Add support for routers
 
 Wed May 23 14:20:19 2007 -0400 Hal Rosenstock
-22d978b5bfa00ba9a411158c42afa6553f5cdc4d
+f49c6114addab8444d0961f780823c33141b883b
 
 	* infiniband-diags/scripts: Add support for IB routers in existing scripts
 
 Wed May 23 06:40:58 2007 -0400 Ira K. Weiny
-0fe47bef34b0fbb5ccfeb611b36cca5796faf44b
+4085ee4a9005f6f7cab28050a2f0d63d8794a213
 
 	* infiniband-diags/infiniband-diags.spec.in: Move commands from bin to sbin
 
 Tue May 22 15:34:45 2007 -0400 Hal Rosenstock
-d5482bd716e61da6f88795d379c44d48513d2e1d
+82aea277bb8541a297b5eef34af4208112e843ad
 
 	* Diags/man: Cosmetic changes
 
 Mon May 21 15:01:45 2007 -0400 Hal Rosenstock
-1f6d53e1db20be451719dfad627ef2e7ad797c1b
+552c82f2e6bc8eb09907e8132e0dd70ebcc9608c
 
 	* diags/man: Fixed some formatting
 
 Tue May 15 12:02:50 2007 -0400 Hal Rosenstock
-32f711a36f98962ec2c9d2a4d79e9c57321e5586
+dbbe9cb983e2e67cd5ffa0ac38a494392f930402
 
 	* infiniband-diags/Makefile.am: Move diag programs and scripts from bin to sbin
 
+Tue May 15 09:26:48 2007 -0400 Hal Rosenstock
+75f187e14908df40ab7ad0eff3e87da381b9ba74
+
+	* Merge branch 'master' of git://staging.openfabrics.org/~halr/management
+
 Mon May 14 13:31:05 2007 -0400 Hal Rosenstock
-03e1e509d8fc8cf7667ca04b0c67a11eb35fbad3
+f79504952e7817a07d0adb2359abf1cadcd31f1f
 
 	* spec summary changes
 
 Wed May 9 19:15:57 2007 -0400 Hal Rosenstock
-2d416a8130b6ee23b9938f79d77fcbda266e8f2c
+0832be7ea9b83e84083d6e859455b75fb3145fb6
 
 	* infiniband-diags/configure.in: Changes for changing from openib-diags to infiniband-diags
 
 Thu Apr 12 16:52:49 2007 -0400 Hal Rosenstock
-f6fd8b0390f5cd16c04fbbeb65d1cdb5e082aa86
+e4d681de516743f6a0d94d679b8332c57c71528f
 
 	* Diags: Renamed openib-diags to infiniband-diags Also, some other changes based on this (openib-diags.spec.in moved to infiniband-diags.spec.in, openib-diags.spec moved to infiniband-diags.spec, and Makefile.am changed for this)

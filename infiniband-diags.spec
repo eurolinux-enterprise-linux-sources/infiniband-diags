@@ -1,16 +1,17 @@
 Summary: OpenFabrics Alliance InfiniBand Diagnostic Tools
 Name: infiniband-diags 
-Version: 1.5.5
+Version: 1.5.8
 Release: 1%{?dist}
 License: GPLv2 or BSD
 Group: System Environment/Libraries
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Source0: http://www.openfabrics.org/downloads/management/%{name}-%{version}.tar.gz
 Url: http://openfabrics.org/
-BuildRequires: opensm-devel >= 3.3.0, libibumad-devel, libibmad-devel, perl
+Source0: http://www.openfabrics.org/downloads/management/%{name}-%{version}.tar.gz
+Patch0: infiniband-diags-1.5.8-all_hcas.patch
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildRequires: opensm-devel > 3.3.8, libibumad-devel, libibmad-devel, perl
 Provides: perl(IBswcountlimits)
 Obsoletes: openib-diags < 1.3
-ExclusiveArch: i386 x86_64 ia64 ppc ppc64
+ExclusiveArch: %{ix86} x86_64 ia64 ppc ppc64
 
 # Find the correct directory to install the perl module into.
 %global _perldir %(perl -e 'use Config; print $Config{installvendorarch};')
@@ -21,6 +22,7 @@ diagnose an IB subnet.
 
 %prep
 %setup -q
+%patch0 -p1 -b .hcas
 
 %build
 %configure --with-perl-installdir=%{_perldir}
@@ -55,6 +57,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_perldir}/IBswcountlimits.pm
 
 %changelog
+* Wed Jul 27 2011 Doug Ledford <dledford@redhat.com> - 1.5.8-1.el6
+- Update to latest upstream version
+- Make build work on i686 arch
+- Modify perfquery to be able to loop through all HCAs in a single host
+- Resolves: bz593767
+- Related: bz725016
+
 * Fri Mar 12 2010 Doug Ledford <dledford@redhat.com> - 1.5.5-1.el6
 - Update and rebuild against latest opensm (which was needed for latest
   ibutils, which was needed for licensing issues resolved in new upstream

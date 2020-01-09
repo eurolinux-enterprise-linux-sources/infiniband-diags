@@ -4,12 +4,12 @@
 
 Summary: OpenFabrics Alliance InfiniBand Diagnostic Tools
 Name: infiniband-diags
-Version: 1.5.5
+Version: 1.5.8
 Release: %rel%{?dist}
 License: GPLv2 or BSD
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Source: http://www.openfabrics.org/downloads/management/infiniband-diags-1.5.5.tar.gz
+Source: http://www.openfabrics.org/downloads/management/infiniband-diags-1.5.8.tar.gz
 Url: http://openfabrics.org/
 BuildRequires: libibmad-devel, opensm-devel, libibumad-devel
 Provides: perl(IBswcountlimits)

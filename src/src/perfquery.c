@@ -293,8 +293,8 @@ static void dump_perfcounters(int extended, int timeout, uint16_t cap_mask,
 			IBERROR("perfquery");
 		if (!(cap_mask & 0x1000)) {
 			/* if PortCounters:PortXmitWait not supported clear this counter */
-			IBWARN
-			    ("PortXmitWait not indicated so ignore this counter");
+			VERBOSE("PortXmitWait not indicated"
+				" so ignore this counter");
 			perf_count.xmtwait = 0;
 			mad_encode_field(pc, IB_PC_XMT_WAIT_F,
 					 &perf_count.xmtwait);
@@ -302,7 +302,10 @@ static void dump_perfcounters(int extended, int timeout, uint16_t cap_mask,
 		if (aggregate)
 			aggregate_perfcounters();
 		else
-			mad_dump_perfcounters(buf, sizeof buf, pc, sizeof pc);
+			mad_dump_fields(buf, sizeof buf, pc, sizeof pc,
+							IB_PC_FIRST_F,
+							(cap_mask & 0x1000)?IB_PC_LAST_F:(IB_PC_RCV_PKTS_F+1));
+
 	} else {
 		if (!(cap_mask & 0x200))	/* 1.2 errata: bit 9 is extended counter support */
 			IBWARN
@@ -344,9 +347,9 @@ static void reset_counters(int extended, int timeout, int mask,
 }
 
 static int reset, reset_only, all_ports, loop_ports, port, extended, xmt_sl,
-    rcv_sl, xmt_disc;
+    rcv_sl, xmt_disc, rcv_err, smpl_ctl;
 
-static void common_func(ib_portid_t *portid, int port_num, int mask,
+static void common_func(ib_portid_t * portid, int port_num, int mask,
 			unsigned query, unsigned reset,
 			const char *name, uint16_t attr,
 			void dump_func(char *, int, void *, int))
@@ -390,6 +393,26 @@ static void xmt_disc_query(ib_portid_t * portid, int port, int mask)
 		    mad_dump_perfcounters_xmt_disc);
 }
 
+static void rcv_err_query(ib_portid_t * portid, int port, int mask)
+{
+	common_func(portid, port, mask, !reset_only, (reset_only || reset),
+		    "PortRcvErrorDetails", IB_GSI_PORT_RCV_ERROR_DETAILS,
+		    mad_dump_perfcounters_rcv_err);
+}
+
+void dump_portsamples_control(ib_portid_t * portid, int port)
+{
+	char buf[1024];
+
+	if (!pma_query_via(pc, portid, port, ibd_timeout,
+			   IB_GSI_PORT_SAMPLES_CONTROL, srcport))
+		IBERROR("sampctlquery");
+
+	mad_dump_portsamples_control(buf, sizeof buf, pc, sizeof pc);
+	printf("# PortSamplesControl: %s port %d\n%s", portid2str(portid),
+	       port, buf);
+}
+
 static int process_opt(void *context, int ch, char *optarg)
 {
 	switch (ch) {
@@ -404,6 +427,12 @@ static int process_opt(void *context, int ch, char *optarg)
 		break;
 	case 'D':
 		xmt_disc = 1;
+		break;
+	case 'E':
+		rcv_err = 1;
+		break;
+	case 'c':
+		smpl_ctl = 1;
 		break;
 	case 'a':
 		all_ports++;
@@ -444,6 +473,8 @@ int main(int argc, char **argv)
 		{"xmtsl", 'X', 0, NULL, "show Xmt SL port counters"},
 		{"rcvsl", 'S', 0, NULL, "show Rcv SL port counters"},
 		{"xmtdisc", 'D', 0, NULL, "show Xmt Discard Details"},
+		{"rcverr", 'E', 0, NULL, "show Rcv Error Details"},
+		{"smplctl", 'c', 0, NULL, "show samples control"},
 		{"all_ports", 'a', 0, NULL, "show aggregated counters"},
 		{"loop_ports", 'l', 0, NULL, "iterate through each port"},
 		{"reset_after_read", 'r', 0, NULL, "reset counters after read"},
@@ -516,6 +547,16 @@ int main(int argc, char **argv)
 
 	if (xmt_disc) {
 		xmt_disc_query(&portid, port, mask);
+		goto done;
+	}
+
+	if (rcv_err) {
+		rcv_err_query(&portid, port, mask);
+		goto done;
+	}
+
+	if (smpl_ctl) {
+		dump_portsamples_control(&portid, port);
 		goto done;
 	}
 
