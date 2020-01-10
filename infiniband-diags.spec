@@ -1,7 +1,7 @@
 Summary: OpenFabrics Alliance InfiniBand Diagnostic Tools
 Name: infiniband-diags 
 Version: 2.0.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Upstream allows either license to be used
 License: GPLv2 or BSD
 Url:     https://github.com/linux-rdma/infiniband-diags
@@ -9,6 +9,9 @@ Source0: https://github.com/linux-rdma/%{name}/releases/download/%{version}/%{na
 # RHEL-specific patches:
 Patch6: 0006-Fix-hostname-usage-in-set_nodedesc.sh.patch
 Patch7: 0007-Fix-ibnodes-h-output.patch
+
+Patch8: 0001-infiniband-diags-Update-iblinkinfo-diffcheck-options.patch
+Patch9: 0002-infiniband-diags-Update-default-man-pages.patch
 
 BuildRequires: opensm-devel > 3.3.8, libibumad-devel, perl
 BuildRequires: glib2-devel
@@ -45,6 +48,8 @@ Static libraries for the infiniband-diags library.
 %setup -q
 %patch6 -p1 -b .hostname
 %patch7 -p1 -b .help
+%patch8 -p1
+%patch9 -p1
 
 %build
 %configure
@@ -143,6 +148,10 @@ find ${RPM_BUILD_ROOT} -type f -name '*.la' -print -delete
 %postun -p /sbin/ldconfig
 
 %changelog
+* Wed Jul 11 2018 Honggang Li <honli@redhat.com> 2.0.0-2
+- Update iblinkinfo --diffcheck options
+- Resolves: bz1596754
+
 * Mon Oct 16 2017 Honggang Li <honli@redhat.com> 2.0.0-1
 - Rebase to latest upstream release v2.0.0
 - Resolves: bz1456944

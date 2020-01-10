@@ -1,0 +1,1059 @@
+From aecbb6f068880421e13eb70911fd22c70388412c Mon Sep 17 00:00:00 2001
+From: Ira Weiny <ira.weiny@intel.com>
+Date: Sun, 8 Jul 2018 23:59:25 -0400
+Subject: [PATCH 2/2] infiniband-diags: Update default man pages
+
+After the correction to iblinkinfo's diffcheck option regenerate
+the default man page source files.
+
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ doc/man/check_lft_balance.8.in | 13 ++++-----
+ doc/man/ibcacheedit.8.in       | 11 ++++----
+ doc/man/ibfindnodesusing.8.in  | 13 ++++-----
+ doc/man/ibidsverify.8.in       | 17 ++++++-----
+ doc/man/iblinkinfo.8.in        | 17 +++++------
+ doc/man/ibroute.8.in           | 17 ++++++-----
+ doc/man/ibstat.8.in            | 15 +++++-----
+ doc/man/ibstatus.8.in          | 15 +++++-----
+ doc/man/ibsysstat.8.in         | 13 ++++-----
+ doc/man/ibtracert.8.in         | 64 ++++++++++++++++++++++++++++++++++++------
+ doc/man/infiniband-diags.8.in  | 17 ++++++-----
+ doc/man/perfquery.8.in         | 15 +++++-----
+ doc/man/saquery.8.in           | 15 +++++-----
+ doc/man/sminfo.8.in            | 17 ++++++-----
+ doc/man/smpdump.8.in           | 17 ++++++-----
+ doc/man/smpquery.8.in          | 17 ++++++-----
+ doc/man/vendstat.8.in          | 15 +++++-----
+ 17 files changed, 168 insertions(+), 140 deletions(-)
+
+diff --git a/doc/man/check_lft_balance.8.in b/doc/man/check_lft_balance.8.in
+index 3e84b13db1c1..174e6c77a49a 100644
+--- a/doc/man/check_lft_balance.8.in
++++ b/doc/man/check_lft_balance.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH CHECK_LFT_BALANCE 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-CHECK_LFT_BALANCE \- 
++check_lft_balance \- check InfiniBand unicast forwarding tables balance
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,16 +30,15 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH CHECK INFINIBAND UNICAST FORWARDING TABLES BALANCE
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ check_lft_balance.sh [\-hRv]
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ check_lft_balance.sh is a script which checks for balancing in Infiniband
+ unicast forwarding tables.  It analyzes the output of
+ \fBdump_lfts(8)\fP and \fBiblinkinfo(8)\fP
+-.SS OPTIONS
++.SH OPTIONS
+ .INDENT 0.0
+ .TP
+ .B \fB\-h\fP
+@@ -54,11 +53,11 @@ believe that the fabric has changed.
+ .B \fB\-v\fP
+ verbose output
+ .UNINDENT
+-.SS SEE ALSO
++.SH SEE ALSO
+ .sp
+ \fBdump_lfts(8)\fP
+ \fBiblinkinfo(8)\fP
+-.SS AUTHORS
++.SH AUTHORS
+ .INDENT 0.0
+ .TP
+ .B Albert Chu
+diff --git a/doc/man/ibcacheedit.8.in b/doc/man/ibcacheedit.8.in
+index 73bff51e9730..64db5da9d331 100644
+--- a/doc/man/ibcacheedit.8.in
++++ b/doc/man/ibcacheedit.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH IBCACHEEDIT 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-IBCACHEEDIT \- 
++ibcacheedit \- edit an ibnetdiscover cache
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,15 +30,14 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH EDIT AN IBNETDISCOVER CACHE
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ ibcacheedit [options] <orig.cache> <new.cache>
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ ibcacheedit allows users to edit an ibnetdiscover cache created through the
+ \fB\-\-cache\fP option in \fBibnetdiscover(8)\fP .
+-.SS OPTIONS
++.SH OPTIONS
+ .INDENT 0.0
+ .TP
+ .B \fB\-\-switchguid BEFOREGUID:AFTERGUID\fP
+@@ -70,7 +69,7 @@ guid will be adjusted as well on switches.
+ .
+ .sp
+ \fB\-V, \-\-version\fP     show the version info.
+-.SS AUTHORS
++.SH AUTHORS
+ .INDENT 0.0
+ .TP
+ .B Albert Chu
+diff --git a/doc/man/ibfindnodesusing.8.in b/doc/man/ibfindnodesusing.8.in
+index 3e9a4039c2fb..33dc302453fa 100644
+--- a/doc/man/ibfindnodesusing.8.in
++++ b/doc/man/ibfindnodesusing.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH IBFINDNODESUSING 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-IBFINDNODESUSING \- 
++ibfindnodesusing \- find a list of end nodes which are routed through the specified switch and port
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,16 +30,15 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH FIND A LIST OF END NODES WHICH ARE ROUTED THROUGH THE SPECIFIED SWITCH AND PORT
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ ibfindnodesusing.pl [options] <switch_guid|switch_name> <port>
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ ibfindnodesusing.pl uses ibroute and detects the current nodes which are routed
+ through both directions of the link specified.  The link is specified by one
+ switch port end; the script finds the remote end automatically.
+-.SS OPTIONS
++.SH OPTIONS
+ .INDENT 0.0
+ .TP
+ .B \fB\-h\fP
+@@ -55,7 +54,7 @@ believe that the fabric has changed.
+ \fB\-C <ca_name>\fP    use the specified ca_name.
+ .sp
+ \fB\-P <ca_port>\fP    use the specified ca_port.
+-.SS FILES
++.SH FILES
+ .\" Common text for the config file
+ .
+ .SS CONFIG FILE
+@@ -117,7 +116,7 @@ for the file location for your installation.
+ .fi
+ .UNINDENT
+ .UNINDENT
+-.SS AUTHOR
++.SH AUTHOR
+ .INDENT 0.0
+ .TP
+ .B Ira Weiny
+diff --git a/doc/man/ibidsverify.8.in b/doc/man/ibidsverify.8.in
+index 882bac740fbd..7b891431f2b0 100644
+--- a/doc/man/ibidsverify.8.in
++++ b/doc/man/ibidsverify.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH IBIDSVERIFY 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-IBIDSVERIFY \- 
++ibidsverify \- validate IB identifiers in subnet and report errors
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,11 +30,10 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH VALIDATE IB IDENTIFIERS IN SUBNET AND REPORT ERRORS
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ ibidsverify.pl [\-h] [\-R]
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ ibidsverify.pl is a perl script which uses a full topology file that was
+ created by ibnetdiscover, scans the network to validate the LIDs and GUIDs
+@@ -44,7 +43,7 @@ or duplicate identifiers.
+ Finally, ibidsverify.pl will also reuse the cached ibnetdiscover output from
+ some of the other diag tools which makes it a bit faster than running
+ ibnetdiscover from scratch.
+-.SS OPTIONS
++.SH OPTIONS
+ .sp
+ \fB\-R\fP
+ Recalculate the ibnetdiscover information, ie do not use the cached
+@@ -55,10 +54,10 @@ fabric has changed.
+ \fB\-C <ca_name>\fP    use the specified ca_name.
+ .sp
+ \fB\-P <ca_port>\fP    use the specified ca_port.
+-.SS EXIT STATUS
++.SH EXIT STATUS
+ .sp
+ Exit status is 1 if errors are found, 0 otherwise.
+-.SS FILES
++.SH FILES
+ .\" Common text for the config file
+ .
+ .SS CONFIG FILE
+@@ -67,10 +66,10 @@ Exit status is 1 if errors are found, 0 otherwise.
+ .sp
+ A global config file is provided to set some of the common options for all
+ tools.  See supplied config file for details.
+-.SS SEE ALSO
++.SH SEE ALSO
+ .sp
+ \fBibnetdiscover(8)\fP
+-.SS AUTHOR
++.SH AUTHOR
+ .INDENT 0.0
+ .TP
+ .B Hal Rosenstock
+diff --git a/doc/man/iblinkinfo.8.in b/doc/man/iblinkinfo.8.in
+index 105195bc4161..19b350f156d7 100644
+--- a/doc/man/iblinkinfo.8.in
++++ b/doc/man/iblinkinfo.8.in
+@@ -115,18 +115,15 @@ network or another cache.  A special diff output for ibnetdiscover
+ output will be displayed showing differences between the old and current
+ fabric.  By default, the following are compared for differences: switches,
+ channel adapters, routers, and port connections.
+-.\" Define the common option diffcheck
+-.
+ .sp
+ \fB\-\-diffcheck <key(s)>\fP
+-Specify what diff checks should be done in the \fB\-\-diff\fP option above.
+-Comma separate multiple diff check key(s).  The available diff checks
+-are: \fBsw = switches\fP, \fBca = channel adapters\fP, \fBrouter\fP = routers,
+-\fBport\fP = port connections, \fBlid\fP = lids, \fBnodedesc\fP = node
+-descriptions.  Note that \fBport\fP, \fBlid\fP, and \fBnodedesc\fP are
+-checked only for the node types that are specified (e.g. \fBsw\fP,
+-\fBca\fP, \fBrouter\fP).  If \fBport\fP is specified alongside \fBlid\fP
+-or \fBnodedesc\fP, remote port lids and node descriptions will also be compared.
++Specify what diff checks should be done in the \fB\-\-diff\fP option above.  Comma
++separate multiple diff check key(s).  The available diff checks are: \fBport\fP =
++port connections, \fBstate\fP = port state, \fBlid\fP = lids, \fBnodedesc\fP = node
++descriptions.  Note that \fBport\fP, \fBlid\fP, and \fBnodedesc\fP are checked only
++for the node types that are specified (e.g.  \fBswitches\-only\fP, \fBcas\-only\fP).
++If \fBport\fP is specified alongside \fBlid\fP or \fBnodedesc\fP, remote port lids
++and node descriptions will also be compared.
+ .sp
+ \fB\-\-filterdownports <filename>\fP
+ Filter downports indicated in a ibnetdiscover cache.  If a port was previously
+diff --git a/doc/man/ibroute.8.in b/doc/man/ibroute.8.in
+index aa988ceb17e8..c2ec1def35ee 100644
+--- a/doc/man/ibroute.8.in
++++ b/doc/man/ibroute.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH IBROUTE 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-IBROUTE \- 
++ibroute \- query InfiniBand switch forwarding tables
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,17 +30,16 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH QUERY INFINIBAND SWITCH FORWARDING TABLES
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ ibroute [options] [<dest dr_path|lid|guid> [<startlid> [<endlid>]]]
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ ibroute uses SMPs to display the forwarding tables (unicast
+ (LinearForwardingTable or LFT) or multicast (MulticastForwardingTable or MFT))
+ for the specified switch LID and the optional lid (mlid) range.
+ The default range is all valid entries in the range 1...FDBTop.
+-.SS OPTIONS
++.SH OPTIONS
+ .INDENT 0.0
+ .TP
+ .B \fB\-a, \-\-all\fP
+@@ -193,7 +192,7 @@ This file maps GUIDs to more user friendly names.  See FILES section.
+ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .UNINDENT
+ .UNINDENT
+-.SS FILES
++.SH FILES
+ .\" Common text for the config file
+ .
+ .SS CONFIG FILE
+@@ -255,7 +254,7 @@ for the file location for your installation.
+ .fi
+ .UNINDENT
+ .UNINDENT
+-.SS EXAMPLES
++.SH EXAMPLES
+ .sp
+ Unicast examples
+ .INDENT 0.0
+@@ -278,10 +277,10 @@ ibroute \-M 4                # dump all non empty mlids of switch with lid 4
+ ibroute \-M 4 0xc010 0xc020  # same, but with range
+ ibroute \-M \-n 4             # simple dump format
+ .UNINDENT
+-.SS SEE ALSO
++.SH SEE ALSO
+ .sp
+ ibtracert (8)
+-.SS AUTHOR
++.SH AUTHOR
+ .INDENT 0.0
+ .TP
+ .B Hal Rosenstock
+diff --git a/doc/man/ibstat.8.in b/doc/man/ibstat.8.in
+index 6fc7fb7eaf32..8d297fd9fbcc 100644
+--- a/doc/man/ibstat.8.in
++++ b/doc/man/ibstat.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH IBSTAT 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-IBSTAT \- 
++ibstat \- query basic status of InfiniBand device(s)
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,11 +30,10 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH QUERY BASIC STATUS OF INFINIBAND DEVICE(S)
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ ibstat [options] <ca_name> [portnum]
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ ibstat is a binary which displays basic information obtained from the local
+ IB driver. Output includes LID, SMLID, port state, link width active, and port
+@@ -43,7 +42,7 @@ physical state.
+ It is similar to the ibstatus utility but implemented as a binary rather
+ than a script. It has options to list CAs and/or ports and displays more
+ information than ibstatus.
+-.SS OPTIONS
++.SH OPTIONS
+ .INDENT 0.0
+ .TP
+ .B \fB\-l, \-\-list_of_cas\fP
+@@ -96,7 +95,7 @@ May be used several times (\-vv or \-v \-v \-v)
+ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .UNINDENT
+ .UNINDENT
+-.SS EXAMPLES
++.SH EXAMPLES
+ .INDENT 0.0
+ .TP
+ .B ::
+@@ -105,10 +104,10 @@ ibstat \-l         # list all IB devices
+ ibstat \-p         # show port guids
+ ibstat mthca0 2   # show status of port 2 of \(aqmthca0\(aq
+ .UNINDENT
+-.SS SEE ALSO
++.SH SEE ALSO
+ .sp
+ ibstatus (8)
+-.SS AUTHOR
++.SH AUTHOR
+ .INDENT 0.0
+ .TP
+ .B Hal Rosenstock
+diff --git a/doc/man/ibstatus.8.in b/doc/man/ibstatus.8.in
+index 56f3937a1d8f..b8e2489b3f9a 100644
+--- a/doc/man/ibstatus.8.in
++++ b/doc/man/ibstatus.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH IBSTATUS 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-IBSTATUS \- 
++ibstatus \- query basic status of InfiniBand device(s)
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,16 +30,15 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH QUERY BASIC STATUS OF INFINIBAND DEVICE(S)
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ ibstatus [\-h] [devname[:port]]...
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ ibstatus is a script which displays basic information obtained from the local
+ IB driver. Output includes LID, SMLID, port state, link width active, and port
+ physical state.
+-.SS OPTIONS
++.SH OPTIONS
+ .\" Define the common option -h
+ .
+ .sp
+@@ -52,7 +51,7 @@ InfiniBand device name
+ .B \fBportnum\fP
+ port number of InfiniBand device
+ .UNINDENT
+-.SS EXAMPLES
++.SH EXAMPLES
+ .INDENT 0.0
+ .TP
+ .B ::
+@@ -60,10 +59,10 @@ ibstatus                    # display status of all IB ports
+ ibstatus mthca1             # status of mthca1 ports
+ ibstatus mthca1:1 mthca0:2  # show status of specified ports
+ .UNINDENT
+-.SS SEE ALSO
++.SH SEE ALSO
+ .sp
+ \fBibstat (8)\fP
+-.SS AUTHOR
++.SH AUTHOR
+ .INDENT 0.0
+ .TP
+ .B Hal Rosenstock
+diff --git a/doc/man/ibsysstat.8.in b/doc/man/ibsysstat.8.in
+index 63dd8ce9cd14..57e0c966ffbb 100644
+--- a/doc/man/ibsysstat.8.in
++++ b/doc/man/ibsysstat.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH IBSYSSTAT 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-IBSYSSTAT \- 
++ibsysstat \- system status on an InfiniBand address
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,16 +30,15 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH SYSTEM STATUS ON AN INFINIBAND ADDRESS
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ ibsysstat [options] <dest lid | guid> [<op>]
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ ibsysstat uses vendor mads to validate connectivity between IB nodes
+ and obtain other information about the IB node. ibsysstat is run as
+ client/server. Default is to run as client.
+-.SS OPTIONS
++.SH OPTIONS
+ .sp
+ Current supported operations:
+ .INDENT 0.0
+@@ -165,7 +164,7 @@ May be used several times (\-vv or \-v \-v \-v)
+ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .UNINDENT
+ .UNINDENT
+-.SS FILES
++.SH FILES
+ .\" Common text for the config file
+ .
+ .SS CONFIG FILE
+@@ -174,7 +173,7 @@ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .sp
+ A global config file is provided to set some of the common options for all
+ tools.  See supplied config file for details.
+-.SS AUTHOR
++.SH AUTHOR
+ .INDENT 0.0
+ .TP
+ .B Hal Rosenstock
+diff --git a/doc/man/ibtracert.8.in b/doc/man/ibtracert.8.in
+index 6c936f78112f..5c3aff97c591 100644
+--- a/doc/man/ibtracert.8.in
++++ b/doc/man/ibtracert.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH IBTRACERT 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-IBTRACERT \- 
++ibtracert \- trace InfiniBand path
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,18 +30,17 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH TRACE INFINIBAND PATH
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ ibtracert [options] [<lid|guid> [<startlid> [<endlid>]]]
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ ibtracert uses SMPs to trace the path from a source GID/LID to a
+ destination GID/LID. Each hop along the path is displayed until
+ the destination is reached or a hop does not respond. By using
+ the \-m option, multicast path tracing can be performed between source
+ and destination nodes.
+-.SS OPTIONS
++.SH OPTIONS
+ .INDENT 0.0
+ .TP
+ .B \fB\-n, \-\-no_info\fP
+@@ -66,6 +65,15 @@ force route to destination port
+ .
+ .sp
+ \fB\-s, \-\-sm_port <smlid>\fP     use \(aqsmlid\(aq as the target lid for SA queries.
++.\" Define the common option --ports-file
++.
++.sp
++\fB\-\-ports\-file <ports\-file>\fP   Specify a ports file.
++.INDENT 0.0
++.INDENT 3.5
++This file contains multiple source and destination lid or guid pairs. See FILES section.
++.UNINDENT
++.UNINDENT
+ .SS Port Selection flags
+ .\" Define the common option -C
+ .
+@@ -173,7 +181,7 @@ is specified then a value will be prompted for.
+ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .UNINDENT
+ .UNINDENT
+-.SS FILES
++.SH FILES
+ .\" Common text for the config file
+ .
+ .SS CONFIG FILE
+@@ -235,7 +243,45 @@ for the file location for your installation.
+ .fi
+ .UNINDENT
+ .UNINDENT
+-.SS EXAMPLES
++.\" Common text to describe the port file.
++.
++.SS PORTS FILE FORMAT
++.sp
++The ports file can be used to specify multiple source and destination pairs.  They can be lids or guids.  If guids, use the \-G option to indicate that.
++.sp
++\fBGenerically:\fP
++.INDENT 0.0
++.INDENT 3.5
++.sp
++.nf
++.ft C
++# comment
++<src> <dst>
++.ft P
++.fi
++.UNINDENT
++.UNINDENT
++.sp
++\fBExample:\fP
++.INDENT 0.0
++.INDENT 3.5
++.sp
++.nf
++.ft C
++73 207
++203 657
++531 101
++
++> OR <
++
++0x0008f104003f125c 0x0008f104003f133d
++0x0008f1040011ab07 0x0008f104004265c0
++0x0008f104007c5510 0x0008f1040099bb08
++.ft P
++.fi
++.UNINDENT
++.UNINDENT
++.SH EXAMPLES
+ .sp
+ Unicast examples
+ .INDENT 0.0
+@@ -252,10 +298,10 @@ Multicast example
+ .B ::
+ ibtracert \-m 0xc000 4 16    # show multicast path of mlid 0xc000 between lids 4 and 16
+ .UNINDENT
+-.SS SEE ALSO
++.SH SEE ALSO
+ .sp
+ ibroute (8)
+-.SS AUTHOR
++.SH AUTHOR
+ .INDENT 0.0
+ .TP
+ .B Hal Rosenstock
+diff --git a/doc/man/infiniband-diags.8.in b/doc/man/infiniband-diags.8.in
+index 01e457732248..107202eaa0c0 100644
+--- a/doc/man/infiniband-diags.8.in
++++ b/doc/man/infiniband-diags.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH INFINIBAND-DIAGS 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-INFINIBAND-DIAGS \- 
++infiniband-diags \- Diagnostics for InfiniBand Fabrics
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,8 +30,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH DIAGNOSTICS FOR INFINIBAND FABRICS
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ infiniband\-diags is a set of utilities designed to help configure, debug, and
+ maintain infiniband fabrics.  Many tools and utilities are provided.  Some with
+@@ -40,7 +39,7 @@ similar functionality.
+ The base utilities use directed route MAD\(aqs to perform their operations.  They
+ may therefore work even in unconfigured subnets.  Other, higher level
+ utilities, require LID routed MAD\(aqs and to some extent SA/SM access.
+-.SS THE USE OF SMPs (QP0)
++.SH THE USE OF SMPS (QP0)
+ .sp
+ Many of the tools in this package rely on the use of SMPs via QP0 to acquire
+ data directly from the SMA.  While this mode of operation is not technically in
+@@ -49,7 +48,7 @@ that this level of diagnostics is valuable when working with a fabric which is
+ broken or only partially configured.  For this reason many of these tools may
+ require the use of an MKey or operation from Virtual Machines may be restricted
+ for security reasons.
+-.SS COMMON OPTIONS
++.SH COMMON OPTIONS
+ .sp
+ Most OpenIB diagnostics take some of the following common flags. The exact list
+ of supported flags per utility can be found in the documentation for those
+@@ -221,7 +220,7 @@ This file maps GUIDs to more user friendly names.  See FILES section.
+ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .UNINDENT
+ .UNINDENT
+-.SS COMMON FILES
++.SH COMMON FILES
+ .sp
+ The following config files are common amongst many of the utilities.
+ .\" Common text for the config file
+@@ -377,7 +376,7 @@ When grouping is used, IB nodes are organized into chassis which are
+ numbered. Nodes which cannot be determined to be in a chassis are
+ displayed as "Non\-Chassis Nodes".  External ports are also shown on the
+ connectivity lines.
+-.SS Utilities list
++.SH UTILITIES LIST
+ .SS Basic fabric conectivity
+ .INDENT 0.0
+ .INDENT 3.5
+@@ -432,7 +431,7 @@ See: smpquery, smpdump, saquery, sminfo
+ See: ibidsverify
+ .UNINDENT
+ .UNINDENT
+-.SS Backwards compatibility scripts
++.SH BACKWARDS COMPATIBILITY SCRIPTS
+ .sp
+ The following scripts have been identified as redundant and/or lower performing
+ as compared to the above scripts.  They are provided as legacy scripts when
+@@ -442,7 +441,7 @@ ibcheckerrors, ibclearcounters, ibclearerrors, ibdatacounters
+ ibchecknet, ibchecknode, ibcheckport, ibcheckportstate,
+ ibcheckportwidth, ibcheckstate, ibcheckwidth, ibswportwatch,
+ ibprintca, ibprintrt, ibprintswitch, set_nodedesc.sh
+-.SS AUTHORS
++.SH AUTHORS
+ .INDENT 0.0
+ .TP
+ .B Ira Weiny
+diff --git a/doc/man/perfquery.8.in b/doc/man/perfquery.8.in
+index d939902eac1a..c078fc0d3de7 100644
+--- a/doc/man/perfquery.8.in
++++ b/doc/man/perfquery.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH PERFQUERY 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-PERFQUERY \- 
++perfquery \- query InfiniBand port counters on a single port
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,11 +30,10 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH QUERY INFINIBAND PORT COUNTERS ON A SINGLE PORT
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ perfquery [options] [<lid|guid> [[port(s)] [reset_mask]]]
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ perfquery uses PerfMgt GMPs to obtain the PortCounters (basic performance and
+ error counters), PortExtendedCounters, PortXmitDataSL, PortRcvDataSL,
+@@ -51,7 +50,7 @@ Note: Inputting a port of 255 indicates an operation be performed on all ports.
+ .sp
+ Note: For PortCounters, ExtendedCounters, and resets, multiple ports can be
+ specified by either a comma separated list or a port range.  See examples below.
+-.SS OPTIONS
++.SH OPTIONS
+ .INDENT 0.0
+ .TP
+ .B \fB\-x, \-\-extended\fP
+@@ -244,7 +243,7 @@ is specified then a value will be prompted for.
+ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .UNINDENT
+ .UNINDENT
+-.SS FILES
++.SH FILES
+ .\" Common text for the config file
+ .
+ .SS CONFIG FILE
+@@ -253,7 +252,7 @@ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .sp
+ A global config file is provided to set some of the common options for all
+ tools.  See supplied config file for details.
+-.SS EXAMPLES
++.SH EXAMPLES
+ .INDENT 0.0
+ .INDENT 3.5
+ .sp
+@@ -278,7 +277,7 @@ perfquery \-l 32 1,4,8    # read performance counters from lid 32, port 1, 4, an
+ .fi
+ .UNINDENT
+ .UNINDENT
+-.SS AUTHOR
++.SH AUTHOR
+ .INDENT 0.0
+ .TP
+ .B Hal Rosenstock
+diff --git a/doc/man/saquery.8.in b/doc/man/saquery.8.in
+index 72465fcc5d9d..b596a505d829 100644
+--- a/doc/man/saquery.8.in
++++ b/doc/man/saquery.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH SAQUERY 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-SAQUERY \- 
++saquery \- query InfiniBand subnet administration attributes
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,14 +30,13 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH QUERY INFINIBAND SUBNET ADMINISTRATION ATTRIBUTES
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ saquery [options] [<name> | <lid> | <guid>]
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ saquery issues the selected SA query. Node records are queried by default.
+-.SS OPTIONS
++.SH OPTIONS
+ .INDENT 0.0
+ .TP
+ .B \fB\-p\fP
+@@ -297,7 +296,7 @@ This file maps GUIDs to more user friendly names.  See FILES section.
+ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .UNINDENT
+ .UNINDENT
+-.SS COMMON FILES
++.SH COMMON FILES
+ .\" Common text for the config file
+ .
+ .SS CONFIG FILE
+@@ -359,10 +358,10 @@ for the file location for your installation.
+ .fi
+ .UNINDENT
+ .UNINDENT
+-.SS DEPENDENCIES
++.SH DEPENDENCIES
+ .sp
+ OpenSM (or other running SM/SA), libosmcomp, libibumad, libibmad
+-.SS AUTHORS
++.SH AUTHORS
+ .INDENT 0.0
+ .TP
+ .B Ira Weiny
+diff --git a/doc/man/sminfo.8.in b/doc/man/sminfo.8.in
+index 8b33d270112c..e0d3484337e4 100644
+--- a/doc/man/sminfo.8.in
++++ b/doc/man/sminfo.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH SMINFO 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-SMINFO \- 
++sminfo \- query InfiniBand SMInfo attribute
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,11 +30,10 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH QUERY INFINIBAND SMINFO ATTRIBUTE
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ sminfo [options] sm_lid | sm_dr_path [modifier]
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ Optionally set and display the output of a sminfo query in human readable
+ format. The target SM is the one listed in the local port info, or the SM
+@@ -42,7 +41,7 @@ specified by the optional SM lid or by the SM direct routed path.
+ .sp
+ Note: using sminfo for any purposes other then simple query may be very
+ dangerous, and may result in a malfunction of the target SM.
+-.SS OPTIONS
++.SH OPTIONS
+ .INDENT 0.0
+ .TP
+ .B \fB\-s, \-\-state <state>\fP set SM state
+@@ -185,7 +184,7 @@ is specified then a value will be prompted for.
+ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .UNINDENT
+ .UNINDENT
+-.SS FILES
++.SH FILES
+ .\" Common text for the config file
+ .
+ .SS CONFIG FILE
+@@ -194,7 +193,7 @@ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .sp
+ A global config file is provided to set some of the common options for all
+ tools.  See supplied config file for details.
+-.SS EXAMPLES
++.SH EXAMPLES
+ .INDENT 0.0
+ .TP
+ .B ::
+@@ -202,10 +201,10 @@ sminfo                  # local port\(aqs sminfo
+ sminfo 32               # show sminfo of lid 32
+ sminfo  \-G 0x8f1040023  # same but using guid address
+ .UNINDENT
+-.SS SEE ALSO
++.SH SEE ALSO
+ .sp
+ smpdump (8)
+-.SS AUTHOR
++.SH AUTHOR
+ .INDENT 0.0
+ .TP
+ .B Hal Rosenstock
+diff --git a/doc/man/smpdump.8.in b/doc/man/smpdump.8.in
+index 269402bec176..08422a741c27 100644
+--- a/doc/man/smpdump.8.in
++++ b/doc/man/smpdump.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH SMPDUMP 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-SMPDUMP \- 
++smpdump \- dump InfiniBand subnet management attributes
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,15 +30,14 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH DUMP INFINIBAND SUBNET MANAGEMENT ATTRIBUTES
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ smpdump [options] <dlid|dr_path> <attribute> [attribute_modifier]
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ smpdump is a general purpose SMP utility which gets SM attributes from a
+ specified SMA. The result is dumped in hex by default.
+-.SS OPTIONS
++.SH OPTIONS
+ .INDENT 0.0
+ .TP
+ .B \fBdlid|drpath\fP
+@@ -168,7 +167,7 @@ May be used several times (\-vv or \-v \-v \-v)
+ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .UNINDENT
+ .UNINDENT
+-.SS FILES
++.SH FILES
+ .\" Common text for the config file
+ .
+ .SS CONFIG FILE
+@@ -177,7 +176,7 @@ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .sp
+ A global config file is provided to set some of the common options for all
+ tools.  See supplied config file for details.
+-.SS EXAMPLES
++.SH EXAMPLES
+ .sp
+ Direct Routed Examples
+ .INDENT 0.0
+@@ -194,10 +193,10 @@ LID Routed Examples
+ smpdump 3 0x15 2        # PORT INFO, lid 3 port 2
+ smpdump 0xa0 0x11       # NODE INFO, lid 0xa0
+ .UNINDENT
+-.SS SEE ALSO
++.SH SEE ALSO
+ .sp
+ smpquery (8)
+-.SS AUTHOR
++.SH AUTHOR
+ .INDENT 0.0
+ .TP
+ .B Hal Rosenstock
+diff --git a/doc/man/smpquery.8.in b/doc/man/smpquery.8.in
+index 9aed1c258b8c..0ca72b51ba5d 100644
+--- a/doc/man/smpquery.8.in
++++ b/doc/man/smpquery.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH SMPQUERY 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-SMPQUERY \- 
++smpquery \- query InfiniBand subnet management attributes
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,16 +30,15 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH QUERY INFINIBAND SUBNET MANAGEMENT ATTRIBUTES
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ smpquery [options] <op> <dest dr_path|lid|guid> [op params]
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ smpquery allows a basic subset of standard SMP queries including the following:
+ node info, node description, switch info, port info. Fields are displayed in
+ human readable format.
+-.SS OPTIONS
++.SH OPTIONS
+ .sp
+ Current supported operations (case insensitive) and their parameters:
+ .INDENT 0.0
+@@ -226,7 +225,7 @@ is specified then a value will be prompted for.
+ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .UNINDENT
+ .UNINDENT
+-.SS FILES
++.SH FILES
+ .\" Common text for the config file
+ .
+ .SS CONFIG FILE
+@@ -288,7 +287,7 @@ for the file location for your installation.
+ .fi
+ .UNINDENT
+ .UNINDENT
+-.SS EXAMPLES
++.SH EXAMPLES
+ .INDENT 0.0
+ .TP
+ .B ::
+@@ -297,10 +296,10 @@ smpquery \-G switchinfo 0x2C9000100D051 1  # switchinfo by guid
+ smpquery \-D nodeinfo 0                    # nodeinfo by direct route
+ smpquery \-c nodeinfo 6 0,12               # nodeinfo by combined route
+ .UNINDENT
+-.SS SEE ALSO
++.SH SEE ALSO
+ .sp
+ smpdump (8)
+-.SS AUTHOR
++.SH AUTHOR
+ .INDENT 0.0
+ .TP
+ .B Hal Rosenstock
+diff --git a/doc/man/vendstat.8.in b/doc/man/vendstat.8.in
+index ebec171762e1..58a23c128270 100644
+--- a/doc/man/vendstat.8.in
++++ b/doc/man/vendstat.8.in
+@@ -2,7 +2,7 @@
+ .
+ .TH VENDSTAT 8 "@BUILD_DATE@" "" "Open IB Diagnostics"
+ .SH NAME
+-VENDSTAT \- 
++vendstat \- query InfiniBand vendor specific functions
+ .
+ .nr rst2man-indent-level 0
+ .
+@@ -30,16 +30,15 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+ ..
+-.SH QUERY INFINIBAND VENDOR SPECIFIC FUNCTIONS
+-.SS SYNOPSIS
++.SH SYNOPSIS
+ .sp
+ vendstat [options] <lid|guid>
+-.SS DESCRIPTION
++.SH DESCRIPTION
+ .sp
+ vendstat uses vendor specific MADs to access beyond the IB spec
+ vendor specific functionality. Currently, there is support for
+ Mellanox InfiniSwitch\-III (IS3) and InfiniSwitch\-IV (IS4).
+-.SS OPTIONS
++.SH OPTIONS
+ .INDENT 0.0
+ .TP
+ .B \fB\-N\fP
+@@ -189,7 +188,7 @@ May be used several times (\-vv or \-v \-v \-v)
+ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .UNINDENT
+ .UNINDENT
+-.SS FILES
++.SH FILES
+ .\" Common text for the config file
+ .
+ .SS CONFIG FILE
+@@ -198,7 +197,7 @@ Default: @IBDIAG_CONFIG_PATH@/ibdiag.conf
+ .sp
+ A global config file is provided to set some of the common options for all
+ tools.  See supplied config file for details.
+-.SS EXAMPLES
++.SH EXAMPLES
+ .INDENT 0.0
+ .TP
+ .B ::
+@@ -208,7 +207,7 @@ vendstat \-i 6 12        # read IS4 port 12 counter group info
+ vendstat \-c 0,1 6 12    # configure IS4 port 12 counter groups for PortXmitDataSL
+ vendstat \-c 2,8 6 12    # configure IS4 port 12 counter groups for PortRcvDataSL
+ .UNINDENT
+-.SS AUTHOR
++.SH AUTHOR
+ .INDENT 0.0
+ .TP
+ .B Hal Rosenstock
+-- 
+2.15.0-rc1
+

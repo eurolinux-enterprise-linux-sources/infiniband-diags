@@ -1,0 +1,39 @@
+From 28b29a03d0942672e517723791034cf104a27095 Mon Sep 17 00:00:00 2001
+From: Ira Weiny <ira.weiny@intel.com>
+Date: Sun, 8 Jul 2018 23:58:05 -0400
+Subject: [PATCH 1/2] infiniband-diags: Update iblinkinfo --diffcheck options
+
+iblinkinfo does not support the same diffcheck options as ibnetdiscover.
+Therefore it can't use the common diffcheck man page text.  Create unique
+text for iblinkinfo.
+
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ doc/rst/iblinkinfo.8.in.rst | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/doc/rst/iblinkinfo.8.in.rst b/doc/rst/iblinkinfo.8.in.rst
+index 5f87f3704b6c..ad4a17d56200 100644
+--- a/doc/rst/iblinkinfo.8.in.rst
++++ b/doc/rst/iblinkinfo.8.in.rst
+@@ -74,7 +74,16 @@ Cache File flags
+ 
+ .. include:: common/opt_load-cache.rst
+ .. include:: common/opt_diff.rst
+-.. include:: common/opt_diffcheck.rst
++
++**--diffcheck <key(s)>**
++Specify what diff checks should be done in the **--diff** option above.  Comma
++separate multiple diff check key(s).  The available diff checks are: **port** =
++port connections, **state** = port state, **lid** = lids, **nodedesc** = node
++descriptions.  Note that **port**, **lid**, and **nodedesc** are checked only
++for the node types that are specified (e.g.  **switches-only**, **cas-only**).
++If **port** is specified alongside **lid** or **nodedesc**, remote port lids
++and node descriptions will also be compared.
++
+ 
+ **--filterdownports <filename>**
+ Filter downports indicated in a ibnetdiscover cache.  If a port was previously
+-- 
+2.15.0-rc1
+
