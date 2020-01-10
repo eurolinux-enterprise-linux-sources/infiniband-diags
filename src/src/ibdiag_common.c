@@ -527,14 +527,34 @@ int is_port_info_extended_supported(ib_portid_t * dest, int port,
 	return 1;
 }
 
-int is_mlnx_ext_port_info_supported(uint32_t devid)
+int is_mlnx_ext_port_info_supported(uint32_t vendorid,
+				    uint16_t devid)
 {
 	if (ibd_ibnetdisc_flags & IBND_CONFIG_MLX_EPI) {
-		if ((devid >= 0xc738 && devid <= 0xc73b) || devid == 0xcb20 || devid == 0xcf08)
+
+		if ((devid >= 0xc738 && devid <= 0xc73b) || devid == 0xcb20 || devid == 0xcf08 ||
+		    ((vendorid == 0x119f) &&
+		     /* Bull SwitchX */
+		     (devid == 0x1b02 || devid == 0x1b50 ||
+		      /* Bull SwitchIB and SwitchIB2 */
+		      devid == 0x1ba0 ||
+		      (devid >= 0x1bd0 && devid <= 0x1bd5))))
 			return 1;
-		if (devid >= 0x1003 && devid <= 0x1016)
+		if ((devid >= 0x1003 && devid <= 0x1017) ||
+		    ((vendorid == 0x119f) &&
+		     /* Bull ConnectX3 */
+		     (devid == 0x1b33 || devid == 0x1b73 ||
+		      devid == 0x1b40 || devid == 0x1b41 ||
+		      devid == 0x1b60 || devid == 0x1b61 ||
+		      /* Bull ConnectIB */
+		      devid == 0x1b83 ||
+		      devid == 0x1b93 || devid == 0x1b94 ||
+		      /* Bull ConnectX4 */
+		      devid == 0x1bb4 || devid == 0x1bb5 ||
+		      devid == 0x1bc4)))
 			return 1;
 	}
+
 	return 0;
 }
 
@@ -588,8 +608,8 @@ int resolve_self(char *ca_name, uint8_t ca_port, ib_portid_t *portid,
 		*portnum = port.portnum;
 	if (gid) {
 		memset(gid, 0, sizeof(*gid));
-		prefix = cl_hton64(port.gid_prefix);
-		guid = cl_hton64(port.port_guid);
+		prefix = cl_ntoh64(port.gid_prefix);
+		guid = cl_ntoh64(port.port_guid);
 		mad_encode_field(*gid, IB_GID_PREFIX_F, &prefix);
 		mad_encode_field(*gid, IB_GID_GUID_F, &guid);
 	}
@@ -814,8 +834,14 @@ check_ext_speed:
 
 check_fdr10_active:
 	if ((mad_get_field(port->ext_info, 0,
-			   IB_MLNX_EXT_PORT_LINK_SPEED_ACTIVE_F) & FDR10) == 0)
-		snprintf(speed_msg, msg_size, "Could be FDR10");
+			   IB_MLNX_EXT_PORT_LINK_SPEED_ACTIVE_F) & FDR10) == 0) {
+		/* Special case QDR to try to avoid confusion with FDR10 */
+		if (mad_get_field(port->info, 0, IB_PORT_LINK_SPEED_ACTIVE_F) == 4)	/* QDR (10.0 Gbps) */
+			snprintf(speed_msg, msg_size,
+				 "Could be FDR10 (Found link at QDR but expected speed is FDR10)");
+		else
+			snprintf(speed_msg, msg_size, "Could be FDR10");
+	}
 }
 
 int vsnprint_field(char *buf, size_t n, enum MAD_FIELDS f, int spacing,
@@ -824,7 +850,7 @@ int vsnprint_field(char *buf, size_t n, enum MAD_FIELDS f, int spacing,
 	int len, i, ret;
 
 	len = strlen(mad_field_name(f));
-        if (len + 2 > n || spacing + 1 > n)
+	if (len + 2 > n || spacing + 1 > n)
 		return 0;
 
 	strncpy(buf, mad_field_name(f), n);

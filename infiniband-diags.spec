@@ -1,40 +1,42 @@
 Summary: OpenFabrics Alliance InfiniBand Diagnostic Tools
 Name: infiniband-diags 
-Version: 1.6.7
+Version: 2.0.0
 Release: 1%{?dist}
 # Upstream allows either license to be used
 License: GPLv2 or BSD
-Group: System Environment/Libraries
-Url: http://openfabrics.org/
-Source0: https://www.openfabrics.org/downloads/management/%{name}-%{version}.tar.gz
+Url:     https://github.com/linux-rdma/infiniband-diags
+Source0: https://github.com/linux-rdma/%{name}/releases/download/%{version}/%{name}-%{version}.tar.gz
 # RHEL-specific patches:
 Patch6: 0006-Fix-hostname-usage-in-set_nodedesc.sh.patch
 Patch7: 0007-Fix-ibnodes-h-output.patch
 
-BuildRequires: opensm-devel > 3.3.8, libibumad-devel, libibmad-devel, perl
-BuildRequires: glib2-devel, systemd-devel
+BuildRequires: opensm-devel > 3.3.8, libibumad-devel, perl
+BuildRequires: glib2-devel
 Provides: perl(IBswcountlimits)
+Provides: libibmad = %{version}-%{release}
+Obsoletes: libibmad < %{version}-%{release}
 Obsoletes: openib-diags < 1.3
 
-# Find the correct directory to install the perl module into.
-%global _perldir %(perl -e 'use Config; print $Config{installvendorarch};')
-
 %description
-This package provides IB diagnostic programs and scripts needed to
-diagnose an IB subnet.
+This package provides IB diagnostic programs and scripts needed to diagnose an
+IB subnet.  infiniband-diags now also provides libibmad.  libibmad provides low
+layer IB functions for use by the IB diagnostic and management programs. These
+include MAD, SA, SMP, and other basic IB functions.
 
 %package devel
 Summary: Development files for the infiniband-diags library
-Group: System Environment/Libraries
-Requires: %{name} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{version}-%{release}
+Provides: libibmad-devel = %{version}-%{release}
+Obsoletes: libibmad-devel < %{version}-%{release}
 
 %description devel
 Headers and shared devel libraries for the infiniband-diags package.
 
 %package devel-static
 Summary: Static development files for the infiniband-diags library
-Group: System Environment/Libraries
-Requires: %{name}-devel = %{version}-%{release}
+Requires: %{name}-devel%{?_isa} = %{version}-%{release}
+Provides: libibmad-static = %{version}-%{release}
+Obsoletes: libibmad-static < %{version}-%{release}
 
 %description devel-static
 Static libraries for the infiniband-diags library.
@@ -45,30 +47,89 @@ Static libraries for the infiniband-diags library.
 %patch7 -p1 -b .help
 
 %build
-%configure --with-perl-installdir=%{_perldir}
-make
+%configure
+make V=1
 
 %install
 make DESTDIR=$RPM_BUILD_ROOT install
 # remove unpackaged files from the buildroot
-rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
-rm -f $RPM_BUILD_ROOT%{_sbindir}/*.{pl,sh}
-rm -f $RPM_BUILD_ROOT%{_sysconfdir}/init.d/rdma-ndd
-rm -f $RPM_BUILD_ROOT%{_sbindir}/rdma-ndd
-rm -f $RPM_BUILD_ROOT%{_mandir}/man8/rdma-ndd.8*
-rm -f $RPM_BUILD_ROOT%{_unitdir}/rdma-ndd.service
-
-%post -p /sbin/ldconfig
-%postun -p /sbin/ldconfig
+find ${RPM_BUILD_ROOT} -type f -name '*.la' -print -delete
 
 %files
-%{_sbindir}/*
-%{_mandir}/man8/*.8*
-%{_libdir}/libibnetdisc.so.*
-%dir %{_sysconfdir}/infiniband-diags
-%config(noreplace) %{_sysconfdir}/infiniband-diags/*
-%doc COPYING README ChangeLog
+# C programs here
+%{_sbindir}/ibaddr
+%{_mandir}/man8/ibaddr.8.gz
+%{_sbindir}/ibnetdiscover
+%{_mandir}/man8/ibnetdiscover.8.gz
+%{_sbindir}/ibping
+%{_mandir}/man8/ibping.8.gz
+%{_sbindir}/ibportstate
+%{_mandir}/man8/ibportstate.8.gz
+%{_sbindir}/ibroute
+%{_mandir}/man8/ibroute.8.gz
+%{_sbindir}/ibstat
+%{_mandir}/man8/ibstat.8.gz
+%{_sbindir}/ibsysstat
+%{_mandir}/man8/ibsysstat.8.gz
+%{_sbindir}/ibtracert
+%{_mandir}/man8/ibtracert.8.gz
+%{_sbindir}/perfquery
+%{_mandir}/man8/perfquery.8.gz
+%{_sbindir}/sminfo
+%{_mandir}/man8/sminfo.8.gz
+%{_sbindir}/smpdump
+%{_mandir}/man8/smpdump.8.gz
+%{_sbindir}/smpquery
+%{_mandir}/man8/smpquery.8.gz
+%{_sbindir}/saquery
+%{_mandir}/man8/saquery.8.gz
+%{_sbindir}/vendstat
+%{_mandir}/man8/vendstat.8.gz
+%{_sbindir}/iblinkinfo
+%{_mandir}/man8/iblinkinfo.8.gz
+%{_sbindir}/ibqueryerrors
+%{_mandir}/man8/ibqueryerrors.8.gz
+%{_sbindir}/ibcacheedit
+%{_mandir}/man8/ibcacheedit.8.gz
+%{_sbindir}/ibccquery
+%{_mandir}/man8/ibccquery.8.gz
+%{_sbindir}/ibccconfig
+%{_mandir}/man8/ibccconfig.8.gz
+%{_sbindir}/dump_fts
+%{_mandir}/man8/dump_fts.8.gz
+
+# scripts here
+%{_sbindir}/ibhosts
+%{_mandir}/man8/ibhosts.8.gz
+%{_sbindir}/ibswitches
+%{_mandir}/man8/ibswitches.8.gz
+%{_sbindir}/ibnodes
+%{_mandir}/man8/ibnodes.8.gz
+%{_sbindir}/ibrouters
+%{_mandir}/man8/ibrouters.8.gz
+%{_sbindir}/ibfindnodesusing.pl
+%{_mandir}/man8/ibfindnodesusing.8.gz
+%{_sbindir}/ibidsverify.pl
+%{_mandir}/man8/ibidsverify.8.gz
+%{_sbindir}/check_lft_balance.pl
+%{_mandir}/man8/check_lft_balance.8.gz
+%{_sbindir}/dump_lfts.sh
+%{_mandir}/man8/dump_lfts.8.gz
+%{_sbindir}/dump_mfts.sh
+%{_mandir}/man8/dump_mfts.8.gz
+%{_sbindir}/ibstatus
+%{_mandir}/man8/ibstatus.8.gz
+
+# and the rest
+%{_mandir}/man8/infiniband-diags.8.gz
+%{_libdir}/*.so.*
+%global _perldir %(perl -e 'use Config; $T=$Config{installvendorlib}; print $T;')
 %{_perldir}/IBswcountlimits.pm
+%dir %{_sysconfdir}/infiniband-diags
+%config(noreplace) %{_sysconfdir}/infiniband-diags/error_thresholds
+%config(noreplace) %{_sysconfdir}/infiniband-diags/ibdiag.conf
+%doc README COPYING ChangeLog
+%license COPYING
 
 %files devel
 %{_includedir}/*
@@ -78,7 +139,14 @@ rm -f $RPM_BUILD_ROOT%{_unitdir}/rdma-ndd.service
 %files devel-static
 %{_libdir}/*.a
 
+%post -p /sbin/ldconfig
+%postun -p /sbin/ldconfig
+
 %changelog
+* Mon Oct 16 2017 Honggang Li <honli@redhat.com> 2.0.0-1
+- Rebase to latest upstream release v2.0.0
+- Resolves: bz1456944
+
 * Mon Mar  6 2017 Honggang Li <honli@redhat.com> - 1.6.7-1
 - Rebase to latest upstream release 1.6.7.
 - Remove patches merged into upstream release.

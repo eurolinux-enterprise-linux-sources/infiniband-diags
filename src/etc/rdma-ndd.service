@@ -4,8 +4,8 @@ After=rdma.service
 
 [Service]
 Type=forking
-EnvironmentFile=/usr/local/etc/infiniband-diags/ibdiag.conf
-ExecStart=${prefix}/sbin/rdma-ndd
+EnvironmentFile=/nfs/site/home/iweiny/rdma-core/build/etc/infiniband-diags/ibdiag.conf
+ExecStart=/nfs/site/home/iweiny/rdma-core/build/sbin/rdma-ndd
 
 [Install]
 WantedBy=multi-user.target

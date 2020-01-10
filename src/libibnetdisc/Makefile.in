@@ -130,9 +130,11 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(sbindir)" \
 	"$(DESTDIR)$(man3dir)" "$(DESTDIR)$(libibnetdiscincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libibnetdisc_la_LIBADD =
-am_libibnetdisc_la_OBJECTS = libibnetdisc_la-ibnetdisc.lo \
-	libibnetdisc_la-ibnetdisc_cache.lo libibnetdisc_la-chassis.lo \
-	libibnetdisc_la-query_smp.lo
+am__dirstamp = $(am__leading_dot)dirstamp
+am_libibnetdisc_la_OBJECTS = src/libibnetdisc_la-ibnetdisc.lo \
+	src/libibnetdisc_la-ibnetdisc_cache.lo \
+	src/libibnetdisc_la-chassis.lo \
+	src/libibnetdisc_la-query_smp.lo
 libibnetdisc_la_OBJECTS = $(am_libibnetdisc_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -144,14 +146,13 @@ libibnetdisc_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(LDFLAGS) -o $@
 @ENABLE_TEST_UTILS_TRUE@am__EXEEXT_1 = test/testleaks$(EXEEXT)
 PROGRAMS = $(sbin_PROGRAMS)
-am_test_testleaks_OBJECTS = test_testleaks-testleaks.$(OBJEXT)
+am_test_testleaks_OBJECTS = test/test_testleaks-testleaks.$(OBJEXT)
 test_testleaks_OBJECTS = $(am_test_testleaks_OBJECTS)
 test_testleaks_LDADD = $(LDADD)
 test_testleaks_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(test_testleaks_CFLAGS) $(CFLAGS) $(test_testleaks_LDFLAGS) \
 	$(LDFLAGS) -o $@
-am__dirstamp = $(am__leading_dot)dirstamp
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -232,8 +233,6 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DEFAULT_START = @DEFAULT_START@
-DEFAULT_STOP = @DEFAULT_STOP@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
@@ -286,20 +285,12 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
-RDMA_SERVICE = @RDMA_SERVICE@
 RELEASE = @RELEASE@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
-SPEC_FILE_RDMA_NDD_INSTALL = @SPEC_FILE_RDMA_NDD_INSTALL@
 STRIP = @STRIP@
-SYSTEMD_BUILD_REQUIRES = @SYSTEMD_BUILD_REQUIRES@
-SYSTEMD_CFLAGS = @SYSTEMD_CFLAGS@
-SYSTEMD_LIBS = @SYSTEMD_LIBS@
-SYSTEMD_SYSTEM_UNIT_DIR = @SYSTEMD_SYSTEM_UNIT_DIR@
 TARBALL = @TARBALL@
-UDEV_CFLAGS = @UDEV_CFLAGS@
-UDEV_LIBS = @UDEV_LIBS@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
@@ -333,6 +324,7 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
+ibmad_api_version = @ibmad_api_version@
 ibnetdisc_api_version = @ibnetdisc_api_version@
 includedir = @includedir@
 infodir = @infodir@
@@ -356,7 +348,9 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-INCLUDES = -I$(srcdir)/include -I$(includedir) -I$(includedir)/infiniband
+AM_CPPFLAGS = -I$(srcdir)/include -I$(includedir) -I$(includedir)/infiniband \
+	-I$(top_srcdir)/libibmad/include
+
 lib_LTLIBRARIES = libibnetdisc.la
 @DEBUG_FALSE@DBGFLAGS = 
 @DEBUG_TRUE@DBGFLAGS = -ggdb -D_DEBUG_
@@ -368,7 +362,7 @@ libibnetdisc_la_SOURCES = src/ibnetdisc.c src/ibnetdisc_cache.c src/chassis.c \
 libibnetdisc_la_CFLAGS = -Wall $(DBGFLAGS) $(GLIB_CFLAGS)
 libibnetdisc_la_LDFLAGS = -version-info $(ibnetdisc_api_version) \
 	-export-dynamic $(libibnetdisc_version_script) \
-	-libmad $(GLIB_LIBS)
+	-L$(top_builddir)/libibmad -libmad $(GLIB_LIBS)
 
 libibnetdisc_la_DEPENDENCIES = $(srcdir)/src/libibnetdisc.map
 libibnetdiscincludedir = $(includedir)/infiniband
@@ -402,9 +396,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign libibnetdisc/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu libibnetdisc/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign libibnetdisc/Makefile
+	  $(AUTOMAKE) --gnu libibnetdisc/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -458,6 +452,20 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
+src/$(am__dirstamp):
+	@$(MKDIR_P) src
+	@: > src/$(am__dirstamp)
+src/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) src/$(DEPDIR)
+	@: > src/$(DEPDIR)/$(am__dirstamp)
+src/libibnetdisc_la-ibnetdisc.lo: src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/libibnetdisc_la-ibnetdisc_cache.lo: src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/libibnetdisc_la-chassis.lo: src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/libibnetdisc_la-query_smp.lo: src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 libibnetdisc.la: $(libibnetdisc_la_OBJECTS) $(libibnetdisc_la_DEPENDENCIES) $(EXTRA_libibnetdisc_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libibnetdisc_la_LINK) -rpath $(libdir) $(libibnetdisc_la_OBJECTS) $(libibnetdisc_la_LIBADD) $(LIBS)
@@ -513,6 +521,11 @@ clean-sbinPROGRAMS:
 test/$(am__dirstamp):
 	@$(MKDIR_P) test
 	@: > test/$(am__dirstamp)
+test/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) test/$(DEPDIR)
+	@: > test/$(DEPDIR)/$(am__dirstamp)
+test/test_testleaks-testleaks.$(OBJEXT): test/$(am__dirstamp) \
+	test/$(DEPDIR)/$(am__dirstamp)
 
 test/testleaks$(EXEEXT): $(test_testleaks_OBJECTS) $(test_testleaks_DEPENDENCIES) $(EXTRA_test_testleaks_DEPENDENCIES) test/$(am__dirstamp)
 	@rm -f test/testleaks$(EXEEXT)
@@ -520,84 +533,91 @@ test/testleaks$(EXEEXT): $(test_testleaks_OBJECTS) $(test_testleaks_DEPENDENCIES
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f src/*.$(OBJEXT)
+	-rm -f src/*.lo
+	-rm -f test/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libibnetdisc_la-chassis.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libibnetdisc_la-ibnetdisc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libibnetdisc_la-ibnetdisc_cache.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libibnetdisc_la-query_smp.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_testleaks-testleaks.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/libibnetdisc_la-chassis.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/libibnetdisc_la-ibnetdisc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/libibnetdisc_la-ibnetdisc_cache.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/libibnetdisc_la-query_smp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@test/$(DEPDIR)/test_testleaks-testleaks.Po@am__quote@
 
 .c.o:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c $<
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ $<
 
 .c.obj:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c `$(CYGPATH_W) '$<'`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .c.lo:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
-libibnetdisc_la-ibnetdisc.lo: src/ibnetdisc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -MT libibnetdisc_la-ibnetdisc.lo -MD -MP -MF $(DEPDIR)/libibnetdisc_la-ibnetdisc.Tpo -c -o libibnetdisc_la-ibnetdisc.lo `test -f 'src/ibnetdisc.c' || echo '$(srcdir)/'`src/ibnetdisc.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libibnetdisc_la-ibnetdisc.Tpo $(DEPDIR)/libibnetdisc_la-ibnetdisc.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibnetdisc.c' object='libibnetdisc_la-ibnetdisc.lo' libtool=yes @AMDEPBACKSLASH@
+src/libibnetdisc_la-ibnetdisc.lo: src/ibnetdisc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -MT src/libibnetdisc_la-ibnetdisc.lo -MD -MP -MF src/$(DEPDIR)/libibnetdisc_la-ibnetdisc.Tpo -c -o src/libibnetdisc_la-ibnetdisc.lo `test -f 'src/ibnetdisc.c' || echo '$(srcdir)/'`src/ibnetdisc.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/libibnetdisc_la-ibnetdisc.Tpo src/$(DEPDIR)/libibnetdisc_la-ibnetdisc.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibnetdisc.c' object='src/libibnetdisc_la-ibnetdisc.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -c -o libibnetdisc_la-ibnetdisc.lo `test -f 'src/ibnetdisc.c' || echo '$(srcdir)/'`src/ibnetdisc.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -c -o src/libibnetdisc_la-ibnetdisc.lo `test -f 'src/ibnetdisc.c' || echo '$(srcdir)/'`src/ibnetdisc.c
 
-libibnetdisc_la-ibnetdisc_cache.lo: src/ibnetdisc_cache.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -MT libibnetdisc_la-ibnetdisc_cache.lo -MD -MP -MF $(DEPDIR)/libibnetdisc_la-ibnetdisc_cache.Tpo -c -o libibnetdisc_la-ibnetdisc_cache.lo `test -f 'src/ibnetdisc_cache.c' || echo '$(srcdir)/'`src/ibnetdisc_cache.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libibnetdisc_la-ibnetdisc_cache.Tpo $(DEPDIR)/libibnetdisc_la-ibnetdisc_cache.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibnetdisc_cache.c' object='libibnetdisc_la-ibnetdisc_cache.lo' libtool=yes @AMDEPBACKSLASH@
+src/libibnetdisc_la-ibnetdisc_cache.lo: src/ibnetdisc_cache.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -MT src/libibnetdisc_la-ibnetdisc_cache.lo -MD -MP -MF src/$(DEPDIR)/libibnetdisc_la-ibnetdisc_cache.Tpo -c -o src/libibnetdisc_la-ibnetdisc_cache.lo `test -f 'src/ibnetdisc_cache.c' || echo '$(srcdir)/'`src/ibnetdisc_cache.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/libibnetdisc_la-ibnetdisc_cache.Tpo src/$(DEPDIR)/libibnetdisc_la-ibnetdisc_cache.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibnetdisc_cache.c' object='src/libibnetdisc_la-ibnetdisc_cache.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -c -o libibnetdisc_la-ibnetdisc_cache.lo `test -f 'src/ibnetdisc_cache.c' || echo '$(srcdir)/'`src/ibnetdisc_cache.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -c -o src/libibnetdisc_la-ibnetdisc_cache.lo `test -f 'src/ibnetdisc_cache.c' || echo '$(srcdir)/'`src/ibnetdisc_cache.c
 
-libibnetdisc_la-chassis.lo: src/chassis.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -MT libibnetdisc_la-chassis.lo -MD -MP -MF $(DEPDIR)/libibnetdisc_la-chassis.Tpo -c -o libibnetdisc_la-chassis.lo `test -f 'src/chassis.c' || echo '$(srcdir)/'`src/chassis.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libibnetdisc_la-chassis.Tpo $(DEPDIR)/libibnetdisc_la-chassis.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/chassis.c' object='libibnetdisc_la-chassis.lo' libtool=yes @AMDEPBACKSLASH@
+src/libibnetdisc_la-chassis.lo: src/chassis.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -MT src/libibnetdisc_la-chassis.lo -MD -MP -MF src/$(DEPDIR)/libibnetdisc_la-chassis.Tpo -c -o src/libibnetdisc_la-chassis.lo `test -f 'src/chassis.c' || echo '$(srcdir)/'`src/chassis.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/libibnetdisc_la-chassis.Tpo src/$(DEPDIR)/libibnetdisc_la-chassis.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/chassis.c' object='src/libibnetdisc_la-chassis.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -c -o libibnetdisc_la-chassis.lo `test -f 'src/chassis.c' || echo '$(srcdir)/'`src/chassis.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -c -o src/libibnetdisc_la-chassis.lo `test -f 'src/chassis.c' || echo '$(srcdir)/'`src/chassis.c
 
-libibnetdisc_la-query_smp.lo: src/query_smp.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -MT libibnetdisc_la-query_smp.lo -MD -MP -MF $(DEPDIR)/libibnetdisc_la-query_smp.Tpo -c -o libibnetdisc_la-query_smp.lo `test -f 'src/query_smp.c' || echo '$(srcdir)/'`src/query_smp.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libibnetdisc_la-query_smp.Tpo $(DEPDIR)/libibnetdisc_la-query_smp.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/query_smp.c' object='libibnetdisc_la-query_smp.lo' libtool=yes @AMDEPBACKSLASH@
+src/libibnetdisc_la-query_smp.lo: src/query_smp.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -MT src/libibnetdisc_la-query_smp.lo -MD -MP -MF src/$(DEPDIR)/libibnetdisc_la-query_smp.Tpo -c -o src/libibnetdisc_la-query_smp.lo `test -f 'src/query_smp.c' || echo '$(srcdir)/'`src/query_smp.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/libibnetdisc_la-query_smp.Tpo src/$(DEPDIR)/libibnetdisc_la-query_smp.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/query_smp.c' object='src/libibnetdisc_la-query_smp.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -c -o libibnetdisc_la-query_smp.lo `test -f 'src/query_smp.c' || echo '$(srcdir)/'`src/query_smp.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libibnetdisc_la_CFLAGS) $(CFLAGS) -c -o src/libibnetdisc_la-query_smp.lo `test -f 'src/query_smp.c' || echo '$(srcdir)/'`src/query_smp.c
 
-test_testleaks-testleaks.o: test/testleaks.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_testleaks_CFLAGS) $(CFLAGS) -MT test_testleaks-testleaks.o -MD -MP -MF $(DEPDIR)/test_testleaks-testleaks.Tpo -c -o test_testleaks-testleaks.o `test -f 'test/testleaks.c' || echo '$(srcdir)/'`test/testleaks.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_testleaks-testleaks.Tpo $(DEPDIR)/test_testleaks-testleaks.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test/testleaks.c' object='test_testleaks-testleaks.o' libtool=no @AMDEPBACKSLASH@
+test/test_testleaks-testleaks.o: test/testleaks.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_testleaks_CFLAGS) $(CFLAGS) -MT test/test_testleaks-testleaks.o -MD -MP -MF test/$(DEPDIR)/test_testleaks-testleaks.Tpo -c -o test/test_testleaks-testleaks.o `test -f 'test/testleaks.c' || echo '$(srcdir)/'`test/testleaks.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) test/$(DEPDIR)/test_testleaks-testleaks.Tpo test/$(DEPDIR)/test_testleaks-testleaks.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test/testleaks.c' object='test/test_testleaks-testleaks.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_testleaks_CFLAGS) $(CFLAGS) -c -o test_testleaks-testleaks.o `test -f 'test/testleaks.c' || echo '$(srcdir)/'`test/testleaks.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_testleaks_CFLAGS) $(CFLAGS) -c -o test/test_testleaks-testleaks.o `test -f 'test/testleaks.c' || echo '$(srcdir)/'`test/testleaks.c
 
-test_testleaks-testleaks.obj: test/testleaks.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_testleaks_CFLAGS) $(CFLAGS) -MT test_testleaks-testleaks.obj -MD -MP -MF $(DEPDIR)/test_testleaks-testleaks.Tpo -c -o test_testleaks-testleaks.obj `if test -f 'test/testleaks.c'; then $(CYGPATH_W) 'test/testleaks.c'; else $(CYGPATH_W) '$(srcdir)/test/testleaks.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_testleaks-testleaks.Tpo $(DEPDIR)/test_testleaks-testleaks.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test/testleaks.c' object='test_testleaks-testleaks.obj' libtool=no @AMDEPBACKSLASH@
+test/test_testleaks-testleaks.obj: test/testleaks.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_testleaks_CFLAGS) $(CFLAGS) -MT test/test_testleaks-testleaks.obj -MD -MP -MF test/$(DEPDIR)/test_testleaks-testleaks.Tpo -c -o test/test_testleaks-testleaks.obj `if test -f 'test/testleaks.c'; then $(CYGPATH_W) 'test/testleaks.c'; else $(CYGPATH_W) '$(srcdir)/test/testleaks.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) test/$(DEPDIR)/test_testleaks-testleaks.Tpo test/$(DEPDIR)/test_testleaks-testleaks.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test/testleaks.c' object='test/test_testleaks-testleaks.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_testleaks_CFLAGS) $(CFLAGS) -c -o test_testleaks-testleaks.obj `if test -f 'test/testleaks.c'; then $(CYGPATH_W) 'test/testleaks.c'; else $(CYGPATH_W) '$(srcdir)/test/testleaks.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_testleaks_CFLAGS) $(CFLAGS) -c -o test/test_testleaks-testleaks.obj `if test -f 'test/testleaks.c'; then $(CYGPATH_W) 'test/testleaks.c'; else $(CYGPATH_W) '$(srcdir)/test/testleaks.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
+	-rm -rf src/.libs src/_libs
 	-rm -rf test/.libs test/_libs
 install-man3: $(man_MANS)
 	@$(NORMAL_INSTALL)
@@ -779,6 +799,9 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-rm -f src/$(DEPDIR)/$(am__dirstamp)
+	-rm -f src/$(am__dirstamp)
+	-rm -f test/$(DEPDIR)/$(am__dirstamp)
 	-rm -f test/$(am__dirstamp)
 
 maintainer-clean-generic:
@@ -790,7 +813,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	clean-sbinPROGRAMS mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./$(DEPDIR)
+	-rm -rf src/$(DEPDIR) test/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -836,7 +859,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./$(DEPDIR)
+	-rm -rf src/$(DEPDIR) test/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

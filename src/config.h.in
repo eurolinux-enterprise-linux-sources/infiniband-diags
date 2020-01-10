@@ -15,9 +15,6 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the `ibmad' library (-libmad). */
-#undef HAVE_LIBIBMAD
-
 /* Define to 1 if you have the `ibumad' library (-libumad). */
 #undef HAVE_LIBIBUMAD
 
@@ -66,11 +63,11 @@
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
 
+/* Define to 1 if you have the <sys/time.h> header file. */
+#undef HAVE_SYS_TIME_H
+
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
-
-/* whether libudev logging can be used */
-#undef HAVE_UDEV_LOGGING
 
 /* Define to 1 if struct umad_port has link_layer member */
 #undef HAVE_UMAD_PORT_LINK_LAYER
@@ -120,3 +117,9 @@
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
+
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
+#undef inline
+#endif

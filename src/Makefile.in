@@ -89,11 +89,9 @@ sbin_PROGRAMS = src/ibaddr$(EXEEXT) src/ibnetdiscover$(EXEEXT) \
 	src/saquery$(EXEEXT) src/vendstat$(EXEEXT) \
 	src/iblinkinfo$(EXEEXT) src/ibqueryerrors$(EXEEXT) \
 	src/ibcacheedit$(EXEEXT) src/ibccquery$(EXEEXT) \
-	src/ibccconfig$(EXEEXT) src/dump_fts$(EXEEXT) $(am__EXEEXT_1) \
-	$(am__EXEEXT_2)
-@ENABLE_RDMA_NDD_TRUE@am__append_1 = src/rdma-ndd
-@ENABLE_TEST_UTILS_TRUE@am__append_2 = src/ibsendtrap src/mcm_rereg_test
-@ENABLE_COMPAT_UTILS_TRUE@am__append_3 = scripts/ibcheckerrs scripts/ibchecknet scripts/ibchecknode \
+	src/ibccconfig$(EXEEXT) src/dump_fts$(EXEEXT) $(am__EXEEXT_1)
+@ENABLE_TEST_UTILS_TRUE@am__append_1 = src/ibsendtrap src/mcm_rereg_test
+@ENABLE_COMPAT_UTILS_TRUE@am__append_2 = scripts/ibcheckerrs scripts/ibchecknet scripts/ibchecknode \
 @ENABLE_COMPAT_UTILS_TRUE@		scripts/ibcheckport scripts/ibcheckportwidth scripts/ibcheckportstate \
 @ENABLE_COMPAT_UTILS_TRUE@		scripts/ibcheckwidth scripts/ibcheckstate \
 @ENABLE_COMPAT_UTILS_TRUE@		scripts/ibcheckerrors scripts/ibdatacounts \
@@ -103,17 +101,14 @@ sbin_PROGRAMS = src/ibaddr$(EXEEXT) src/ibnetdiscover$(EXEEXT) \
 @ENABLE_COMPAT_UTILS_TRUE@		scripts/ibprintca.pl scripts/ibprintswitch.pl scripts/ibprintrt.pl \
 @ENABLE_COMPAT_UTILS_TRUE@		scripts/set_nodedesc.sh scripts/ibclearerrors scripts/ibclearcounters
 
-@ENABLE_RDMA_NDD_TRUE@am__append_4 = doc/man/rdma-ndd.8
 
 # but only actually install them if specified
-@ENABLE_COMPAT_UTILS_TRUE@am__append_5 = $(compat_man_pages)
+@ENABLE_COMPAT_UTILS_TRUE@am__append_3 = $(compat_man_pages)
 subdir = .
-DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
+DIST_COMMON = INSTALL NEWS README AUTHORS ChangeLog \
+	$(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
-	$(srcdir)/config.h.in $(top_srcdir)/doc/man/rdma-ndd.8.in \
-	$(top_srcdir)/etc/rdma-ndd.init.in \
-	$(top_srcdir)/etc/rdma-ndd.service.in \
-	$(srcdir)/infiniband-diags.spec.in \
+	$(srcdir)/config.h.in $(srcdir)/infiniband-diags.spec.in \
 	$(top_srcdir)/include/ibdiag_version.h.in \
 	$(top_srcdir)/scripts/ibcheckerrors.in \
 	$(top_srcdir)/scripts/ibcheckerrs.in \
@@ -166,10 +161,10 @@ DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/doc/man/vendstat.8.in \
 	$(top_srcdir)/doc/man/infiniband-diags.8.in \
 	$(top_srcdir)/config/depcomp $(top_srcdir)/config/test-driver \
-	AUTHORS COPYING ChangeLog NEWS README config/compile \
-	config/config.guess config/config.sub config/depcomp \
-	config/install-sh config/missing config/ltmain.sh \
-	$(top_srcdir)/config/compile $(top_srcdir)/config/config.guess \
+	COPYING config/compile config/config.guess config/config.sub \
+	config/depcomp config/install-sh config/missing \
+	config/ltmain.sh $(top_srcdir)/config/compile \
+	$(top_srcdir)/config/config.guess \
 	$(top_srcdir)/config/config.sub \
 	$(top_srcdir)/config/install-sh $(top_srcdir)/config/ltmain.sh \
 	$(top_srcdir)/config/missing
@@ -185,18 +180,16 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = doc/man/rdma-ndd.8 etc/rdma-ndd.init \
-	etc/rdma-ndd.service infiniband-diags.spec \
-	include/ibdiag_version.h scripts/ibcheckerrors \
-	scripts/ibcheckerrs scripts/ibchecknet scripts/ibchecknode \
-	scripts/ibcheckport scripts/ibcheckportstate \
-	scripts/ibcheckportwidth scripts/ibcheckstate \
-	scripts/ibcheckwidth scripts/ibclearcounters \
-	scripts/ibclearerrors scripts/ibdatacounts \
-	scripts/ibdatacounters scripts/ibhosts scripts/ibnodes \
-	scripts/ibswitches scripts/ibrouters scripts/iblinkinfo.pl \
-	scripts/ibqueryerrors.pl scripts/dump_lfts.sh \
-	scripts/dump_mfts.sh doc/man/ibaddr.8 \
+CONFIG_CLEAN_FILES = infiniband-diags.spec include/ibdiag_version.h \
+	scripts/ibcheckerrors scripts/ibcheckerrs scripts/ibchecknet \
+	scripts/ibchecknode scripts/ibcheckport \
+	scripts/ibcheckportstate scripts/ibcheckportwidth \
+	scripts/ibcheckstate scripts/ibcheckwidth \
+	scripts/ibclearcounters scripts/ibclearerrors \
+	scripts/ibdatacounts scripts/ibdatacounters scripts/ibhosts \
+	scripts/ibnodes scripts/ibswitches scripts/ibrouters \
+	scripts/iblinkinfo.pl scripts/ibqueryerrors.pl \
+	scripts/dump_lfts.sh scripts/dump_mfts.sh doc/man/ibaddr.8 \
 	doc/man/check_lft_balance.8 doc/man/ibcacheedit.8 \
 	doc/man/ibccconfig.8 doc/man/ibccquery.8 doc/man/dump_fts.8 \
 	doc/man/ibhosts.8 doc/man/ibidsverify.8 doc/man/iblinkinfo.8 \
@@ -217,15 +210,16 @@ am__v_AR_0 = @echo "  AR      " $@;
 am__v_AR_1 = 
 libcommon_a_AR = $(AR) $(ARFLAGS)
 libcommon_a_LIBADD =
-am_libcommon_a_OBJECTS = ibdiag_common.$(OBJEXT) ibdiag_sa.$(OBJEXT)
+am__dirstamp = $(am__leading_dot)dirstamp
+am_libcommon_a_OBJECTS = src/ibdiag_common.$(OBJEXT) \
+	src/ibdiag_sa.$(OBJEXT)
 libcommon_a_OBJECTS = $(am_libcommon_a_OBJECTS)
-@ENABLE_RDMA_NDD_TRUE@am__EXEEXT_1 = src/rdma-ndd$(EXEEXT)
-@ENABLE_TEST_UTILS_TRUE@am__EXEEXT_2 = src/ibsendtrap$(EXEEXT) \
+@ENABLE_TEST_UTILS_TRUE@am__EXEEXT_1 = src/ibsendtrap$(EXEEXT) \
 @ENABLE_TEST_UTILS_TRUE@	src/mcm_rereg_test$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(sbindir)" \
 	"$(DESTDIR)$(man8dir)"
 PROGRAMS = $(sbin_PROGRAMS)
-am_src_dump_fts_OBJECTS = dump_fts.$(OBJEXT)
+am_src_dump_fts_OBJECTS = src/dump_fts.$(OBJEXT)
 src_dump_fts_OBJECTS = $(am_src_dump_fts_OBJECTS)
 src_dump_fts_LDADD = $(LDADD)
 src_dump_fts_DEPENDENCIES = libcommon.a
@@ -236,114 +230,87 @@ am__v_lt_1 =
 src_dump_fts_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(src_dump_fts_LDFLAGS) $(LDFLAGS) -o $@
-am__dirstamp = $(am__leading_dot)dirstamp
-am_src_ibaddr_OBJECTS = ibaddr.$(OBJEXT)
+am_src_ibaddr_OBJECTS = src/ibaddr.$(OBJEXT)
 src_ibaddr_OBJECTS = $(am_src_ibaddr_OBJECTS)
 src_ibaddr_LDADD = $(LDADD)
 src_ibaddr_DEPENDENCIES = libcommon.a
-am_src_ibcacheedit_OBJECTS = ibcacheedit.$(OBJEXT)
+am_src_ibcacheedit_OBJECTS = src/ibcacheedit.$(OBJEXT)
 src_ibcacheedit_OBJECTS = $(am_src_ibcacheedit_OBJECTS)
 src_ibcacheedit_LDADD = $(LDADD)
 src_ibcacheedit_DEPENDENCIES = libcommon.a
-src_ibcacheedit_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(src_ibcacheedit_LDFLAGS) $(LDFLAGS) \
-	-o $@
-am_src_ibccconfig_OBJECTS = ibccconfig.$(OBJEXT)
+am_src_ibccconfig_OBJECTS = src/ibccconfig.$(OBJEXT)
 src_ibccconfig_OBJECTS = $(am_src_ibccconfig_OBJECTS)
 src_ibccconfig_LDADD = $(LDADD)
 src_ibccconfig_DEPENDENCIES = libcommon.a
-am_src_ibccquery_OBJECTS = ibccquery.$(OBJEXT)
+am_src_ibccquery_OBJECTS = src/ibccquery.$(OBJEXT)
 src_ibccquery_OBJECTS = $(am_src_ibccquery_OBJECTS)
 src_ibccquery_LDADD = $(LDADD)
 src_ibccquery_DEPENDENCIES = libcommon.a
-am_src_iblinkinfo_OBJECTS = iblinkinfo.$(OBJEXT)
+am_src_iblinkinfo_OBJECTS = src/iblinkinfo.$(OBJEXT)
 src_iblinkinfo_OBJECTS = $(am_src_iblinkinfo_OBJECTS)
 src_iblinkinfo_LDADD = $(LDADD)
 src_iblinkinfo_DEPENDENCIES = libcommon.a
-src_iblinkinfo_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(src_iblinkinfo_LDFLAGS) $(LDFLAGS) -o \
-	$@
-am_src_ibnetdiscover_OBJECTS = ibnetdiscover.$(OBJEXT)
+am_src_ibnetdiscover_OBJECTS = src/ibnetdiscover.$(OBJEXT)
 src_ibnetdiscover_OBJECTS = $(am_src_ibnetdiscover_OBJECTS)
 src_ibnetdiscover_LDADD = $(LDADD)
 src_ibnetdiscover_DEPENDENCIES = libcommon.a
-src_ibnetdiscover_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(src_ibnetdiscover_LDFLAGS) $(LDFLAGS) \
-	-o $@
-am_src_ibping_OBJECTS = ibping.$(OBJEXT)
+am_src_ibping_OBJECTS = src/ibping.$(OBJEXT)
 src_ibping_OBJECTS = $(am_src_ibping_OBJECTS)
 src_ibping_LDADD = $(LDADD)
 src_ibping_DEPENDENCIES = libcommon.a
-am_src_ibportstate_OBJECTS = ibportstate.$(OBJEXT)
+am_src_ibportstate_OBJECTS = src/ibportstate.$(OBJEXT)
 src_ibportstate_OBJECTS = $(am_src_ibportstate_OBJECTS)
 src_ibportstate_LDADD = $(LDADD)
 src_ibportstate_DEPENDENCIES = libcommon.a
-am_src_ibqueryerrors_OBJECTS = ibqueryerrors.$(OBJEXT)
+am_src_ibqueryerrors_OBJECTS = src/ibqueryerrors.$(OBJEXT)
 src_ibqueryerrors_OBJECTS = $(am_src_ibqueryerrors_OBJECTS)
 src_ibqueryerrors_LDADD = $(LDADD)
 src_ibqueryerrors_DEPENDENCIES = libcommon.a
-src_ibqueryerrors_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(src_ibqueryerrors_LDFLAGS) $(LDFLAGS) \
-	-o $@
-am_src_ibroute_OBJECTS = ibroute.$(OBJEXT)
+am_src_ibroute_OBJECTS = src/ibroute.$(OBJEXT)
 src_ibroute_OBJECTS = $(am_src_ibroute_OBJECTS)
 src_ibroute_LDADD = $(LDADD)
 src_ibroute_DEPENDENCIES = libcommon.a
-am_src_ibsendtrap_OBJECTS = ibsendtrap.$(OBJEXT)
+am_src_ibsendtrap_OBJECTS = src/ibsendtrap.$(OBJEXT)
 src_ibsendtrap_OBJECTS = $(am_src_ibsendtrap_OBJECTS)
 src_ibsendtrap_LDADD = $(LDADD)
 src_ibsendtrap_DEPENDENCIES = libcommon.a
-am_src_ibstat_OBJECTS = ibstat.$(OBJEXT)
+am_src_ibstat_OBJECTS = src/ibstat.$(OBJEXT)
 src_ibstat_OBJECTS = $(am_src_ibstat_OBJECTS)
 src_ibstat_LDADD = $(LDADD)
 src_ibstat_DEPENDENCIES = libcommon.a
-am_src_ibsysstat_OBJECTS = ibsysstat.$(OBJEXT)
+am_src_ibsysstat_OBJECTS = src/ibsysstat.$(OBJEXT)
 src_ibsysstat_OBJECTS = $(am_src_ibsysstat_OBJECTS)
 src_ibsysstat_LDADD = $(LDADD)
 src_ibsysstat_DEPENDENCIES = libcommon.a
-am_src_ibtracert_OBJECTS = ibtracert.$(OBJEXT)
+am_src_ibtracert_OBJECTS = src/ibtracert.$(OBJEXT)
 src_ibtracert_OBJECTS = $(am_src_ibtracert_OBJECTS)
 src_ibtracert_LDADD = $(LDADD)
 src_ibtracert_DEPENDENCIES = libcommon.a
-am_src_mcm_rereg_test_OBJECTS = mcm_rereg_test.$(OBJEXT)
+am_src_mcm_rereg_test_OBJECTS = src/mcm_rereg_test.$(OBJEXT)
 src_mcm_rereg_test_OBJECTS = $(am_src_mcm_rereg_test_OBJECTS)
 src_mcm_rereg_test_LDADD = $(LDADD)
 src_mcm_rereg_test_DEPENDENCIES = libcommon.a
-am_src_perfquery_OBJECTS = perfquery.$(OBJEXT)
+am_src_perfquery_OBJECTS = src/perfquery.$(OBJEXT)
 src_perfquery_OBJECTS = $(am_src_perfquery_OBJECTS)
 src_perfquery_LDADD = $(LDADD)
 src_perfquery_DEPENDENCIES = libcommon.a
-am__src_rdma_ndd_SOURCES_DIST = src/rdma-ndd.c
-@ENABLE_RDMA_NDD_TRUE@am_src_rdma_ndd_OBJECTS =  \
-@ENABLE_RDMA_NDD_TRUE@	src_rdma_ndd-rdma-ndd.$(OBJEXT)
-src_rdma_ndd_OBJECTS = $(am_src_rdma_ndd_OBJECTS)
-am__DEPENDENCIES_1 =
-@ENABLE_RDMA_NDD_TRUE@src_rdma_ndd_DEPENDENCIES = libcommon.a \
-@ENABLE_RDMA_NDD_TRUE@	$(am__DEPENDENCIES_1)
-src_rdma_ndd_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(src_rdma_ndd_CFLAGS) \
-	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am_src_saquery_OBJECTS = saquery.$(OBJEXT)
+am_src_saquery_OBJECTS = src/saquery.$(OBJEXT)
 src_saquery_OBJECTS = $(am_src_saquery_OBJECTS)
 src_saquery_LDADD = $(LDADD)
 src_saquery_DEPENDENCIES = libcommon.a
-am_src_sminfo_OBJECTS = sminfo.$(OBJEXT)
+am_src_sminfo_OBJECTS = src/sminfo.$(OBJEXT)
 src_sminfo_OBJECTS = $(am_src_sminfo_OBJECTS)
 src_sminfo_LDADD = $(LDADD)
 src_sminfo_DEPENDENCIES = libcommon.a
-am_src_smpdump_OBJECTS = smpdump.$(OBJEXT)
+am_src_smpdump_OBJECTS = src/smpdump.$(OBJEXT)
 src_smpdump_OBJECTS = $(am_src_smpdump_OBJECTS)
 src_smpdump_LDADD = $(LDADD)
 src_smpdump_DEPENDENCIES = libcommon.a
-am_src_smpquery_OBJECTS = smpquery.$(OBJEXT)
+am_src_smpquery_OBJECTS = src/smpquery.$(OBJEXT)
 src_smpquery_OBJECTS = $(am_src_smpquery_OBJECTS)
 src_smpquery_LDADD = $(LDADD)
 src_smpquery_DEPENDENCIES = libcommon.a
-am_src_vendstat_OBJECTS = vendstat.$(OBJEXT)
+am_src_vendstat_OBJECTS = src/vendstat.$(OBJEXT)
 src_vendstat_OBJECTS = $(am_src_vendstat_OBJECTS)
 src_vendstat_LDADD = $(LDADD)
 src_vendstat_DEPENDENCIES = libcommon.a
@@ -418,9 +385,9 @@ SOURCES = $(libcommon_a_SOURCES) $(src_dump_fts_SOURCES) \
 	$(src_ibsendtrap_SOURCES) $(src_ibstat_SOURCES) \
 	$(src_ibsysstat_SOURCES) $(src_ibtracert_SOURCES) \
 	$(src_mcm_rereg_test_SOURCES) $(src_perfquery_SOURCES) \
-	$(src_rdma_ndd_SOURCES) $(src_saquery_SOURCES) \
-	$(src_sminfo_SOURCES) $(src_smpdump_SOURCES) \
-	$(src_smpquery_SOURCES) $(src_vendstat_SOURCES)
+	$(src_saquery_SOURCES) $(src_sminfo_SOURCES) \
+	$(src_smpdump_SOURCES) $(src_smpquery_SOURCES) \
+	$(src_vendstat_SOURCES)
 DIST_SOURCES = $(libcommon_a_SOURCES) $(src_dump_fts_SOURCES) \
 	$(src_ibaddr_SOURCES) $(src_ibcacheedit_SOURCES) \
 	$(src_ibccconfig_SOURCES) $(src_ibccquery_SOURCES) \
@@ -430,9 +397,9 @@ DIST_SOURCES = $(libcommon_a_SOURCES) $(src_dump_fts_SOURCES) \
 	$(src_ibsendtrap_SOURCES) $(src_ibstat_SOURCES) \
 	$(src_ibsysstat_SOURCES) $(src_ibtracert_SOURCES) \
 	$(src_mcm_rereg_test_SOURCES) $(src_perfquery_SOURCES) \
-	$(am__src_rdma_ndd_SOURCES_DIST) $(src_saquery_SOURCES) \
-	$(src_sminfo_SOURCES) $(src_smpdump_SOURCES) \
-	$(src_smpquery_SOURCES) $(src_vendstat_SOURCES)
+	$(src_saquery_SOURCES) $(src_sminfo_SOURCES) \
+	$(src_smpdump_SOURCES) $(src_smpquery_SOURCES) \
+	$(src_vendstat_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -712,8 +679,6 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DEFAULT_START = @DEFAULT_START@
-DEFAULT_STOP = @DEFAULT_STOP@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
@@ -766,20 +731,12 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
-RDMA_SERVICE = @RDMA_SERVICE@
 RELEASE = @RELEASE@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
-SPEC_FILE_RDMA_NDD_INSTALL = @SPEC_FILE_RDMA_NDD_INSTALL@
 STRIP = @STRIP@
-SYSTEMD_BUILD_REQUIRES = @SYSTEMD_BUILD_REQUIRES@
-SYSTEMD_CFLAGS = @SYSTEMD_CFLAGS@
-SYSTEMD_LIBS = @SYSTEMD_LIBS@
-SYSTEMD_SYSTEM_UNIT_DIR = @SYSTEMD_SYSTEM_UNIT_DIR@
 TARBALL = @TARBALL@
-UDEV_CFLAGS = @UDEV_CFLAGS@
-UDEV_LIBS = @UDEV_LIBS@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
@@ -813,6 +770,7 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
+ibmad_api_version = @ibmad_api_version@
 ibnetdisc_api_version = @ibnetdisc_api_version@
 includedir = @includedir@
 infodir = @infodir@
@@ -837,9 +795,10 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I config
-SUBDIRS = libibnetdisc
-INCLUDES = -I$(top_builddir)/include/ -I$(srcdir)/include -I$(includedir) \
-	-I$(includedir)/infiniband -I$(top_srcdir)/libibnetdisc/include
+SUBDIRS = libibmad libibnetdisc
+AM_CPPFLAGS = -I$(top_builddir)/include/ -I$(srcdir)/include -I$(includedir) \
+	-I$(includedir)/infiniband -I$(top_srcdir)/libibnetdisc/include \
+	-I$(top_srcdir)/libibmad/include
 
 @DEBUG_FALSE@DBGFLAGS = 
 @DEBUG_TRUE@DBGFLAGS = -ggdb -D_DEBUG_
@@ -847,7 +806,7 @@ sbin_SCRIPTS = scripts/ibhosts scripts/ibswitches scripts/ibnodes \
 	scripts/ibrouters scripts/ibfindnodesusing.pl \
 	scripts/ibidsverify.pl scripts/check_lft_balance.pl \
 	scripts/dump_lfts.sh scripts/dump_mfts.sh scripts/ibstatus \
-	$(am__append_3)
+	$(am__append_2)
 man_MANS = doc/man/ibaddr.8 doc/man/check_lft_balance.8 \
 	doc/man/ibcacheedit.8 doc/man/ibccconfig.8 doc/man/ibccquery.8 \
 	doc/man/dump_fts.8 doc/man/iblinkinfo.8 \
@@ -860,7 +819,7 @@ man_MANS = doc/man/ibaddr.8 doc/man/check_lft_balance.8 \
 	doc/man/saquery.8 doc/man/sminfo.8 doc/man/smpdump.8 \
 	doc/man/smpquery.8 doc/man/vendstat.8 \
 	doc/man/infiniband-diags.8 man/dump_lfts.8 man/dump_mfts.8 \
-	$(am__append_4) $(am__append_5)
+	$(am__append_3)
 
 # define this for the dist target
 compat_man_pages = man/ibdiscover.8 man/ibcheckerrors.8 man/ibcheckerrs.8 \
@@ -874,11 +833,13 @@ compat_man_pages = man/ibdiscover.8 man/ibcheckerrors.8 man/ibcheckerrs.8 \
 
 noinst_LIBRARIES = libcommon.a
 AM_CFLAGS = -Wall $(DBGFLAGS)
-LDADD = libcommon.a
+LDADD = libcommon.a \
+	-L$(top_builddir)/libibnetdisc -libnetdisc \
+	-L$(top_builddir)/libibmad -libmad
+
 libcommon_a_SOURCES = src/ibdiag_common.c src/ibdiag_sa.c
 src_ibaddr_SOURCES = src/ibaddr.c
 src_ibnetdiscover_SOURCES = src/ibnetdiscover.c
-src_ibnetdiscover_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
 src_ibping_SOURCES = src/ibping.c
 src_ibportstate_SOURCES = src/ibportstate.c
 src_ibroute_SOURCES = src/ibroute.c
@@ -896,16 +857,10 @@ src_mcm_rereg_test_SOURCES = src/mcm_rereg_test.c
 src_iblinkinfo_SOURCES = src/iblinkinfo.c
 src_ibccquery_SOURCES = src/ibccquery.c
 src_ibccconfig_SOURCES = src/ibccconfig.c
-src_iblinkinfo_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
 src_ibqueryerrors_SOURCES = src/ibqueryerrors.c
-src_ibqueryerrors_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
 src_ibcacheedit_SOURCES = src/ibcacheedit.c
-src_ibcacheedit_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
 src_dump_fts_SOURCES = src/dump_fts.c
-src_dump_fts_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
-@ENABLE_RDMA_NDD_TRUE@src_rdma_ndd_SOURCES = src/rdma-ndd.c
-@ENABLE_RDMA_NDD_TRUE@src_rdma_ndd_CFLAGS = $(AM_CFLAGS) $(UDEV_CFLAGS)
-@ENABLE_RDMA_NDD_TRUE@src_rdma_ndd_LDADD = libcommon.a $(UDEV_LIBS)
+src_dump_fts_LDFLAGS = $(internal_lib_LDFLAGS)
 BUILT_SOURCES = ibdiag_version
 @HAVE_DASH_TRUE@TESTS = tests/check_shells.sh
 EXTRA_DIST = doc scripts include infiniband-diags.spec.in infiniband-diags.spec \
@@ -922,15 +877,15 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
-	      echo ' cd $(srcdir) && $(AUTOMAKE) --foreign'; \
-	      $(am__cd) $(srcdir) && $(AUTOMAKE) --foreign \
+	      echo ' cd $(srcdir) && $(AUTOMAKE) --gnu'; \
+	      $(am__cd) $(srcdir) && $(AUTOMAKE) --gnu \
 		&& exit 0; \
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign Makefile
+	  $(AUTOMAKE) --gnu Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -965,12 +920,6 @@ $(srcdir)/config.h.in:  $(am__configure_deps)
 
 distclean-hdr:
 	-rm -f config.h stamp-h1
-doc/man/rdma-ndd.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/rdma-ndd.8.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-etc/rdma-ndd.init: $(top_builddir)/config.status $(top_srcdir)/etc/rdma-ndd.init.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-etc/rdma-ndd.service: $(top_builddir)/config.status $(top_srcdir)/etc/rdma-ndd.service.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
 infiniband-diags.spec: $(top_builddir)/config.status $(srcdir)/infiniband-diags.spec.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 include/ibdiag_version.h: $(top_builddir)/config.status $(top_srcdir)/include/ibdiag_version.h.in
@@ -1078,6 +1027,16 @@ doc/man/infiniband-diags.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/
 
 clean-noinstLIBRARIES:
 	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+src/$(am__dirstamp):
+	@$(MKDIR_P) src
+	@: > src/$(am__dirstamp)
+src/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) src/$(DEPDIR)
+	@: > src/$(DEPDIR)/$(am__dirstamp)
+src/ibdiag_common.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/ibdiag_sa.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 libcommon.a: $(libcommon_a_OBJECTS) $(libcommon_a_DEPENDENCIES) $(EXTRA_libcommon_a_DEPENDENCIES) 
 	$(AM_V_at)-rm -f libcommon.a
@@ -1132,97 +1091,134 @@ clean-sbinPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-src/$(am__dirstamp):
-	@$(MKDIR_P) src
-	@: > src/$(am__dirstamp)
+src/dump_fts.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/dump_fts$(EXEEXT): $(src_dump_fts_OBJECTS) $(src_dump_fts_DEPENDENCIES) $(EXTRA_src_dump_fts_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/dump_fts$(EXEEXT)
 	$(AM_V_CCLD)$(src_dump_fts_LINK) $(src_dump_fts_OBJECTS) $(src_dump_fts_LDADD) $(LIBS)
+src/ibaddr.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/ibaddr$(EXEEXT): $(src_ibaddr_OBJECTS) $(src_ibaddr_DEPENDENCIES) $(EXTRA_src_ibaddr_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibaddr$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_ibaddr_OBJECTS) $(src_ibaddr_LDADD) $(LIBS)
+src/ibcacheedit.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/ibcacheedit$(EXEEXT): $(src_ibcacheedit_OBJECTS) $(src_ibcacheedit_DEPENDENCIES) $(EXTRA_src_ibcacheedit_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibcacheedit$(EXEEXT)
-	$(AM_V_CCLD)$(src_ibcacheedit_LINK) $(src_ibcacheedit_OBJECTS) $(src_ibcacheedit_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(src_ibcacheedit_OBJECTS) $(src_ibcacheedit_LDADD) $(LIBS)
+src/ibccconfig.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/ibccconfig$(EXEEXT): $(src_ibccconfig_OBJECTS) $(src_ibccconfig_DEPENDENCIES) $(EXTRA_src_ibccconfig_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibccconfig$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_ibccconfig_OBJECTS) $(src_ibccconfig_LDADD) $(LIBS)
+src/ibccquery.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/ibccquery$(EXEEXT): $(src_ibccquery_OBJECTS) $(src_ibccquery_DEPENDENCIES) $(EXTRA_src_ibccquery_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibccquery$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_ibccquery_OBJECTS) $(src_ibccquery_LDADD) $(LIBS)
+src/iblinkinfo.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/iblinkinfo$(EXEEXT): $(src_iblinkinfo_OBJECTS) $(src_iblinkinfo_DEPENDENCIES) $(EXTRA_src_iblinkinfo_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/iblinkinfo$(EXEEXT)
-	$(AM_V_CCLD)$(src_iblinkinfo_LINK) $(src_iblinkinfo_OBJECTS) $(src_iblinkinfo_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(src_iblinkinfo_OBJECTS) $(src_iblinkinfo_LDADD) $(LIBS)
+src/ibnetdiscover.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/ibnetdiscover$(EXEEXT): $(src_ibnetdiscover_OBJECTS) $(src_ibnetdiscover_DEPENDENCIES) $(EXTRA_src_ibnetdiscover_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibnetdiscover$(EXEEXT)
-	$(AM_V_CCLD)$(src_ibnetdiscover_LINK) $(src_ibnetdiscover_OBJECTS) $(src_ibnetdiscover_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(src_ibnetdiscover_OBJECTS) $(src_ibnetdiscover_LDADD) $(LIBS)
+src/ibping.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/ibping$(EXEEXT): $(src_ibping_OBJECTS) $(src_ibping_DEPENDENCIES) $(EXTRA_src_ibping_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibping$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_ibping_OBJECTS) $(src_ibping_LDADD) $(LIBS)
+src/ibportstate.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/ibportstate$(EXEEXT): $(src_ibportstate_OBJECTS) $(src_ibportstate_DEPENDENCIES) $(EXTRA_src_ibportstate_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibportstate$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_ibportstate_OBJECTS) $(src_ibportstate_LDADD) $(LIBS)
+src/ibqueryerrors.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/ibqueryerrors$(EXEEXT): $(src_ibqueryerrors_OBJECTS) $(src_ibqueryerrors_DEPENDENCIES) $(EXTRA_src_ibqueryerrors_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibqueryerrors$(EXEEXT)
-	$(AM_V_CCLD)$(src_ibqueryerrors_LINK) $(src_ibqueryerrors_OBJECTS) $(src_ibqueryerrors_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(src_ibqueryerrors_OBJECTS) $(src_ibqueryerrors_LDADD) $(LIBS)
+src/ibroute.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/ibroute$(EXEEXT): $(src_ibroute_OBJECTS) $(src_ibroute_DEPENDENCIES) $(EXTRA_src_ibroute_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibroute$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_ibroute_OBJECTS) $(src_ibroute_LDADD) $(LIBS)
+src/ibsendtrap.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/ibsendtrap$(EXEEXT): $(src_ibsendtrap_OBJECTS) $(src_ibsendtrap_DEPENDENCIES) $(EXTRA_src_ibsendtrap_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibsendtrap$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_ibsendtrap_OBJECTS) $(src_ibsendtrap_LDADD) $(LIBS)
+src/ibstat.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/ibstat$(EXEEXT): $(src_ibstat_OBJECTS) $(src_ibstat_DEPENDENCIES) $(EXTRA_src_ibstat_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibstat$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_ibstat_OBJECTS) $(src_ibstat_LDADD) $(LIBS)
+src/ibsysstat.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/ibsysstat$(EXEEXT): $(src_ibsysstat_OBJECTS) $(src_ibsysstat_DEPENDENCIES) $(EXTRA_src_ibsysstat_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibsysstat$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_ibsysstat_OBJECTS) $(src_ibsysstat_LDADD) $(LIBS)
+src/ibtracert.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/ibtracert$(EXEEXT): $(src_ibtracert_OBJECTS) $(src_ibtracert_DEPENDENCIES) $(EXTRA_src_ibtracert_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/ibtracert$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_ibtracert_OBJECTS) $(src_ibtracert_LDADD) $(LIBS)
+src/mcm_rereg_test.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/mcm_rereg_test$(EXEEXT): $(src_mcm_rereg_test_OBJECTS) $(src_mcm_rereg_test_DEPENDENCIES) $(EXTRA_src_mcm_rereg_test_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/mcm_rereg_test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_mcm_rereg_test_OBJECTS) $(src_mcm_rereg_test_LDADD) $(LIBS)
+src/perfquery.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/perfquery$(EXEEXT): $(src_perfquery_OBJECTS) $(src_perfquery_DEPENDENCIES) $(EXTRA_src_perfquery_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/perfquery$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_perfquery_OBJECTS) $(src_perfquery_LDADD) $(LIBS)
-
-src/rdma-ndd$(EXEEXT): $(src_rdma_ndd_OBJECTS) $(src_rdma_ndd_DEPENDENCIES) $(EXTRA_src_rdma_ndd_DEPENDENCIES) src/$(am__dirstamp)
-	@rm -f src/rdma-ndd$(EXEEXT)
-	$(AM_V_CCLD)$(src_rdma_ndd_LINK) $(src_rdma_ndd_OBJECTS) $(src_rdma_ndd_LDADD) $(LIBS)
+src/saquery.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/saquery$(EXEEXT): $(src_saquery_OBJECTS) $(src_saquery_DEPENDENCIES) $(EXTRA_src_saquery_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/saquery$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_saquery_OBJECTS) $(src_saquery_LDADD) $(LIBS)
+src/sminfo.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/sminfo$(EXEEXT): $(src_sminfo_OBJECTS) $(src_sminfo_DEPENDENCIES) $(EXTRA_src_sminfo_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/sminfo$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_sminfo_OBJECTS) $(src_sminfo_LDADD) $(LIBS)
+src/smpdump.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/smpdump$(EXEEXT): $(src_smpdump_OBJECTS) $(src_smpdump_DEPENDENCIES) $(EXTRA_src_smpdump_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/smpdump$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_smpdump_OBJECTS) $(src_smpdump_LDADD) $(LIBS)
+src/smpquery.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/smpquery$(EXEEXT): $(src_smpquery_OBJECTS) $(src_smpquery_DEPENDENCIES) $(EXTRA_src_smpquery_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/smpquery$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(src_smpquery_OBJECTS) $(src_smpquery_LDADD) $(LIBS)
+src/vendstat.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 src/vendstat$(EXEEXT): $(src_vendstat_OBJECTS) $(src_vendstat_DEPENDENCIES) $(EXTRA_src_vendstat_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/vendstat$(EXEEXT)
@@ -1265,406 +1261,59 @@ uninstall-sbinSCRIPTS:
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f src/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dump_fts.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibaddr.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibcacheedit.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibccconfig.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibccquery.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibdiag_common.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibdiag_sa.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iblinkinfo.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibnetdiscover.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibping.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibportstate.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibqueryerrors.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibroute.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibsendtrap.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibstat.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibsysstat.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibtracert.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcm_rereg_test.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/perfquery.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/saquery.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sminfo.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smpdump.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smpquery.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/src_rdma_ndd-rdma-ndd.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vendstat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/dump_fts.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibaddr.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibcacheedit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibccconfig.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibccquery.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibdiag_common.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibdiag_sa.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/iblinkinfo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibnetdiscover.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibping.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibportstate.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibqueryerrors.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibroute.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibsendtrap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibstat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibsysstat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ibtracert.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/mcm_rereg_test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/perfquery.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/saquery.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/sminfo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/smpdump.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/smpquery.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/vendstat.Po@am__quote@
 
 .c.o:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c $<
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ $<
 
 .c.obj:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c `$(CYGPATH_W) '$<'`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .c.lo:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
-
-ibdiag_common.o: src/ibdiag_common.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibdiag_common.o -MD -MP -MF $(DEPDIR)/ibdiag_common.Tpo -c -o ibdiag_common.o `test -f 'src/ibdiag_common.c' || echo '$(srcdir)/'`src/ibdiag_common.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibdiag_common.Tpo $(DEPDIR)/ibdiag_common.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibdiag_common.c' object='ibdiag_common.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibdiag_common.o `test -f 'src/ibdiag_common.c' || echo '$(srcdir)/'`src/ibdiag_common.c
-
-ibdiag_common.obj: src/ibdiag_common.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibdiag_common.obj -MD -MP -MF $(DEPDIR)/ibdiag_common.Tpo -c -o ibdiag_common.obj `if test -f 'src/ibdiag_common.c'; then $(CYGPATH_W) 'src/ibdiag_common.c'; else $(CYGPATH_W) '$(srcdir)/src/ibdiag_common.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibdiag_common.Tpo $(DEPDIR)/ibdiag_common.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibdiag_common.c' object='ibdiag_common.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibdiag_common.obj `if test -f 'src/ibdiag_common.c'; then $(CYGPATH_W) 'src/ibdiag_common.c'; else $(CYGPATH_W) '$(srcdir)/src/ibdiag_common.c'; fi`
-
-ibdiag_sa.o: src/ibdiag_sa.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibdiag_sa.o -MD -MP -MF $(DEPDIR)/ibdiag_sa.Tpo -c -o ibdiag_sa.o `test -f 'src/ibdiag_sa.c' || echo '$(srcdir)/'`src/ibdiag_sa.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibdiag_sa.Tpo $(DEPDIR)/ibdiag_sa.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibdiag_sa.c' object='ibdiag_sa.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibdiag_sa.o `test -f 'src/ibdiag_sa.c' || echo '$(srcdir)/'`src/ibdiag_sa.c
-
-ibdiag_sa.obj: src/ibdiag_sa.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibdiag_sa.obj -MD -MP -MF $(DEPDIR)/ibdiag_sa.Tpo -c -o ibdiag_sa.obj `if test -f 'src/ibdiag_sa.c'; then $(CYGPATH_W) 'src/ibdiag_sa.c'; else $(CYGPATH_W) '$(srcdir)/src/ibdiag_sa.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibdiag_sa.Tpo $(DEPDIR)/ibdiag_sa.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibdiag_sa.c' object='ibdiag_sa.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibdiag_sa.obj `if test -f 'src/ibdiag_sa.c'; then $(CYGPATH_W) 'src/ibdiag_sa.c'; else $(CYGPATH_W) '$(srcdir)/src/ibdiag_sa.c'; fi`
-
-dump_fts.o: src/dump_fts.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dump_fts.o -MD -MP -MF $(DEPDIR)/dump_fts.Tpo -c -o dump_fts.o `test -f 'src/dump_fts.c' || echo '$(srcdir)/'`src/dump_fts.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dump_fts.Tpo $(DEPDIR)/dump_fts.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/dump_fts.c' object='dump_fts.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dump_fts.o `test -f 'src/dump_fts.c' || echo '$(srcdir)/'`src/dump_fts.c
-
-dump_fts.obj: src/dump_fts.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dump_fts.obj -MD -MP -MF $(DEPDIR)/dump_fts.Tpo -c -o dump_fts.obj `if test -f 'src/dump_fts.c'; then $(CYGPATH_W) 'src/dump_fts.c'; else $(CYGPATH_W) '$(srcdir)/src/dump_fts.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dump_fts.Tpo $(DEPDIR)/dump_fts.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/dump_fts.c' object='dump_fts.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dump_fts.obj `if test -f 'src/dump_fts.c'; then $(CYGPATH_W) 'src/dump_fts.c'; else $(CYGPATH_W) '$(srcdir)/src/dump_fts.c'; fi`
-
-ibaddr.o: src/ibaddr.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibaddr.o -MD -MP -MF $(DEPDIR)/ibaddr.Tpo -c -o ibaddr.o `test -f 'src/ibaddr.c' || echo '$(srcdir)/'`src/ibaddr.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibaddr.Tpo $(DEPDIR)/ibaddr.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibaddr.c' object='ibaddr.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibaddr.o `test -f 'src/ibaddr.c' || echo '$(srcdir)/'`src/ibaddr.c
-
-ibaddr.obj: src/ibaddr.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibaddr.obj -MD -MP -MF $(DEPDIR)/ibaddr.Tpo -c -o ibaddr.obj `if test -f 'src/ibaddr.c'; then $(CYGPATH_W) 'src/ibaddr.c'; else $(CYGPATH_W) '$(srcdir)/src/ibaddr.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibaddr.Tpo $(DEPDIR)/ibaddr.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibaddr.c' object='ibaddr.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibaddr.obj `if test -f 'src/ibaddr.c'; then $(CYGPATH_W) 'src/ibaddr.c'; else $(CYGPATH_W) '$(srcdir)/src/ibaddr.c'; fi`
-
-ibcacheedit.o: src/ibcacheedit.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibcacheedit.o -MD -MP -MF $(DEPDIR)/ibcacheedit.Tpo -c -o ibcacheedit.o `test -f 'src/ibcacheedit.c' || echo '$(srcdir)/'`src/ibcacheedit.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibcacheedit.Tpo $(DEPDIR)/ibcacheedit.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibcacheedit.c' object='ibcacheedit.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibcacheedit.o `test -f 'src/ibcacheedit.c' || echo '$(srcdir)/'`src/ibcacheedit.c
-
-ibcacheedit.obj: src/ibcacheedit.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibcacheedit.obj -MD -MP -MF $(DEPDIR)/ibcacheedit.Tpo -c -o ibcacheedit.obj `if test -f 'src/ibcacheedit.c'; then $(CYGPATH_W) 'src/ibcacheedit.c'; else $(CYGPATH_W) '$(srcdir)/src/ibcacheedit.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibcacheedit.Tpo $(DEPDIR)/ibcacheedit.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibcacheedit.c' object='ibcacheedit.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibcacheedit.obj `if test -f 'src/ibcacheedit.c'; then $(CYGPATH_W) 'src/ibcacheedit.c'; else $(CYGPATH_W) '$(srcdir)/src/ibcacheedit.c'; fi`
-
-ibccconfig.o: src/ibccconfig.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibccconfig.o -MD -MP -MF $(DEPDIR)/ibccconfig.Tpo -c -o ibccconfig.o `test -f 'src/ibccconfig.c' || echo '$(srcdir)/'`src/ibccconfig.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibccconfig.Tpo $(DEPDIR)/ibccconfig.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibccconfig.c' object='ibccconfig.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibccconfig.o `test -f 'src/ibccconfig.c' || echo '$(srcdir)/'`src/ibccconfig.c
-
-ibccconfig.obj: src/ibccconfig.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibccconfig.obj -MD -MP -MF $(DEPDIR)/ibccconfig.Tpo -c -o ibccconfig.obj `if test -f 'src/ibccconfig.c'; then $(CYGPATH_W) 'src/ibccconfig.c'; else $(CYGPATH_W) '$(srcdir)/src/ibccconfig.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibccconfig.Tpo $(DEPDIR)/ibccconfig.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibccconfig.c' object='ibccconfig.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibccconfig.obj `if test -f 'src/ibccconfig.c'; then $(CYGPATH_W) 'src/ibccconfig.c'; else $(CYGPATH_W) '$(srcdir)/src/ibccconfig.c'; fi`
-
-ibccquery.o: src/ibccquery.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibccquery.o -MD -MP -MF $(DEPDIR)/ibccquery.Tpo -c -o ibccquery.o `test -f 'src/ibccquery.c' || echo '$(srcdir)/'`src/ibccquery.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibccquery.Tpo $(DEPDIR)/ibccquery.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibccquery.c' object='ibccquery.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibccquery.o `test -f 'src/ibccquery.c' || echo '$(srcdir)/'`src/ibccquery.c
-
-ibccquery.obj: src/ibccquery.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibccquery.obj -MD -MP -MF $(DEPDIR)/ibccquery.Tpo -c -o ibccquery.obj `if test -f 'src/ibccquery.c'; then $(CYGPATH_W) 'src/ibccquery.c'; else $(CYGPATH_W) '$(srcdir)/src/ibccquery.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibccquery.Tpo $(DEPDIR)/ibccquery.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibccquery.c' object='ibccquery.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibccquery.obj `if test -f 'src/ibccquery.c'; then $(CYGPATH_W) 'src/ibccquery.c'; else $(CYGPATH_W) '$(srcdir)/src/ibccquery.c'; fi`
-
-iblinkinfo.o: src/iblinkinfo.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT iblinkinfo.o -MD -MP -MF $(DEPDIR)/iblinkinfo.Tpo -c -o iblinkinfo.o `test -f 'src/iblinkinfo.c' || echo '$(srcdir)/'`src/iblinkinfo.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/iblinkinfo.Tpo $(DEPDIR)/iblinkinfo.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/iblinkinfo.c' object='iblinkinfo.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o iblinkinfo.o `test -f 'src/iblinkinfo.c' || echo '$(srcdir)/'`src/iblinkinfo.c
-
-iblinkinfo.obj: src/iblinkinfo.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT iblinkinfo.obj -MD -MP -MF $(DEPDIR)/iblinkinfo.Tpo -c -o iblinkinfo.obj `if test -f 'src/iblinkinfo.c'; then $(CYGPATH_W) 'src/iblinkinfo.c'; else $(CYGPATH_W) '$(srcdir)/src/iblinkinfo.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/iblinkinfo.Tpo $(DEPDIR)/iblinkinfo.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/iblinkinfo.c' object='iblinkinfo.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o iblinkinfo.obj `if test -f 'src/iblinkinfo.c'; then $(CYGPATH_W) 'src/iblinkinfo.c'; else $(CYGPATH_W) '$(srcdir)/src/iblinkinfo.c'; fi`
-
-ibnetdiscover.o: src/ibnetdiscover.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibnetdiscover.o -MD -MP -MF $(DEPDIR)/ibnetdiscover.Tpo -c -o ibnetdiscover.o `test -f 'src/ibnetdiscover.c' || echo '$(srcdir)/'`src/ibnetdiscover.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibnetdiscover.Tpo $(DEPDIR)/ibnetdiscover.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibnetdiscover.c' object='ibnetdiscover.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibnetdiscover.o `test -f 'src/ibnetdiscover.c' || echo '$(srcdir)/'`src/ibnetdiscover.c
-
-ibnetdiscover.obj: src/ibnetdiscover.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibnetdiscover.obj -MD -MP -MF $(DEPDIR)/ibnetdiscover.Tpo -c -o ibnetdiscover.obj `if test -f 'src/ibnetdiscover.c'; then $(CYGPATH_W) 'src/ibnetdiscover.c'; else $(CYGPATH_W) '$(srcdir)/src/ibnetdiscover.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibnetdiscover.Tpo $(DEPDIR)/ibnetdiscover.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibnetdiscover.c' object='ibnetdiscover.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibnetdiscover.obj `if test -f 'src/ibnetdiscover.c'; then $(CYGPATH_W) 'src/ibnetdiscover.c'; else $(CYGPATH_W) '$(srcdir)/src/ibnetdiscover.c'; fi`
-
-ibping.o: src/ibping.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibping.o -MD -MP -MF $(DEPDIR)/ibping.Tpo -c -o ibping.o `test -f 'src/ibping.c' || echo '$(srcdir)/'`src/ibping.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibping.Tpo $(DEPDIR)/ibping.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibping.c' object='ibping.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibping.o `test -f 'src/ibping.c' || echo '$(srcdir)/'`src/ibping.c
-
-ibping.obj: src/ibping.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibping.obj -MD -MP -MF $(DEPDIR)/ibping.Tpo -c -o ibping.obj `if test -f 'src/ibping.c'; then $(CYGPATH_W) 'src/ibping.c'; else $(CYGPATH_W) '$(srcdir)/src/ibping.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibping.Tpo $(DEPDIR)/ibping.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibping.c' object='ibping.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibping.obj `if test -f 'src/ibping.c'; then $(CYGPATH_W) 'src/ibping.c'; else $(CYGPATH_W) '$(srcdir)/src/ibping.c'; fi`
-
-ibportstate.o: src/ibportstate.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibportstate.o -MD -MP -MF $(DEPDIR)/ibportstate.Tpo -c -o ibportstate.o `test -f 'src/ibportstate.c' || echo '$(srcdir)/'`src/ibportstate.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibportstate.Tpo $(DEPDIR)/ibportstate.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibportstate.c' object='ibportstate.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibportstate.o `test -f 'src/ibportstate.c' || echo '$(srcdir)/'`src/ibportstate.c
-
-ibportstate.obj: src/ibportstate.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibportstate.obj -MD -MP -MF $(DEPDIR)/ibportstate.Tpo -c -o ibportstate.obj `if test -f 'src/ibportstate.c'; then $(CYGPATH_W) 'src/ibportstate.c'; else $(CYGPATH_W) '$(srcdir)/src/ibportstate.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibportstate.Tpo $(DEPDIR)/ibportstate.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibportstate.c' object='ibportstate.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibportstate.obj `if test -f 'src/ibportstate.c'; then $(CYGPATH_W) 'src/ibportstate.c'; else $(CYGPATH_W) '$(srcdir)/src/ibportstate.c'; fi`
-
-ibqueryerrors.o: src/ibqueryerrors.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibqueryerrors.o -MD -MP -MF $(DEPDIR)/ibqueryerrors.Tpo -c -o ibqueryerrors.o `test -f 'src/ibqueryerrors.c' || echo '$(srcdir)/'`src/ibqueryerrors.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibqueryerrors.Tpo $(DEPDIR)/ibqueryerrors.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibqueryerrors.c' object='ibqueryerrors.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibqueryerrors.o `test -f 'src/ibqueryerrors.c' || echo '$(srcdir)/'`src/ibqueryerrors.c
-
-ibqueryerrors.obj: src/ibqueryerrors.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibqueryerrors.obj -MD -MP -MF $(DEPDIR)/ibqueryerrors.Tpo -c -o ibqueryerrors.obj `if test -f 'src/ibqueryerrors.c'; then $(CYGPATH_W) 'src/ibqueryerrors.c'; else $(CYGPATH_W) '$(srcdir)/src/ibqueryerrors.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibqueryerrors.Tpo $(DEPDIR)/ibqueryerrors.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibqueryerrors.c' object='ibqueryerrors.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibqueryerrors.obj `if test -f 'src/ibqueryerrors.c'; then $(CYGPATH_W) 'src/ibqueryerrors.c'; else $(CYGPATH_W) '$(srcdir)/src/ibqueryerrors.c'; fi`
-
-ibroute.o: src/ibroute.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibroute.o -MD -MP -MF $(DEPDIR)/ibroute.Tpo -c -o ibroute.o `test -f 'src/ibroute.c' || echo '$(srcdir)/'`src/ibroute.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibroute.Tpo $(DEPDIR)/ibroute.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibroute.c' object='ibroute.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibroute.o `test -f 'src/ibroute.c' || echo '$(srcdir)/'`src/ibroute.c
-
-ibroute.obj: src/ibroute.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibroute.obj -MD -MP -MF $(DEPDIR)/ibroute.Tpo -c -o ibroute.obj `if test -f 'src/ibroute.c'; then $(CYGPATH_W) 'src/ibroute.c'; else $(CYGPATH_W) '$(srcdir)/src/ibroute.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibroute.Tpo $(DEPDIR)/ibroute.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibroute.c' object='ibroute.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibroute.obj `if test -f 'src/ibroute.c'; then $(CYGPATH_W) 'src/ibroute.c'; else $(CYGPATH_W) '$(srcdir)/src/ibroute.c'; fi`
-
-ibsendtrap.o: src/ibsendtrap.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibsendtrap.o -MD -MP -MF $(DEPDIR)/ibsendtrap.Tpo -c -o ibsendtrap.o `test -f 'src/ibsendtrap.c' || echo '$(srcdir)/'`src/ibsendtrap.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibsendtrap.Tpo $(DEPDIR)/ibsendtrap.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibsendtrap.c' object='ibsendtrap.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibsendtrap.o `test -f 'src/ibsendtrap.c' || echo '$(srcdir)/'`src/ibsendtrap.c
-
-ibsendtrap.obj: src/ibsendtrap.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibsendtrap.obj -MD -MP -MF $(DEPDIR)/ibsendtrap.Tpo -c -o ibsendtrap.obj `if test -f 'src/ibsendtrap.c'; then $(CYGPATH_W) 'src/ibsendtrap.c'; else $(CYGPATH_W) '$(srcdir)/src/ibsendtrap.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibsendtrap.Tpo $(DEPDIR)/ibsendtrap.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibsendtrap.c' object='ibsendtrap.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibsendtrap.obj `if test -f 'src/ibsendtrap.c'; then $(CYGPATH_W) 'src/ibsendtrap.c'; else $(CYGPATH_W) '$(srcdir)/src/ibsendtrap.c'; fi`
-
-ibstat.o: src/ibstat.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibstat.o -MD -MP -MF $(DEPDIR)/ibstat.Tpo -c -o ibstat.o `test -f 'src/ibstat.c' || echo '$(srcdir)/'`src/ibstat.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibstat.Tpo $(DEPDIR)/ibstat.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibstat.c' object='ibstat.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibstat.o `test -f 'src/ibstat.c' || echo '$(srcdir)/'`src/ibstat.c
-
-ibstat.obj: src/ibstat.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibstat.obj -MD -MP -MF $(DEPDIR)/ibstat.Tpo -c -o ibstat.obj `if test -f 'src/ibstat.c'; then $(CYGPATH_W) 'src/ibstat.c'; else $(CYGPATH_W) '$(srcdir)/src/ibstat.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibstat.Tpo $(DEPDIR)/ibstat.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibstat.c' object='ibstat.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibstat.obj `if test -f 'src/ibstat.c'; then $(CYGPATH_W) 'src/ibstat.c'; else $(CYGPATH_W) '$(srcdir)/src/ibstat.c'; fi`
-
-ibsysstat.o: src/ibsysstat.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibsysstat.o -MD -MP -MF $(DEPDIR)/ibsysstat.Tpo -c -o ibsysstat.o `test -f 'src/ibsysstat.c' || echo '$(srcdir)/'`src/ibsysstat.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibsysstat.Tpo $(DEPDIR)/ibsysstat.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibsysstat.c' object='ibsysstat.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibsysstat.o `test -f 'src/ibsysstat.c' || echo '$(srcdir)/'`src/ibsysstat.c
-
-ibsysstat.obj: src/ibsysstat.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibsysstat.obj -MD -MP -MF $(DEPDIR)/ibsysstat.Tpo -c -o ibsysstat.obj `if test -f 'src/ibsysstat.c'; then $(CYGPATH_W) 'src/ibsysstat.c'; else $(CYGPATH_W) '$(srcdir)/src/ibsysstat.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibsysstat.Tpo $(DEPDIR)/ibsysstat.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibsysstat.c' object='ibsysstat.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibsysstat.obj `if test -f 'src/ibsysstat.c'; then $(CYGPATH_W) 'src/ibsysstat.c'; else $(CYGPATH_W) '$(srcdir)/src/ibsysstat.c'; fi`
-
-ibtracert.o: src/ibtracert.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibtracert.o -MD -MP -MF $(DEPDIR)/ibtracert.Tpo -c -o ibtracert.o `test -f 'src/ibtracert.c' || echo '$(srcdir)/'`src/ibtracert.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibtracert.Tpo $(DEPDIR)/ibtracert.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibtracert.c' object='ibtracert.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibtracert.o `test -f 'src/ibtracert.c' || echo '$(srcdir)/'`src/ibtracert.c
-
-ibtracert.obj: src/ibtracert.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ibtracert.obj -MD -MP -MF $(DEPDIR)/ibtracert.Tpo -c -o ibtracert.obj `if test -f 'src/ibtracert.c'; then $(CYGPATH_W) 'src/ibtracert.c'; else $(CYGPATH_W) '$(srcdir)/src/ibtracert.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ibtracert.Tpo $(DEPDIR)/ibtracert.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/ibtracert.c' object='ibtracert.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ibtracert.obj `if test -f 'src/ibtracert.c'; then $(CYGPATH_W) 'src/ibtracert.c'; else $(CYGPATH_W) '$(srcdir)/src/ibtracert.c'; fi`
-
-mcm_rereg_test.o: src/mcm_rereg_test.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcm_rereg_test.o -MD -MP -MF $(DEPDIR)/mcm_rereg_test.Tpo -c -o mcm_rereg_test.o `test -f 'src/mcm_rereg_test.c' || echo '$(srcdir)/'`src/mcm_rereg_test.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mcm_rereg_test.Tpo $(DEPDIR)/mcm_rereg_test.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/mcm_rereg_test.c' object='mcm_rereg_test.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcm_rereg_test.o `test -f 'src/mcm_rereg_test.c' || echo '$(srcdir)/'`src/mcm_rereg_test.c
-
-mcm_rereg_test.obj: src/mcm_rereg_test.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcm_rereg_test.obj -MD -MP -MF $(DEPDIR)/mcm_rereg_test.Tpo -c -o mcm_rereg_test.obj `if test -f 'src/mcm_rereg_test.c'; then $(CYGPATH_W) 'src/mcm_rereg_test.c'; else $(CYGPATH_W) '$(srcdir)/src/mcm_rereg_test.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mcm_rereg_test.Tpo $(DEPDIR)/mcm_rereg_test.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/mcm_rereg_test.c' object='mcm_rereg_test.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcm_rereg_test.obj `if test -f 'src/mcm_rereg_test.c'; then $(CYGPATH_W) 'src/mcm_rereg_test.c'; else $(CYGPATH_W) '$(srcdir)/src/mcm_rereg_test.c'; fi`
-
-perfquery.o: src/perfquery.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT perfquery.o -MD -MP -MF $(DEPDIR)/perfquery.Tpo -c -o perfquery.o `test -f 'src/perfquery.c' || echo '$(srcdir)/'`src/perfquery.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/perfquery.Tpo $(DEPDIR)/perfquery.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/perfquery.c' object='perfquery.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o perfquery.o `test -f 'src/perfquery.c' || echo '$(srcdir)/'`src/perfquery.c
-
-perfquery.obj: src/perfquery.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT perfquery.obj -MD -MP -MF $(DEPDIR)/perfquery.Tpo -c -o perfquery.obj `if test -f 'src/perfquery.c'; then $(CYGPATH_W) 'src/perfquery.c'; else $(CYGPATH_W) '$(srcdir)/src/perfquery.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/perfquery.Tpo $(DEPDIR)/perfquery.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/perfquery.c' object='perfquery.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o perfquery.obj `if test -f 'src/perfquery.c'; then $(CYGPATH_W) 'src/perfquery.c'; else $(CYGPATH_W) '$(srcdir)/src/perfquery.c'; fi`
-
-src_rdma_ndd-rdma-ndd.o: src/rdma-ndd.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(src_rdma_ndd_CFLAGS) $(CFLAGS) -MT src_rdma_ndd-rdma-ndd.o -MD -MP -MF $(DEPDIR)/src_rdma_ndd-rdma-ndd.Tpo -c -o src_rdma_ndd-rdma-ndd.o `test -f 'src/rdma-ndd.c' || echo '$(srcdir)/'`src/rdma-ndd.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/src_rdma_ndd-rdma-ndd.Tpo $(DEPDIR)/src_rdma_ndd-rdma-ndd.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/rdma-ndd.c' object='src_rdma_ndd-rdma-ndd.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(src_rdma_ndd_CFLAGS) $(CFLAGS) -c -o src_rdma_ndd-rdma-ndd.o `test -f 'src/rdma-ndd.c' || echo '$(srcdir)/'`src/rdma-ndd.c
-
-src_rdma_ndd-rdma-ndd.obj: src/rdma-ndd.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(src_rdma_ndd_CFLAGS) $(CFLAGS) -MT src_rdma_ndd-rdma-ndd.obj -MD -MP -MF $(DEPDIR)/src_rdma_ndd-rdma-ndd.Tpo -c -o src_rdma_ndd-rdma-ndd.obj `if test -f 'src/rdma-ndd.c'; then $(CYGPATH_W) 'src/rdma-ndd.c'; else $(CYGPATH_W) '$(srcdir)/src/rdma-ndd.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/src_rdma_ndd-rdma-ndd.Tpo $(DEPDIR)/src_rdma_ndd-rdma-ndd.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/rdma-ndd.c' object='src_rdma_ndd-rdma-ndd.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(src_rdma_ndd_CFLAGS) $(CFLAGS) -c -o src_rdma_ndd-rdma-ndd.obj `if test -f 'src/rdma-ndd.c'; then $(CYGPATH_W) 'src/rdma-ndd.c'; else $(CYGPATH_W) '$(srcdir)/src/rdma-ndd.c'; fi`
-
-saquery.o: src/saquery.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT saquery.o -MD -MP -MF $(DEPDIR)/saquery.Tpo -c -o saquery.o `test -f 'src/saquery.c' || echo '$(srcdir)/'`src/saquery.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/saquery.Tpo $(DEPDIR)/saquery.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/saquery.c' object='saquery.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o saquery.o `test -f 'src/saquery.c' || echo '$(srcdir)/'`src/saquery.c
-
-saquery.obj: src/saquery.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT saquery.obj -MD -MP -MF $(DEPDIR)/saquery.Tpo -c -o saquery.obj `if test -f 'src/saquery.c'; then $(CYGPATH_W) 'src/saquery.c'; else $(CYGPATH_W) '$(srcdir)/src/saquery.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/saquery.Tpo $(DEPDIR)/saquery.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/saquery.c' object='saquery.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o saquery.obj `if test -f 'src/saquery.c'; then $(CYGPATH_W) 'src/saquery.c'; else $(CYGPATH_W) '$(srcdir)/src/saquery.c'; fi`
-
-sminfo.o: src/sminfo.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sminfo.o -MD -MP -MF $(DEPDIR)/sminfo.Tpo -c -o sminfo.o `test -f 'src/sminfo.c' || echo '$(srcdir)/'`src/sminfo.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sminfo.Tpo $(DEPDIR)/sminfo.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/sminfo.c' object='sminfo.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sminfo.o `test -f 'src/sminfo.c' || echo '$(srcdir)/'`src/sminfo.c
-
-sminfo.obj: src/sminfo.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sminfo.obj -MD -MP -MF $(DEPDIR)/sminfo.Tpo -c -o sminfo.obj `if test -f 'src/sminfo.c'; then $(CYGPATH_W) 'src/sminfo.c'; else $(CYGPATH_W) '$(srcdir)/src/sminfo.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sminfo.Tpo $(DEPDIR)/sminfo.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/sminfo.c' object='sminfo.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sminfo.obj `if test -f 'src/sminfo.c'; then $(CYGPATH_W) 'src/sminfo.c'; else $(CYGPATH_W) '$(srcdir)/src/sminfo.c'; fi`
-
-smpdump.o: src/smpdump.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT smpdump.o -MD -MP -MF $(DEPDIR)/smpdump.Tpo -c -o smpdump.o `test -f 'src/smpdump.c' || echo '$(srcdir)/'`src/smpdump.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/smpdump.Tpo $(DEPDIR)/smpdump.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/smpdump.c' object='smpdump.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o smpdump.o `test -f 'src/smpdump.c' || echo '$(srcdir)/'`src/smpdump.c
-
-smpdump.obj: src/smpdump.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT smpdump.obj -MD -MP -MF $(DEPDIR)/smpdump.Tpo -c -o smpdump.obj `if test -f 'src/smpdump.c'; then $(CYGPATH_W) 'src/smpdump.c'; else $(CYGPATH_W) '$(srcdir)/src/smpdump.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/smpdump.Tpo $(DEPDIR)/smpdump.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/smpdump.c' object='smpdump.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o smpdump.obj `if test -f 'src/smpdump.c'; then $(CYGPATH_W) 'src/smpdump.c'; else $(CYGPATH_W) '$(srcdir)/src/smpdump.c'; fi`
-
-smpquery.o: src/smpquery.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT smpquery.o -MD -MP -MF $(DEPDIR)/smpquery.Tpo -c -o smpquery.o `test -f 'src/smpquery.c' || echo '$(srcdir)/'`src/smpquery.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/smpquery.Tpo $(DEPDIR)/smpquery.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/smpquery.c' object='smpquery.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o smpquery.o `test -f 'src/smpquery.c' || echo '$(srcdir)/'`src/smpquery.c
-
-smpquery.obj: src/smpquery.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT smpquery.obj -MD -MP -MF $(DEPDIR)/smpquery.Tpo -c -o smpquery.obj `if test -f 'src/smpquery.c'; then $(CYGPATH_W) 'src/smpquery.c'; else $(CYGPATH_W) '$(srcdir)/src/smpquery.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/smpquery.Tpo $(DEPDIR)/smpquery.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/smpquery.c' object='smpquery.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o smpquery.obj `if test -f 'src/smpquery.c'; then $(CYGPATH_W) 'src/smpquery.c'; else $(CYGPATH_W) '$(srcdir)/src/smpquery.c'; fi`
-
-vendstat.o: src/vendstat.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT vendstat.o -MD -MP -MF $(DEPDIR)/vendstat.Tpo -c -o vendstat.o `test -f 'src/vendstat.c' || echo '$(srcdir)/'`src/vendstat.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/vendstat.Tpo $(DEPDIR)/vendstat.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/vendstat.c' object='vendstat.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o vendstat.o `test -f 'src/vendstat.c' || echo '$(srcdir)/'`src/vendstat.c
-
-vendstat.obj: src/vendstat.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT vendstat.obj -MD -MP -MF $(DEPDIR)/vendstat.Tpo -c -o vendstat.obj `if test -f 'src/vendstat.c'; then $(CYGPATH_W) 'src/vendstat.c'; else $(CYGPATH_W) '$(srcdir)/src/vendstat.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/vendstat.Tpo $(DEPDIR)/vendstat.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/vendstat.c' object='vendstat.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o vendstat.obj `if test -f 'src/vendstat.c'; then $(CYGPATH_W) 'src/vendstat.c'; else $(CYGPATH_W) '$(srcdir)/src/vendstat.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -2045,9 +1694,6 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
-	$(MAKE) $(AM_MAKEFLAGS) \
-	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
-	  dist-hook
 	-test -n "$(am__skip_mode_fix)" \
 	|| find "$(distdir)" -type d ! -perm -755 \
 		-exec chmod u+rwx,go+rx {} \; -o \
@@ -2212,13 +1858,13 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-rm -f src/$(DEPDIR)/$(am__dirstamp)
 	-rm -f src/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
-@ENABLE_RDMA_NDD_FALSE@install-exec-hook:
 clean: clean-recursive
 
 clean-am: clean-generic clean-libtool clean-noinstLIBRARIES \
@@ -2226,7 +1872,7 @@ clean-am: clean-generic clean-libtool clean-noinstLIBRARIES \
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -rf ./$(DEPDIR)
+	-rm -rf src/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-libtool distclean-local distclean-tags
@@ -2251,8 +1897,7 @@ install-dvi: install-dvi-recursive
 install-dvi-am:
 
 install-exec-am: install-sbinPROGRAMS install-sbinSCRIPTS
-	@$(NORMAL_INSTALL)
-	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
+
 install-html: install-html-recursive
 
 install-html-am:
@@ -2276,7 +1921,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -rf ./$(DEPDIR)
+	-rm -rf src/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -2299,29 +1944,28 @@ uninstall-am: uninstall-man uninstall-sbinPROGRAMS \
 uninstall-man: uninstall-man8
 
 .MAKE: $(am__recursive_targets) all check check-am install install-am \
-	install-data-am install-exec-am install-strip
+	install-data-am install-strip
 
 .PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am \
 	am--refresh check check-TESTS check-am clean clean-cscope \
 	clean-generic clean-libtool clean-noinstLIBRARIES \
 	clean-sbinPROGRAMS cscope cscopelist-am ctags ctags-am dist \
-	dist-all dist-bzip2 dist-gzip dist-hook dist-lzip dist-shar \
-	dist-tarZ dist-xz dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
-	distclean-libtool distclean-local distclean-tags \
-	distcleancheck distdir distuninstallcheck dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-data-hook install-dvi install-dvi-am \
-	install-exec install-exec-am install-exec-hook install-html \
-	install-html-am install-info install-info-am install-man \
-	install-man8 install-pdf install-pdf-am install-ps \
-	install-ps-am install-sbinPROGRAMS install-sbinSCRIPTS \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am recheck tags tags-am \
-	uninstall uninstall-am uninstall-man uninstall-man8 \
-	uninstall-sbinPROGRAMS uninstall-sbinSCRIPTS
+	dist-all dist-bzip2 dist-gzip dist-lzip dist-shar dist-tarZ \
+	dist-xz dist-zip distcheck distclean distclean-compile \
+	distclean-generic distclean-hdr distclean-libtool \
+	distclean-local distclean-tags distcleancheck distdir \
+	distuninstallcheck dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am \
+	install-data-hook install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-man install-man8 install-pdf \
+	install-pdf-am install-ps install-ps-am install-sbinPROGRAMS \
+	install-sbinSCRIPTS install-strip installcheck installcheck-am \
+	installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	recheck tags tags-am uninstall uninstall-am uninstall-man \
+	uninstall-man8 uninstall-sbinPROGRAMS uninstall-sbinSCRIPTS
 
 ibdiag_version:
 	if [ -x $(top_srcdir)/gen_ver.sh ] ; then \
@@ -2337,11 +1981,6 @@ ibdiag_version:
 distclean-local:
 	$(top_srcdir)/doc/generate clean
 
-dist-hook:
-	if [ -x $(top_srcdir)/gen_chlog.sh ] ; then \
-		$(top_srcdir)/gen_chlog.sh > $(distdir)/ChangeLog ; \
-	fi
-
 # install this to a default location.
 install-data-hook:
 	if test ! -d $(DESTDIR)/$(sysconfdir)/infiniband-diags; then \
@@ -2353,11 +1992,6 @@ install-data-hook:
 	$(top_srcdir)/config/install-sh -c -m 444 $(top_srcdir)/scripts/IBswcountlimits.pm $(DESTDIR)/$(PERL_INSTALLDIR)/IBswcountlimits.pm
 	$(top_srcdir)/config/install-sh -c -m 444 $(top_srcdir)/etc/error_thresholds $(DESTDIR)/$(sysconfdir)/infiniband-diags
 	$(top_srcdir)/config/install-sh -c -m 400 $(top_srcdir)/etc/ibdiag.conf $(DESTDIR)/$(sysconfdir)/infiniband-diags
-
-@ENABLE_RDMA_NDD_TRUE@install-exec-hook:
-@ENABLE_RDMA_NDD_TRUE@@SYSTEMD_SYSTEM_TRUE@	$(top_srcdir)/config/install-sh -m 755 $(top_srcdir)/etc/rdma-ndd.service $(DESTDIR)/$(SYSTEMD_SYSTEM_UNIT_DIR)/rdma-ndd.service
-@ENABLE_RDMA_NDD_TRUE@@SYSTEMD_SYSTEM_FALSE@	$(top_srcdir)/config/install-sh -m 755 -d $(DESTDIR)/$(sysconfdir)/init.d
-@ENABLE_RDMA_NDD_TRUE@@SYSTEMD_SYSTEM_FALSE@	$(top_srcdir)/config/install-sh -m 755 $(top_srcdir)/etc/rdma-ndd.init $(DESTDIR)/$(sysconfdir)/init.d/rdma-ndd
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

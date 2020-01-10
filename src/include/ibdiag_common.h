@@ -39,6 +39,8 @@
 #ifndef _IBDIAG_COMMON_H_
 #define _IBDIAG_COMMON_H_
 
+#include <endian.h>
+
 #include <stdarg.h>
 #include <infiniband/mad.h>
 #include <infiniband/iba/ib_types.h>
@@ -79,6 +81,15 @@ extern char *ibd_nd_format;
 /* PM ClassPortInfo CapabilityMask Bits */
 #ifndef IS_PM_RSFEC_COUNTERS_SUP
 #define IS_PM_RSFEC_COUNTERS_SUP (CL_HTON16(((uint16_t)1)<<14))
+#endif
+
+#ifndef IB_PM_IS_QP1_DROP_SUP
+#define IB_PM_IS_QP1_DROP_SUP (CL_HTON16(((uint16_t)1)<<15))
+#endif
+
+/* PM ClassPortInfo CapabilityMask2 Bits */
+#ifndef IB_PM_IS_ADDL_PORT_CTRS_EXT_SUP
+#define IB_PM_IS_ADDL_PORT_CTRS_EXT_SUP (CL_HTON32(((uint32_t)1)<<1))
 #endif
 
 /* SM PortInfo CapabilityMask2 Bits */
@@ -133,7 +144,7 @@ extern void ibexit(const char *fn, char *msg, ...);
  */
 extern char *conv_cnt_human_readable(uint64_t val64, float *val, int data);
 
-int is_mlnx_ext_port_info_supported(uint32_t devid);
+int is_mlnx_ext_port_info_supported(uint32_t vendorid, uint16_t devid);
 
 int is_port_info_extended_supported(ib_portid_t * dest, int port,
 				    struct ibmad_port *srcport);

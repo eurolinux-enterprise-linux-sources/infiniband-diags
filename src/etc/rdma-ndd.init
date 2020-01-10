@@ -41,8 +41,8 @@
 # notice, one of the license notices in the documentation
 # and/or other materials provided with the distribution.
 
-prefix=/usr/local
-exec_prefix=${prefix}
+prefix=/nfs/site/home/iweiny/rdma-core/build
+exec_prefix=/nfs/site/home/iweiny/rdma-core/build
 pidfile=${prefix}/var/run/rdma-ndd.pid
 
 # Source function library.

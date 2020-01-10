@@ -48,6 +48,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <linux/types.h> /* __be64 */
 
 #include <infiniband/umad.h>
 
@@ -76,9 +77,9 @@ static void ca_dump(umad_ca_t * ca)
 	printf("\tNumber of ports: %d\n", ca->numports);
 	printf("\tFirmware version: %s\n", ca->fw_ver);
 	printf("\tHardware version: %s\n", ca->hw_ver);
-	printf("\tNode GUID: 0x%016" PRIx64 "\n", ntohll(ca->node_guid));
+	printf("\tNode GUID: 0x%016" PRIx64 "\n", be64toh(ca->node_guid));
 	printf("\tSystem image GUID: 0x%016" PRIx64 "\n",
-	       ntohll(ca->system_guid));
+	       be64toh(ca->system_guid));
 }
 
 static char *port_state_str[] = {
@@ -182,13 +183,15 @@ static int port_dump(umad_port_t * port, int alone)
 	       7 ? port_phy_state_str[port->phys_state] : "???");
 	if (is_fdr10(port))
 		printf("%sRate: %d (FDR10)\n", pre, port->rate);
-	else
+	else if (port->rate != 2)	/* 1x SDR */
 		printf("%sRate: %d\n", pre, port->rate);
+	else
+		printf("%sRate: 2.5\n", pre);
 	printf("%sBase lid: %d\n", pre, port->base_lid);
 	printf("%sLMC: %d\n", pre, port->lmc);
 	printf("%sSM lid: %d\n", pre, port->sm_lid);
 	printf("%sCapability mask: 0x%08x\n", pre, ntohl(port->capmask));
-	printf("%sPort GUID: 0x%016" PRIx64 "\n", pre, ntohll(port->port_guid));
+	printf("%sPort GUID: 0x%016" PRIx64 "\n", pre, be64toh(port->port_guid));
 #ifdef HAVE_UMAD_PORT_LINK_LAYER
 	printf("%sLink layer: %s\n", pre, port->link_layer);
 #endif
@@ -236,7 +239,7 @@ static int ca_stat(char *ca_name, int portnum, int no_ports)
 
 static int ports_list(char names[][UMAD_CA_NAME_LEN], int n)
 {
-	uint64_t guids[64];
+	__be64 guids[64];
 	int found, ports, i;
 
 	for (i = 0, found = 0; i < n && found < 64; i++) {
@@ -249,7 +252,7 @@ static int ports_list(char names[][UMAD_CA_NAME_LEN], int n)
 
 	for (i = 0; i < found; i++)
 		if (guids[i])
-			printf("0x%016" PRIx64 "\n", ntohll(guids[i]));
+			printf("0x%016" PRIx64 "\n", be64toh(guids[i]));
 	return found;
 }
 

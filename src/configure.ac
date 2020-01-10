@@ -1,11 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(infiniband-diags, 1.6.7, linux-rdma@vger.kernel.org)
+AC_INIT(infiniband-diags, 2.0.0, linux-rdma@vger.kernel.org)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([subdir-objects])
 
 AC_SUBST(RELEASE, ${RELEASE:-unknown})
 AC_SUBST(TARBALL, ${TARBALL:-${PACKAGE}-${VERSION}.tar.gz})
@@ -31,11 +31,6 @@ AM_CONDITIONAL(HAVE_DASH, test x$have_dash = xtrue)
 dnl Checks for libraries
 AC_CHECK_LIB(ibumad, umad_init, [],
 	AC_MSG_ERROR([umad_init() not found. diags require libibumad.]))
-AC_CHECK_LIB(ibmad, mad_dump_mlnx_ext_port_info, [],
-	AC_MSG_ERROR([mad_dump_mlnx_ext_port_info() not found.
-	diags require libibmad with mad_dump_mlnx_ext_port_info support.]))
-AC_CHECK_LIB(ibmad, mad_dump_classportinfo, [],
-	AC_MSG_ERROR([mad_dump_classportinfo() not found. diags requires a more recent libibmad.]))
 AC_CHECK_MEMBER([struct umad_port.link_layer],
 			[ac_have_umad_port_link_layer=yes],
 			[ac_have_umad_port_link_layer=no],
@@ -48,12 +43,9 @@ AC_CHECK_LIB(osmcomp, cl_qmap_insert, [],
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([stdlib.h string.h unistd.h fcntl.h inttypes.h netinet/in.h sys/ioctl.h])
+AC_CHECK_HEADERS([stdlib.h string.h unistd.h fcntl.h inttypes.h netinet/in.h sys/ioctl.h sys/time.h])
 AC_CHECK_HEADER(infiniband/umad.h, [],
 	AC_MSG_ERROR([<infiniband/umad.h> not found. diags require libibumad.])
-)
-AC_CHECK_HEADER(infiniband/mad.h, [],
-	AC_MSG_ERROR([<infiniband/mad.h> not found. diags require libibmad.])
 )
 
 dnl Checks for library functions
@@ -63,6 +55,7 @@ AC_CHECK_FUNCS([strchr strrchr strtol strtoul memset strtoull])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
+AC_C_INLINE
 
 dnl Define a configure directory
 IBDIAG_CONFIG_PATH_TMP1="`eval echo ${sysconfdir}`"
@@ -180,73 +173,14 @@ fi
 AC_SUBST(ibnetdisc_api_version)
 dnl End libibnetdisc stuff
 
-dnl Begin determine the systemd use and location
-PKG_CHECK_MODULES([SYSTEMD], [systemd], use_systemd=yes, use_systemd=no)
-
-specfile_install="%{_sysconfdir}/init.d/rdma-ndd"
-if test "x$use_systemd" == xyes; then
-	dir=""
-	AC_ARG_WITH([systemdsystemunitdir], AS_HELP_STRING([--with-systemdsystemunitdir=DIR],
-			[Directory for systemd service files default from pkg-config variable systemdsystemunitdir)]),
-			[dir=${withval}],
-			[dir="$($PKG_CONFIG --variable=systemdsystemunitdir systemd)"])
-	systemdsystemunitdir=${dir}
-	AC_SUBST(SYSTEMD_SYSTEM_UNIT_DIR, [$systemdsystemunitdir])
-	AC_SUBST(SYSTEMD_BUILD_REQUIRES, "BuildRequires: systemd")
-	specfile_install="$systemdsystemunitdir/rdma-ndd.service"
+dnl Begin libibmad stuff
+ibmad_api_version=`grep LIBVERSION $srcdir/libibmad/libibmad.ver | sed 's/LIBVERSION=//'`
+if test -z $ibmad_api_version; then
+   ibmad_api_version=1:0:0
 fi
-AM_CONDITIONAL(SYSTEMD_SYSTEM, test "x$use_systemd" == xyes)
-AC_SUBST(SPEC_FILE_RDMA_NDD_INSTALL, $specfile_install)
+AC_SUBST(ibmad_api_version)
+dnl End libibmad stuff
 
-dnl End systemd stuff
-
-
-dnl with or with rdma-ndd
-AC_MSG_CHECKING(for --enable-rdma-ndd)
-AC_ARG_ENABLE(rdma-ndd,
-[  --enable-rdma-ndd build rdma-ndd (default=yes)],
-[case "${enableval}" in
-  yes) rdmandd=yes ;;
-  no)  rdmandd=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-rdma-ndd) ;;
-esac],[rdmandd=yes])
-AM_CONDITIONAL(ENABLE_RDMA_NDD, test x$rdmandd = xyes)
-AC_MSG_RESULT(${rdmandd=no})
-
-dnl configures for rdma-ndd startup script
-default_rdma_service=openibd
-AC_ARG_WITH([rdma_service],
-    AC_HELP_STRING([--with-rdma-service=name],
-                       [name of the RDMA service: "rdma" when using /etc/init.d/rdma to start RDMA services; "openibd" when using /etc/init.d/openibd to start RDMA services [default=${default_rdma_service}]]))
-AC_SUBST(RDMA_SERVICE, ${with_rdma_service:-${default_rdma_service}})
-
-if { rpm -q sles-release || rpm -q openSUSE-release; } >/dev/null 2>&1; then
-	default_stop="0 1 4 6"
-else
-	default_stop="0 1 6"
-fi
-
-default_start="null"
-
-AC_SUBST(DEFAULT_START, $default_start)
-AC_SUBST(DEFAULT_STOP, $default_stop)
-
-AS_IF([test x$rdmandd = xyes], [
-    PKG_CHECK_MODULES([UDEV], [libudev])
-    AC_CONFIG_FILES([doc/man/rdma-ndd.8 \
-			etc/rdma-ndd.init \
-			etc/rdma-ndd.service])
-    AC_SUBST([UDEV_CFLAGS])
-    AC_SUBST([UDEV_LIBS])
-    if test "$with_udev" = "yes"; then
-	PKG_CHECK_EXISTS(libudev >= 218, [with_dev_logging=no],
-			[with_udev_logging=yes])
-	if test "$with_udev_logging" = "yes"; then
-		AC_DEFINE_UNQUOTED([HAVE_UDEV_LOGGING], 1,
-				[whether libudev logging can be used])
-	fi
-    fi
-])
 
 dnl Generate doc/man/*.in files if possible
 DOC_DATE="`date +%Y-%m-%d`"
@@ -322,5 +256,6 @@ AC_CONFIG_FILES([\
 	doc/man/vendstat.8 \
 	doc/man/infiniband-diags.8 \
 	libibnetdisc/Makefile \
+	libibmad/Makefile \
 ])
 AC_OUTPUT

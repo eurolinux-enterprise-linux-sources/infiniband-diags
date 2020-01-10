@@ -10,36 +10,77 @@ interface to this library is _not_ guaranteed to be stable (though we try.)
 
 Dependencies:
 
-	1) libibmad >= 1.3.12
-	2) libibumad >= 1.3.7
-	3) opensm-libs >= 3.3.10
-	4) ib_umad kernel module
-	5) glib2
+	1) libibumad >= 1.3.7
+	2) opensm-libs >= 3.3.10
+	3) ib_umad kernel module
+	4) glib2
 
 
-Release notes v1.6.6 => 1.6.7
+Release notes 1.6.7 => 2.0.0
 
-   1) bug fixes
-   2) Add support for systemd
+   1) combine libibmad
+   2) Removed rdma-ndd
+   	2a) Removed need for systemd
+   	2b) Removed need for udev
 
 
-Authors since 1.6.6
+Authors since 1.6.7
 
-Dan Ben Yosef (1):
-  saquery.c: Fix changing qos_class flag value to network order twice
+*Preserved full history from libibmad*
 
-Hal Rosenstock (5):
-  ibcacheedit.c: Eliminate unused parameter passed to
-    update_switchportguids
-  ibqueryerrors.c: Removed unused passed parameters to print_port_config
-    and query_and_dump
-  Remove unused pisize parameter from dump_portinfo in ibdiag_common
-  ibportstate.c: Fix unsigned comparison warnings
-  ibsendtrap.c: Eliminate unused parameter from send_trap
+Ana Guerrero López (4):
+  Update AM_INIT_AUTOMAKE to use subdir-objects
+  Replace INCLUDES with AM_CPPFLAGS
+  Update the shebang to point to /bin/bash
+  A few typo fixes in the manpages
 
-Ira Weiny (1):
-  rdma-ndd: Add systemd support
+Dag Moxnes (1):
+  ibportstate: Fixed switch peer port probing when using DR routing
 
-Vladimir Koushnir (1):
-  infiniband-diags: Add Switch-IB2 support to device white lists
+Eitan Zahavi (1):
+  ibsendtrap.c: Add support for security traps
+
+Hal Rosenstock (13):
+  ibportstate.c: When not switch, port can be router port
+  ibaddr.c: Fix LID printfs to be unsigned rather than signed
+  libibnetdisc/internal.h: Remove duplicated declaration of
+    add_to_portlid_hash
+  ibtracert.c: Enable m_key option
+  Add Bull device ID support to device white lists
+  infiniband-diags: Add Connect-X5 device ID to device white
+  scripts: Add mkey support into ibhosts, ibswitches, and ibrouters
+  ibdiag_common.c: Disambiguate link speed when QDR and could be FDR10
+  saquery.c: Remove use of to be deprecated ib_gid_t
+  ibdiag_common.c: Fix endian conversion in resolve_self for umad_port
+    GID prefix and GUID
+  ibdiag_common.c: Fix cosmetic formatting issue
+  ibstat.c: Add include for __be64 type
+  perfquery.c: Output PerfMgt ClassPortInfo CapabilityMask2
+
+Ira Weiny (15):
+  doc/man/*.in: update pre-built *.in files
+  scripts: Add m_key to man pages
+  infiniband-diags: Use modern glibc htobe64/be64toh macros
+  infiniband-diags: Fix type passed to umad_get_ca_portguids
+  infiniband-diags/perfquery: Use universal zero init for perf_count
+  infiniband-diags: Update README files to reflect new merged repo
+  infiniband-diags: Bump version to 2.0.0
+  infiniband-diags: Update COPYING files to reflect the new repo
+  infiniband-diags: Remove redundant AUTHORS file
+  infiniband-diags: Move libibmad auto-configuration to main dir
+  infiniband-diags: Merge makefiles and build against internal libibmad
+  infiniband-diags: Combine libibmad spec into infiniband-diags
+  infiniband-diags: Remove outdated scripts for ChangeLog
+  infiniband-diags: set noreplace on config files
+  infiniband-diags: Remove rdma-ndd
+
+
+Oded Nissan (2):
+  ibstat.c: If port is 1x SDR, rate is 2.5 rather than 2 Gbps
+  perfquery.c: Add support for additional counters in
+    PortCountersExtended
+
+Vincent Ficet (1):
+  infiniband-diags: Add Bull device ID support to device white lists
+
 
