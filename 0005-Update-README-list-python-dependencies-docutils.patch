@@ -1,0 +1,27 @@
+From eda517d6b73137c4d0b71663ec5c41d73cbddcfb Mon Sep 17 00:00:00 2001
+From: Cyrille Verrier <cyrille.verrier@fabriscale.com>
+Date: Wed, 3 Oct 2018 10:15:52 +0200
+Subject: [PATCH 5/6] Update README: list python dependencies (docutils)
+
+---
+ README | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/README b/README
+index cc0b2af01bf3..02085d80da1b 100644
+--- a/README
++++ b/README
+@@ -14,7 +14,9 @@ Dependencies:
+ 	2) opensm-libs >= 3.3.10
+ 	3) ib_umad kernel module
+ 	4) glib2
+-
++	
++Python dependencies:
++	1) docutils
+ 
+ Release notes 2.0.0 => 2.1.0
+ 
+-- 
+2.15.0-rc1
+

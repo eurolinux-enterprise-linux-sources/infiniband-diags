@@ -183,6 +183,9 @@ void mad_dump_linkwidth(char *buf, int bufsz, void *val, int valsz)
 	case 8:
 		snprintf(buf, bufsz, "12X");
 		break;
+	case 16:
+		snprintf(buf, bufsz, "2X");
+		break;
 	default:
 		IBWARN("bad width %d", width);
 		snprintf(buf, bufsz, "undefined (%d)", width);
@@ -202,10 +205,12 @@ static void dump_linkwidth(char *buf, int bufsz, int width)
 		n += snprintf(buf + n, bufsz - n, "8X or ");
 	if (n < bufsz && (width & 0x8))
 		n += snprintf(buf + n, bufsz - n, "12X or ");
+	if (n < bufsz && (width & 0x10))
+		n += snprintf(buf + n, bufsz - n, "2X or ");
 
 	if (n >= bufsz)
 		return;
-	else if (width == 0 || (width >> 4))
+	else if (width == 0 || (width >> 5))
 		snprintf(buf + n, bufsz - n, "undefined (%d)", width);
 	else if (bufsz > 3)
 		buf[n - 4] = '\0';
@@ -223,10 +228,15 @@ void mad_dump_linkwidthsup(char *buf, int bufsz, void *val, int valsz)
 	case 7:
 	case 11:
 	case 15:
+	case 17:
+	case 19:
+	case 23:
+	case 27:
+	case 31:
 		break;
 
 	default:
-		if (!(width >> 4))
+		if (!(width >> 5))
 			snprintf(buf + strlen(buf), bufsz - strlen(buf),
 				 " (IBA extension)");
 		break;
@@ -326,6 +336,9 @@ void mad_dump_linkspeedext(char *buf, int bufsz, void *val, int valsz)
 	case 2:
 		snprintf(buf, bufsz, "25.78125 Gbps");
 		break;
+	case 4:
+		snprintf(buf, bufsz, "53.125 Gbps");
+		break;
 	default:
 		snprintf(buf, bufsz, "undefined (%d)", speed);
 		break;
@@ -345,13 +358,16 @@ static void dump_linkspeedext(char *buf, int bufsz, int speed)
 		n += snprintf(buf + n, bufsz - n, "14.0625 Gbps or ");
 	if (n < bufsz && speed & 0x2)
 		n += snprintf(buf + n, bufsz - n, "25.78125 Gbps or ");
+	if (n < bufsz && speed & 0x4)
+		n += snprintf(buf + n, bufsz - n, "53.125 Gbps or ");
+
 	if (n >= bufsz) {
 		if (bufsz > 3)
 			buf[n - 4] = '\0';
 		return;
 	}
 
-	if (speed >> 2) {
+	if (speed >> 3) {
 		n += snprintf(buf + n, bufsz - n, "undefined (%d)", speed);
 		return;
 	} else if (bufsz > 3)
@@ -606,6 +622,29 @@ void mad_dump_portcapmask(char *buf, int bufsz, void *val, int valsz)
 		*(--s) = 0;
 }
 
+void mad_dump_portcapmask2(char *buf, int bufsz, void *val, int valsz)
+{
+	int mask = *(int *)val;
+	char *s = buf;
+
+	s += sprintf(s, "0x%x\n", mask);
+	if (mask & (1 << 0))
+		s += sprintf(s, "\t\t\t\tIsSetNodeDescriptionSupported\n");
+	if (mask & (1 << 1))
+		s += sprintf(s, "\t\t\t\tIsPortInfoExtendedSupported\n");
+	if (mask & (1 << 2))
+		s += sprintf(s, "\t\t\t\tIsVirtualizationSupported\n");
+	if (mask & (1 << 3))
+		s += sprintf(s, "\t\t\t\tIsSwitchPortStateTableSupported\n");
+	if (mask & (1 << 4))
+		s += sprintf(s, "\t\t\t\tIsLinkWidth2xSupported\n");
+	if (mask & (1 << 5))
+		s += sprintf(s, "\t\t\t\tIsLinkSpeedHDRSupported\n");
+
+	if (s != buf)
+		*(--s) = 0;
+}
+
 void mad_dump_bitfield(char *buf, int bufsz, void *val, int valsz)
 {
 	snprintf(buf, bufsz, "0x%x", *(uint32_t *) val);
@@ -787,7 +826,20 @@ void mad_dump_switchinfo(char *buf, int bufsz, void *val, int valsz)
 
 void mad_dump_perfcounters(char *buf, int bufsz, void *val, int valsz)
 {
-	_dump_fields(buf, bufsz, val, IB_PC_FIRST_F, IB_PC_LAST_F);
+	int cnt, cnt2;
+
+	cnt = _dump_fields(buf, bufsz, val,
+			   IB_PC_FIRST_F, IB_PC_VL15_DROPPED_F);
+	if (cnt < 0)
+		return;
+
+	cnt2 = _dump_fields(buf + cnt, bufsz - cnt, val,
+			    IB_PC_QP1_DROP_F, IB_PC_QP1_DROP_F + 1);
+	if (cnt2 < 0)
+		return;
+
+	_dump_fields(buf + cnt + cnt2, bufsz - cnt - cnt2, val,
+		     IB_PC_VL15_DROPPED_F, IB_PC_LAST_F);
 }
 
 void mad_dump_perfcounters_ext(char *buf, int bufsz, void *val, int valsz)
@@ -1131,8 +1183,16 @@ void mad_dump_classportinfo(char *buf, int bufsz, void *val, int valsz)
 
 void mad_dump_portinfo_ext(char *buf, int bufsz, void *val, int valsz)
 {
-	_dump_fields(buf, bufsz, val, IB_PORT_EXT_FIRST_F,
-		     IB_PORT_EXT_LAST_F);
+	int cnt;
+
+	cnt = _dump_fields(buf, bufsz, val, IB_PORT_EXT_FIRST_F,
+			   IB_PORT_EXT_LAST_F);
+	if (cnt < 0)
+		return;
+
+	_dump_fields(buf + cnt, bufsz - cnt, val,
+		     IB_PORT_EXT_HDR_FEC_MODE_SUPPORTED_F,
+		     IB_PORT_EXT_HDR_FEC_MODE_LAST_F);
 }
 
 void xdump(FILE * file, char *msg, void *p, int size)

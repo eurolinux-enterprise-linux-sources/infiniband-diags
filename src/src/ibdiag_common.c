@@ -439,7 +439,7 @@ conv_cnt_human_readable(uint64_t val64, float *val, int data)
 {
 	uint64_t tmp = val64;
 	int ui = 0;
-	int div = 1;
+	uint64_t div = 1;
 
 	tmp /= 1024;
 	while (tmp) {
@@ -506,8 +506,18 @@ int is_port_info_extended_supported(ib_portid_t * dest, int port,
 	uint8_t data[IB_SMP_DATA_SIZE] = { 0 };
 	uint32_t cap_mask;
 	uint16_t cap_mask2;
+	int type, portnum;
 
-	if (!smp_query_via(data, dest, IB_ATTR_PORT_INFO, port, 0, srcport))
+	if (!smp_query_via(data, dest, IB_ATTR_NODE_INFO, 0, 0, srcport))
+		IBEXIT("node info query failed");
+
+	mad_decode_field(data, IB_NODE_TYPE_F, &type);
+	if (type == IB_NODE_SWITCH)
+		portnum = 0;
+	else
+		portnum = port;
+
+	if (!smp_query_via(data, dest, IB_ATTR_PORT_INFO, portnum, 0, srcport))
 		IBEXIT("port info query failed");
 
 	mad_decode_field(data, IB_PORT_CAPMASK_F, &cap_mask);
@@ -532,7 +542,9 @@ int is_mlnx_ext_port_info_supported(uint32_t vendorid,
 {
 	if (ibd_ibnetdisc_flags & IBND_CONFIG_MLX_EPI) {
 
-		if ((devid >= 0xc738 && devid <= 0xc73b) || devid == 0xcb20 || devid == 0xcf08 ||
+		if ((devid >= 0xc738 && devid <= 0xc73b) ||
+		    devid == 0xc839 || devid == 0xcb20 || devid == 0xcf08 ||
+		    devid == 0xcf09 || devid == 0xd2f0 ||
 		    ((vendorid == 0x119f) &&
 		     /* Bull SwitchX */
 		     (devid == 0x1b02 || devid == 0x1b50 ||
@@ -540,7 +552,7 @@ int is_mlnx_ext_port_info_supported(uint32_t vendorid,
 		      devid == 0x1ba0 ||
 		      (devid >= 0x1bd0 && devid <= 0x1bd5))))
 			return 1;
-		if ((devid >= 0x1003 && devid <= 0x1017) ||
+		if ((devid >= 0x1003 && devid <= 0x101b) ||
 		    ((vendorid == 0x119f) &&
 		     /* Bull ConnectX3 */
 		     (devid == 0x1b33 || devid == 0x1b73 ||
@@ -737,6 +749,24 @@ int resolve_portid_str(char *ca_name, uint8_t ca_port, ib_portid_t * portid,
 	return -1;
 }
 
+static unsigned int get_max_width(unsigned int num)
+{
+	unsigned r = 0;			/* 1x */
+
+	if (num & 8)
+		r = 3;			/* 12x */
+	else {
+		if (num & 4)
+			r = 2;		/* 8x */
+		else if (num & 2)
+			r = 1;		/* 4x */
+		else if (num & 0x10)
+			r = 4;		/* 2x */
+	}
+
+        return (1 << r);
+}
+
 static unsigned int get_max(unsigned int num)
 {
 	unsigned r = 0;		// r will be lg(num)
@@ -754,7 +784,7 @@ void get_max_msg(char *width_msg, char *speed_msg, int msg_size, ibnd_port_t * p
 	uint32_t cap_mask, rem_cap_mask, fdr10;
 	uint8_t *info = NULL;
 
-	uint32_t max_width = get_max(mad_get_field(port->info, 0,
+	uint32_t max_width = get_max_width(mad_get_field(port->info, 0,
 						   IB_PORT_LINK_WIDTH_SUPPORTED_F)
 				     & mad_get_field(port->remoteport->info, 0,
 						     IB_PORT_LINK_WIDTH_SUPPORTED_F));

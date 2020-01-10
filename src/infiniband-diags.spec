@@ -4,12 +4,12 @@
 
 Summary: OpenFabrics Alliance InfiniBand Diagnostic Tools
 Name: infiniband-diags
-Version: 2.0.0
+Version: 2.1.0
 Release: %rel%{?dist}
 License: GPLv2 or BSD
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Source: http://www.openfabrics.org/downloads/management/infiniband-diags-2.0.0.tar.gz
+Source: http://www.openfabrics.org/downloads/management/infiniband-diags-2.1.0.tar.gz
 Url: http://openfabrics.org/
 BuildRequires: opensm-devel, libibumad-devel, glib2-devel
 Requires: opensm-libs, libibumad, glib2
@@ -101,6 +101,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/ibprintrt.pl
 %{_mandir}/man8/ibprintrt.8.gz
 %{_sbindir}/set_nodedesc.sh
+%{_sbindir}/ibclearerrors
+%{_mandir}/man8/ibclearerrors.8.gz
+%{_sbindir}/ibclearcounters
+%{_mandir}/man8/ibclearcounters.8.gz
 
 
 %files
@@ -166,10 +170,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/dump_lfts.8.gz
 %{_sbindir}/dump_mfts.sh
 %{_mandir}/man8/dump_mfts.8.gz
-%{_sbindir}/ibclearerrors
-%{_mandir}/man8/ibclearerrors.8.gz
-%{_sbindir}/ibclearcounters
-%{_mandir}/man8/ibclearcounters.8.gz
 %{_sbindir}/ibstatus
 %{_mandir}/man8/ibstatus.8.gz
 

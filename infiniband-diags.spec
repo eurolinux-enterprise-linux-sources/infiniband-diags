@@ -1,19 +1,21 @@
 Summary: OpenFabrics Alliance InfiniBand Diagnostic Tools
 Name: infiniband-diags 
-Version: 2.0.0
-Release: 2%{?dist}
+Version: 2.1.0
+Release: 1%{?dist}
 # Upstream allows either license to be used
 License: GPLv2 or BSD
 Url:     https://github.com/linux-rdma/infiniband-diags
 Source0: https://github.com/linux-rdma/%{name}/releases/download/%{version}/%{name}-%{version}.tar.gz
+# Pick up upstream patches after tag '2.1.0'
+Patch1: 0003-Add-latest-new-device-ID-to-device-white-lists.patch
+Patch2: 0005-Update-README-list-python-dependencies-docutils.patch
+Patch3: 0006-Add-latest-Bull-device-IDs-to-device-white-lists.patch
+
 # RHEL-specific patches:
 Patch6: 0006-Fix-hostname-usage-in-set_nodedesc.sh.patch
 Patch7: 0007-Fix-ibnodes-h-output.patch
 
-Patch8: 0001-infiniband-diags-Update-iblinkinfo-diffcheck-options.patch
-Patch9: 0002-infiniband-diags-Update-default-man-pages.patch
-
-BuildRequires: opensm-devel > 3.3.8, libibumad-devel, perl
+BuildRequires: opensm-devel >= 3.3.21, libibumad-devel, perl
 BuildRequires: glib2-devel
 Provides: perl(IBswcountlimits)
 Provides: libibmad = %{version}-%{release}
@@ -46,10 +48,11 @@ Static libraries for the infiniband-diags library.
 
 %prep
 %setup -q
+%patch1 -p1
+%patch2 -p1
+%patch3 -p1
 %patch6 -p1 -b .hostname
 %patch7 -p1 -b .help
-%patch8 -p1
-%patch9 -p1
 
 %build
 %configure
@@ -148,6 +151,10 @@ find ${RPM_BUILD_ROOT} -type f -name '*.la' -print -delete
 %postun -p /sbin/ldconfig
 
 %changelog
+* Tue Jan 29 2019 Honggang Li <honli@redhat.com> 2.1.0-1
+- Rebase to latest upstream release 2.1.0
+- Resolves: bz1642720
+
 * Wed Jul 11 2018 Honggang Li <honli@redhat.com> 2.0.0-2
 - Update iblinkinfo --diffcheck options
 - Resolves: bz1596754

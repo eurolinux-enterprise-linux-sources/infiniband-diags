@@ -1310,6 +1310,18 @@ enum MAD_FIELDS {
 	IB_PC_EXT_QP1_DROP_F,
 	IB_PC_EXT_ERR_LAST_F,
 
+	/*
+	 * Another PortCounters field
+	 */
+	IB_PC_QP1_DROP_F,
+
+	/*
+	 * More PortInfoExtended fields
+	 */
+	IB_PORT_EXT_HDR_FEC_MODE_SUPPORTED_F,
+	IB_PORT_EXT_HDR_FEC_MODE_ENABLED_F,
+	IB_PORT_EXT_HDR_FEC_MODE_LAST_F,
+
 	IB_FIELD_LAST_		/* must be last */
 };
 
@@ -1651,7 +1663,7 @@ MAD_EXPORT ib_mad_dump_fn
     mad_dump_linkspeed, mad_dump_linkspeedsup, mad_dump_linkspeeden,
     mad_dump_linkspeedext, mad_dump_linkspeedextsup, mad_dump_linkspeedexten,
     mad_dump_portstate, mad_dump_portstates,
-    mad_dump_physportstate, mad_dump_portcapmask,
+    mad_dump_physportstate, mad_dump_portcapmask, mad_dump_portcapmask2,
     mad_dump_mtu, mad_dump_vlcap, mad_dump_opervls,
     mad_dump_node_type, mad_dump_sltovl, mad_dump_vlarbitration,
     mad_dump_nodedesc, mad_dump_nodeinfo, mad_dump_portinfo,

@@ -115,6 +115,9 @@ char *dump_linkspeedext_compat(uint32_t espeed, uint32_t speed, uint32_t fdr10)
 	case 2:
 		return ("EDR");
 		break;
+	case 4:
+		return ("HDR");
+		break;
 	}
 	return ("???");
 }
@@ -133,6 +136,9 @@ char *dump_linkwidth_compat(uint32_t width)
 		break;
 	case 8:
 		return ("12x");
+		break;
+	case 16:
+		return ("2x");
 		break;
 	}
 	return ("??");
@@ -989,6 +995,8 @@ static int process_opt(void *context, int ch, char *optarg)
 	switch (ch) {
 	case 1:
 		node_name_map_file = strdup(optarg);
+		if (node_name_map_file == NULL)
+			IBEXIT("out of memory, strdup for node_name_map_file name failed");
 		break;
 	case 2:
 		cache_file = strdup(optarg);

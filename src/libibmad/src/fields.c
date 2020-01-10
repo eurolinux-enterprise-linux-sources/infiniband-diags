@@ -162,7 +162,7 @@ static const ib_field_t ib_mad_f[] = {
 	{BITSOFFS(384, 16), "QkeyViolations", mad_dump_uint},
 	{BITSOFFS(400, 8), "GuidCap", mad_dump_uint},
 	{BITSOFFS(408, 1), "ClientReregister", mad_dump_uint},
-	{BITSOFFS(409, 1), "McastPkeyTrapSuppressionEnabled", mad_dump_uint},
+	{BITSOFFS(409, 2), "McastPkeyTrapSuppressionEnabled", mad_dump_uint},
 	{BITSOFFS(411, 5), "SubnetTimeout", mad_dump_uint},
 	{BITSOFFS(419, 5), "RespTimeVal", mad_dump_uint},
 	{BITSOFFS(424, 4), "LocalPhysErr", mad_dump_uint},
@@ -529,7 +529,7 @@ static const ib_field_t ib_mad_f[] = {
 	/*
 	 * More PortInfo fields
 	 */
-	{BITSOFFS(480, 16), "CapabilityMask2", mad_dump_hex},
+	{BITSOFFS(480, 16), "CapabilityMask2", mad_dump_portcapmask2},
 	{BITSOFFS(496, 4), "LinkSpeedExtActive", mad_dump_linkspeedext},
 	{BITSOFFS(500, 4), "LinkSpeedExtSupported", mad_dump_linkspeedextsup},
 	{BITSOFFS(507, 5), "LinkSpeedExtEnabled", mad_dump_linkspeedexten},
@@ -1003,6 +1003,18 @@ static const ib_field_t ib_mad_f[] = {
 	{1344, 64, "PortXmitWait", mad_dump_uint},
 	{1408, 64, "QP1Dropped", mad_dump_uint},
 	{0, 0},			/* IB_PC_EXT_ERR_LAST_F */
+
+	/*
+	 * Another PortCounters field
+	 */
+	{160, 16, "QP1Dropped", mad_dump_uint},
+
+	/*
+	 * More PortInfoExtended fields
+	 */
+	{112, 16, "HDRFECModeSupported", mad_dump_hex},
+	{128, 16, "HDRFECModeEnabled", mad_dump_hex},
+	{0, 0},			/* IB_PORT_EXT_HDR_FEC_MODE_LAST_F */
 
 	{0, 0}			/* IB_FIELD_LAST_ */
 };
