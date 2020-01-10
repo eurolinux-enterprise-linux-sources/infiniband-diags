@@ -1,0 +1,510 @@
+From 1f945b99ffc248d1105d38b521fc0cbfd8a4462a Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Mon, 22 Jun 2015 18:04:29 +0200
+Subject: [PATCH] Modify perfquery to be able to loop through all HCAs in a
+ single host
+
+From: Doug Ledford <dledford@redhat.com>
+---
+ src/perfquery.c | 401 +++++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 239 insertions(+), 162 deletions(-)
+
+diff --git a/src/perfquery.c b/src/perfquery.c
+index 46451ef53c..9e84828c49 100644
+--- a/src/perfquery.c
++++ b/src/perfquery.c
+@@ -371,7 +371,7 @@ static void reset_counters(int extended, int timeout, int mask,
+ static int reset, reset_only, all_ports, loop_ports, port, extended, xmt_sl,
+     rcv_sl, xmt_disc, rcv_err, extended_speeds, smpl_ctl, oprcvcounters, flowctlcounters,
+     vloppackets, vlopdata, vlxmitflowctlerrors, vlxmitcounters, swportvlcong,
+-    rcvcc, slrcvfecn, slrcvbecn, xmitcc, vlxmittimecc;
++    rcvcc, slrcvfecn, slrcvbecn, xmitcc, vlxmittimecc, all_hcas;
+ static int ports[MAX_PORTS];
+ static int ports_count;
+ 
+@@ -687,12 +687,17 @@ static int process_opt(void *context, int ch, char *optarg)
+ 	case 'R':
+ 		reset_only++;
+ 		break;
++	case 'H':
++		all_hcas++;
++		break;
+ 	default:
+ 		return -1;
+ 	}
+ 	return 0;
+ }
+ 
++#define MAX_HCAS 4 // Assume we will never have more than 4 distinct HCAs in
++		   // a single machine
+ int main(int argc, char **argv)
+ {
+ 	int mgmt_classes[3] = { IB_SMI_CLASS, IB_SA_CLASS, IB_PERFORMANCE_CLASS };
+@@ -707,6 +712,9 @@ int main(int argc, char **argv)
+ 	int enhancedport0;
+ 	char *tmpstr;
+ 	int i;
++	int cur_name = 0;
++	char name_list[MAX_HCAS][UMAD_CA_NAME_LEN];
++	umad_ca_t ca;
+ 
+ 	const struct ibdiag_opt opts[] = {
+ 		{"extended", 'x', 0, NULL, "show extended port counters"},
+@@ -729,6 +737,8 @@ int main(int argc, char **argv)
+ 		{"vlxmittimecc", 12, 0, NULL, "show VL Xmit Time congestion control counters"},
+ 		{"smplctl", 'c', 0, NULL, "show samples control"},
+ 		{"all_ports", 'a', 0, NULL, "show aggregated counters"},
++		{"all_hcas", 'H', 0, NULL, "iterate through all local HCAs and "
++			"ports"},
+ 		{"loop_ports", 'l', 0, NULL, "iterate through each port"},
+ 		{"reset_after_read", 'r', 0, NULL, "reset counters after read"},
+ 		{"Reset_only", 'R', 0, NULL, "only reset counters"},
+@@ -737,10 +747,12 @@ int main(int argc, char **argv)
+ 	char usage_args[] = " [<lid|guid> [[port(s)] [reset_mask]]]";
+ 	const char *usage_examples[] = {
+ 		"\t\t# read local port's performance counters",
++		"-H\t\t# read performance counters on all local HCAs/ports",
+ 		"32 1\t\t# read performance counters from lid 32, port 1",
+ 		"-x 32 1\t# read extended performance counters from lid 32, port 1",
+ 		"-a 32\t\t# read performance counters from lid 32, all ports",
+ 		"-r 32 1\t# read performance counters and reset",
++		"-r -H\t\t# read and reset counters on all local HCAs/ports",
+ 		"-x -r 32 1\t# read extended performance counters and reset",
+ 		"-R 0x20 1\t# reset performance counters of port 1 only",
+ 		"-x -R 0x20 1\t# reset extended performance counters of port 1 only",
+@@ -760,6 +772,18 @@ int main(int argc, char **argv)
+ 	argc -= optind;
+ 	argv += optind;
+ 
++	/*
++	 * The all_hcas option makes no sense combined with any port
++	 * specification, nor does it make sense with all_ports which
++	 * is useful on switches, not on the local host.
++	 */
++	if (all_hcas && argc > 0)
++		IBEXIT("Invalid input: all_hcas and any port/lid/guid are "
++		       "not allowed together.");
++	if (all_hcas && (loop_ports || all_ports || (port == ALL_PORTS)))
++		IBEXIT("Invalid input: all_hcas can not be combined with "
++		       "loop_ports or all_ports or port == ALL_PORTS");
++
+ 	if (argc > 1) {
+ 		if (strchr(argv[1], ',')) {
+ 			tmpstr = strtok(argv[1], ",");
+@@ -794,199 +818,252 @@ int main(int argc, char **argv)
+ 		mask = ext_mask;
+ 	}
+ 
+-	srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port, mgmt_classes, 3);
+-	if (!srcport)
+-		IBEXIT("Failed to open '%s' port '%d'", ibd_ca, ibd_ca_port);
++	if (all_hcas) {
++		if (umad_init() < 0)
++			IBEXIT("Failed to initialize libibumad");
++		if (umad_get_cas_names(name_list, MAX_HCAS) < 0)
++			IBEXIT("Unable to get list of HCAs");
++		cur_name = 0;
++		if (umad_get_ca(name_list[cur_name], &ca))
++			IBEXIT("Unable to get umad ca");
++		ibd_ca = name_list[cur_name++];
++		ibd_ca_port = start_port;
++	}
+ 
+-	smp_mkey_set(srcport, ibd_mkey);
++	do {
++		if (all_hcas && strncmp(ca.ports[ibd_ca_port]->link_layer,
++					"InfiniBand", 10))
++			goto skip_port;
++
++		srcport = mad_rpc_open_port(ibd_ca, ibd_ca_port,
++					    mgmt_classes, 3);
++		if (!srcport) {
++			if (cur_name == 0)
++				IBEXIT("Failed to open '%s' port '%d'",
++				       ibd_ca, ibd_ca_port);
++			exit(0);
++		}
+ 
+-	if (argc) {
+-		if (resolve_portid_str(ibd_ca, ibd_ca_port, &portid, argv[0],
+-				       ibd_dest_type, ibd_sm_id, srcport) < 0)
+-			IBEXIT("can't resolve destination port %s", argv[0]);
+-	} else {
+-		if (resolve_self(ibd_ca, ibd_ca_port, &portid, &port, 0) < 0)
+-			IBEXIT("can't resolve self port %s", argv[0]);
+-	}
++		smp_mkey_set(srcport, ibd_mkey);
++
++		if (argc) {
++			if (resolve_portid_str(ibd_ca, ibd_ca_port, &portid,
++					       argv[0], ibd_dest_type,
++					       ibd_sm_id, srcport) < 0)
++				IBEXIT("can't resolve destination port %s",
++				       argv[0]);
++		} else {
++			if (resolve_self(ibd_ca, ibd_ca_port, &portid, &port,
++					 0) < 0)
++				IBEXIT("can't resolve self port %s", argv[0]);
++		}
+ 
+-	/* PerfMgt ClassPortInfo is a required attribute */
+-	memset(pc, 0, sizeof(pc));
+-	if (!pma_query_via(pc, &portid, port, ibd_timeout, CLASS_PORT_INFO,
+-			   srcport))
+-		IBEXIT("classportinfo query");
+-	/* ClassPortInfo should be supported as part of libibmad */
+-	memcpy(&cap_mask, pc + 2, sizeof(cap_mask));	/* CapabilityMask */
+-	if (!(cap_mask & IB_PM_ALL_PORT_SELECT)) {	/* bit 8 is AllPortSelect */
+-		if (!all_ports && port == ALL_PORTS)
+-			IBEXIT("AllPortSelect not supported");
+-		if (all_ports && port == ALL_PORTS)
+-			all_ports_loop = 1;
+-	}
++		/* PerfMgt ClassPortInfo is a required attribute */
++		memset(pc, 0, sizeof(pc));
++		if (!pma_query_via(pc, &portid, port, ibd_timeout,
++				   CLASS_PORT_INFO, srcport))
++			IBEXIT("classportinfo query");
++		/* ClassPortInfo should be supported as part of libibmad */
++		memcpy(&cap_mask, pc + 2, sizeof(cap_mask));/* CapabilityMask */
++		/* bit 8 is AllPortSelect */
++		if (!(cap_mask & IB_PM_ALL_PORT_SELECT)) {
++			if (!all_ports && port == ALL_PORTS)
++				IBEXIT("AllPortSelect not supported");
++			if (all_ports && port == ALL_PORTS)
++				all_ports_loop = 1;
++		}
+ 
+-	if (xmt_sl) {
+-		xmt_sl_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (xmt_sl) {
++			xmt_sl_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (rcv_sl) {
+-		rcv_sl_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (rcv_sl) {
++			rcv_sl_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (xmt_disc) {
+-		xmt_disc_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (xmt_disc) {
++			xmt_disc_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (rcv_err) {
+-		rcv_err_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (rcv_err) {
++			rcv_err_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (extended_speeds) {
+-		extended_speeds_query(&portid, port, ext_mask, cap_mask);
+-		goto done;
+-	}
++		if (extended_speeds) {
++			extended_speeds_query(&portid, port, ext_mask, cap_mask);
++			goto done;
++		}
+ 
+-	if (oprcvcounters) {
+-		oprcvcounters_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (oprcvcounters) {
++			oprcvcounters_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (flowctlcounters) {
+-		flowctlcounters_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (flowctlcounters) {
++			flowctlcounters_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (vloppackets) {
+-		vloppackets_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (vloppackets) {
++			vloppackets_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (vlopdata) {
+-		vlopdata_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (vlopdata) {
++			vlopdata_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (vlxmitflowctlerrors) {
+-		vlxmitflowctlerrors_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (vlxmitflowctlerrors) {
++			vlxmitflowctlerrors_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (vlxmitcounters) {
+-		vlxmitcounters_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (vlxmitcounters) {
++			vlxmitcounters_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (swportvlcong) {
+-		swportvlcong_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (swportvlcong) {
++			swportvlcong_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (rcvcc) {
+-		rcvcc_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (rcvcc) {
++			rcvcc_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (slrcvfecn) {
+-		slrcvfecn_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (slrcvfecn) {
++			slrcvfecn_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (slrcvbecn) {
+-		slrcvbecn_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (slrcvbecn) {
++			slrcvbecn_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (xmitcc) {
+-		xmitcc_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (xmitcc) {
++			xmitcc_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (vlxmittimecc) {
+-		vlxmittimecc_query(&portid, port, mask);
+-		goto done;
+-	}
++		if (vlxmittimecc) {
++			vlxmittimecc_query(&portid, port, mask);
++			goto done;
++		}
+ 
+-	if (smpl_ctl) {
+-		dump_portsamples_control(&portid, port);
+-		goto done;
+-	}
++		if (smpl_ctl) {
++			dump_portsamples_control(&portid, port);
++			goto done;
++		}
+ 
+ 
+-	if (all_ports_loop || (loop_ports && (all_ports || port == ALL_PORTS))) {
+-		if (smp_query_via(data, &portid, IB_ATTR_NODE_INFO, 0, 0,
+-				  srcport) < 0)
+-			IBEXIT("smp query nodeinfo failed");
+-		node_type = mad_get_field(data, 0, IB_NODE_TYPE_F);
+-		mad_decode_field(data, IB_NODE_NPORTS_F, &num_ports);
+-		if (!num_ports)
+-			IBEXIT("smp query nodeinfo: num ports invalid");
+-
+-		if (node_type == IB_NODE_SWITCH) {
+-			if (smp_query_via(data, &portid, IB_ATTR_SWITCH_INFO,
++		if (all_ports_loop || (loop_ports &&
++				       (all_ports || port == ALL_PORTS))) {
++			if (smp_query_via(data, &portid, IB_ATTR_NODE_INFO,
+ 					  0, 0, srcport) < 0)
+ 				IBEXIT("smp query nodeinfo failed");
+-			enhancedport0 =
+-			    mad_get_field(data, 0, IB_SW_ENHANCED_PORT0_F);
+-			if (enhancedport0)
+-				start_port = 0;
++			node_type = mad_get_field(data, 0, IB_NODE_TYPE_F);
++			mad_decode_field(data, IB_NODE_NPORTS_F, &num_ports);
++			if (!num_ports)
++				IBEXIT("smp query nodeinfo: num ports invalid");
++
++			if (node_type == IB_NODE_SWITCH) {
++				if (smp_query_via(data, &portid,
++						  IB_ATTR_SWITCH_INFO, 0, 0,
++						  srcport) < 0)
++					IBEXIT("smp query nodeinfo failed");
++				enhancedport0 = mad_get_field(data, 0,
++						IB_SW_ENHANCED_PORT0_F);
++				if (enhancedport0)
++					start_port = 0;
++			}
++			if (all_ports_loop && !loop_ports)
++				IBWARN("Emulating AllPortSelect by iterating "
++				       "through all ports");
+ 		}
+-		if (all_ports_loop && !loop_ports)
+-			IBWARN
+-			    ("Emulating AllPortSelect by iterating through all ports");
+-	}
+ 
+-	if (reset_only)
+-		goto do_reset;
+-
+-	if (all_ports_loop || (loop_ports && (all_ports || port == ALL_PORTS))) {
+-		for (i = start_port; i <= num_ports; i++)
+-			dump_perfcounters(extended, ibd_timeout, cap_mask,
+-					  &portid, i, (all_ports_loop
+-						       && !loop_ports));
+-		if (all_ports_loop && !loop_ports) {
+-			if (extended != 1)
+-				output_aggregate_perfcounters(&portid,
+-							      cap_mask);
+-			else
+-				output_aggregate_perfcounters_ext(&portid,
+-								  cap_mask);
+-		}
+-	} else if (ports_count > 1) {
+-		for (i = 0; i < ports_count; i++)
++		if (reset_only)
++			goto do_reset;
++
++		if (all_ports_loop || (loop_ports &&
++				       (all_ports || port == ALL_PORTS))) {
++			for (i = start_port; i <= num_ports; i++)
++				dump_perfcounters(extended, ibd_timeout,
++						  cap_mask, &portid, i,
++						  (all_ports_loop &&
++						   !loop_ports));
++			if (all_ports_loop && !loop_ports) {
++				if (extended != 1)
++					output_aggregate_perfcounters(&portid,
++								      cap_mask);
++				else
++					output_aggregate_perfcounters_ext(&portid,
++									  cap_mask);
++			}
++		} else if (ports_count > 1) {
++			for (i = 0; i < ports_count; i++)
++				dump_perfcounters(extended, ibd_timeout,
++						  cap_mask, &portid, ports[i],
++						  (all_ports && !loop_ports));
++			if (all_ports && !loop_ports) {
++				if (extended != 1)
++					output_aggregate_perfcounters(&portid,
++								      cap_mask);
++				else
++					output_aggregate_perfcounters_ext(&portid,
++									  cap_mask);
++			}
++		} else
+ 			dump_perfcounters(extended, ibd_timeout, cap_mask,
+-					  &portid, ports[i],
+-					  (all_ports && !loop_ports));
+-		if (all_ports && !loop_ports) {
+-			if (extended != 1)
+-				output_aggregate_perfcounters(&portid,
+-							      cap_mask);
+-			else
+-				output_aggregate_perfcounters_ext(&portid,
+-								  cap_mask);
+-		}
+-	} else
+-		dump_perfcounters(extended, ibd_timeout, cap_mask, &portid,
+-				  port, 0);
++					  &portid, port, 0);
+ 
+-	if (!reset)
+-		goto done;
++		if (!reset)
++			goto done;
+ 
+ do_reset:
+-	if (argc <= 2 && !extended && (cap_mask & IB_PM_PC_XMIT_WAIT_SUP))
+-		mask |= (1 << 16);	/* reset portxmitwait */
+-
+-	if (all_ports_loop || (loop_ports && (all_ports || port == ALL_PORTS))) {
+-		for (i = start_port; i <= num_ports; i++)
+-			reset_counters(extended, ibd_timeout, mask, &portid, i);
+-	} else if (ports_count > 1) {
+-		for (i = 0; i < ports_count; i++)
+-			reset_counters(extended, ibd_timeout, mask, &portid, ports[i]);
+-	} else
+-		reset_counters(extended, ibd_timeout, mask, &portid, port);
++		if (argc <= 2 && !extended &&
++		    (cap_mask & IB_PM_PC_XMIT_WAIT_SUP))
++			mask |= (1 << 16);	/* reset portxmitwait */
++
++		if (all_ports_loop || (loop_ports &&
++				       (all_ports || port == ALL_PORTS))) {
++			for (i = start_port; i <= num_ports; i++)
++				reset_counters(extended, ibd_timeout, mask,
++					       &portid, i);
++		} else if (ports_count > 1) {
++			for (i = 0; i < ports_count; i++)
++				reset_counters(extended, ibd_timeout, mask,
++					       &portid, ports[i]);
++		} else
++			reset_counters(extended, ibd_timeout, mask, &portid,
++				       port);
+ 
+ done:
+-	mad_rpc_close_port(srcport);
++		mad_rpc_close_port(srcport);
++skip_port:
++		if (all_hcas) {
++			if (ibd_ca_port < ca.numports)
++				ibd_ca_port++;
++			else {
++				umad_release_ca(&ca);
++				if (umad_get_ca(name_list[cur_name], &ca))
++					/*
++					 * We're done, the next name in the
++					 * list is empty, so exit gracefully
++					 */
++					exit(0);
++				ibd_ca = name_list[cur_name++];
++				ibd_ca_port = start_port;
++			}
++		} else
++			ibd_ca = NULL;
++	} while (ibd_ca);
+ 	exit(0);
+ }
+-- 
+2.4.3
+

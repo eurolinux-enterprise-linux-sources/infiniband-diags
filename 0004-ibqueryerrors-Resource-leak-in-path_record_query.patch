@@ -1,0 +1,40 @@
+From 4e6bc81500fecbdece3c16862252a83cdeed3282 Mon Sep 17 00:00:00 2001
+From: Vladimir Koushnir <vladimirk@mellanox.com>
+Date: Thu, 16 Apr 2015 16:39:43 +0300
+Subject: [PATCH] ibqueryerrors: Resource leak in path_record_query
+
+sa_free_handle function is not called at the end of
+path_record_query function.
+The patch fixes file descriptor leak when path_record_query
+function is called.
+
+Signed-off-by: Vladimir Koushnir <vladimirk@mellanox.com>
+Signed-off-by: Hal Rosenstock <hal@mellanox.com>
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ src/ibqueryerrors.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/ibqueryerrors.c b/src/ibqueryerrors.c
+index 9d9ec45d7f..06fcbaca31 100644
+--- a/src/ibqueryerrors.c
++++ b/src/ibqueryerrors.c
+@@ -344,6 +344,7 @@ static int path_record_query(ib_gid_t sgid,uint64_t dguid)
+                         (uint16_t)IB_SA_ATTR_PATHRECORD,0,cl_ntoh64(comp_mask),ibd_sakey,
+                         &pr, sizeof(pr), &result);
+      if (ret) {
++             sa_free_handle(h);
+              fprintf(stderr, "Query SA failed: %s; sa call path_query failed\n", strerror(ret));
+              return ret;
+      }
+@@ -355,6 +356,7 @@ static int path_record_query(ib_gid_t sgid,uint64_t dguid)
+ 
+      insert_lid2sl_table(&result);
+ Exit:
++     sa_free_handle(h);
+      sa_free_result_mad(&result);
+      return ret;
+ }
+-- 
+2.4.3
+

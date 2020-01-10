@@ -1,0 +1,35 @@
+From 23012ee116dd81d36458a2045dc2c86b41274792 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Mon, 22 Jun 2015 18:04:54 +0200
+Subject: [PATCH] Fix hostname usage in set_nodedesc.sh
+
+From: Doug Ledford <dledford@redhat.com>
+---
+ scripts/set_nodedesc.sh | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/scripts/set_nodedesc.sh b/scripts/set_nodedesc.sh
+index 1e42ac8009..340470b255 100755
+--- a/scripts/set_nodedesc.sh
++++ b/scripts/set_nodedesc.sh
+@@ -5,7 +5,7 @@ if [ -f /etc/sysconfig/network ]; then
+ fi
+ 
+ ib_sysfs="/sys/class/infiniband"
+-newname="$HOSTNAME"
++newname=`hostname -s`
+ 
+ echo ""
+ echo "*** WARNING ***: this command is deprecated."
+@@ -18,7 +18,7 @@ function usage
+ 	echo "   -h this help"
+ 	echo "   -v view all node descriptors"
+ 	echo "   [<name>] set name to name specified."
+-	echo "      Default is to use the hostname: \"$HOSTNAME\""
++	echo "      Default is to use the hostname: \"$newname\""
+ 	exit 2
+ }
+ 
+-- 
+2.4.3
+

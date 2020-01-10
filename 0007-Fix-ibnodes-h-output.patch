@@ -1,0 +1,45 @@
+From 2bdd9c61e0c20aad0ea56d251abec43244bc300f Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Mon, 22 Jun 2015 18:05:05 +0200
+Subject: [PATCH] Fix ibnodes -h output
+
+From: Doug Ledford <dledford@redhat.com>
+
+Fix ibnodes -h output (another regression, bz1054545)
+---
+ scripts/ibnodes.in | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/scripts/ibnodes.in b/scripts/ibnodes.in
+index 5871da8352..8b5e3ae207 100644
+--- a/scripts/ibnodes.in
++++ b/scripts/ibnodes.in
+@@ -1,5 +1,24 @@
+ #!/bin/sh
++usage() {
++        echo Usage: `basename $0` "[-h] [<topology-file> | -C ca_name" \
++	            "-P ca_port -t timeout_ms]"
++        exit -1
++}
++
++options=""
++
++while [ "$1" ]; do
++	case $1 in
++		-h | --help)
++			usage
++			;;
++		default)
++			options="${options} $1"
++			shift
++			;;
++	esac
++done
+ 
+ IBPATH=${IBPATH:-@IBSCRIPTPATH@}
+ 
+-$IBPATH/ibhosts $@; $IBPATH/ibswitches $@
++$IBPATH/ibhosts ${options}; $IBPATH/ibswitches ${options}
+-- 
+2.4.3
+

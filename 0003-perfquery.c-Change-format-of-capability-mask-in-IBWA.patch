@@ -1,0 +1,28 @@
+From 1f4e356a5d156cd85d69f3b064bb1b7692778853 Mon Sep 17 00:00:00 2001
+From: Hal Rosenstock <hal@dev.mellanox.co.il>
+Date: Thu, 1 May 2014 10:22:00 -0400
+Subject: [PATCH] perfquery.c: Change format of capability mask in IBWARN for
+ consistency
+
+Signed-off-by: Hal Rosenstock <hal@mellanox.com>
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ src/perfquery.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/perfquery.c b/src/perfquery.c
+index 3202502d68..46451ef53c 100644
+--- a/src/perfquery.c
++++ b/src/perfquery.c
+@@ -327,7 +327,7 @@ static void dump_perfcounters(int extended, int timeout, uint16_t cap_mask,
+ 		if (!(cap_mask & IB_PM_EXT_WIDTH_SUPPORTED) &&
+ 		    !(cap_mask & IB_PM_EXT_WIDTH_NOIETF_SUP))
+ 			IBWARN
+-			    ("PerfMgt ClassPortInfo 0x%x; No extended counter support indicated\n",
++			    ("PerfMgt ClassPortInfo CapMask 0x%02X; No extended counter support indicated\n",
+ 			     ntohs(cap_mask));
+ 
+ 		memset(pc, 0, sizeof(pc));
+-- 
+2.4.3
+
