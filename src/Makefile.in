@@ -112,6 +112,7 @@ DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
 	$(srcdir)/config.h.in $(top_srcdir)/doc/man/rdma-ndd.8.in \
 	$(top_srcdir)/etc/rdma-ndd.init.in \
+	$(top_srcdir)/etc/rdma-ndd.service.in \
 	$(srcdir)/infiniband-diags.spec.in \
 	$(top_srcdir)/include/ibdiag_version.h.in \
 	$(top_srcdir)/scripts/ibcheckerrors.in \
@@ -185,16 +186,17 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = doc/man/rdma-ndd.8 etc/rdma-ndd.init \
-	infiniband-diags.spec include/ibdiag_version.h \
-	scripts/ibcheckerrors scripts/ibcheckerrs scripts/ibchecknet \
-	scripts/ibchecknode scripts/ibcheckport \
-	scripts/ibcheckportstate scripts/ibcheckportwidth \
-	scripts/ibcheckstate scripts/ibcheckwidth \
-	scripts/ibclearcounters scripts/ibclearerrors \
-	scripts/ibdatacounts scripts/ibdatacounters scripts/ibhosts \
-	scripts/ibnodes scripts/ibswitches scripts/ibrouters \
-	scripts/iblinkinfo.pl scripts/ibqueryerrors.pl \
-	scripts/dump_lfts.sh scripts/dump_mfts.sh doc/man/ibaddr.8 \
+	etc/rdma-ndd.service infiniband-diags.spec \
+	include/ibdiag_version.h scripts/ibcheckerrors \
+	scripts/ibcheckerrs scripts/ibchecknet scripts/ibchecknode \
+	scripts/ibcheckport scripts/ibcheckportstate \
+	scripts/ibcheckportwidth scripts/ibcheckstate \
+	scripts/ibcheckwidth scripts/ibclearcounters \
+	scripts/ibclearerrors scripts/ibdatacounts \
+	scripts/ibdatacounters scripts/ibhosts scripts/ibnodes \
+	scripts/ibswitches scripts/ibrouters scripts/iblinkinfo.pl \
+	scripts/ibqueryerrors.pl scripts/dump_lfts.sh \
+	scripts/dump_mfts.sh doc/man/ibaddr.8 \
 	doc/man/check_lft_balance.8 doc/man/ibcacheedit.8 \
 	doc/man/ibccconfig.8 doc/man/ibccquery.8 doc/man/dump_fts.8 \
 	doc/man/ibhosts.8 doc/man/ibidsverify.8 doc/man/iblinkinfo.8 \
@@ -315,10 +317,16 @@ am_src_perfquery_OBJECTS = perfquery.$(OBJEXT)
 src_perfquery_OBJECTS = $(am_src_perfquery_OBJECTS)
 src_perfquery_LDADD = $(LDADD)
 src_perfquery_DEPENDENCIES = libcommon.a
-src_rdma_ndd_SOURCES = src/rdma-ndd.c
-src_rdma_ndd_OBJECTS = rdma-ndd.$(OBJEXT)
-src_rdma_ndd_LDADD = $(LDADD)
-src_rdma_ndd_DEPENDENCIES = libcommon.a
+am__src_rdma_ndd_SOURCES_DIST = src/rdma-ndd.c
+@ENABLE_RDMA_NDD_TRUE@am_src_rdma_ndd_OBJECTS =  \
+@ENABLE_RDMA_NDD_TRUE@	src_rdma_ndd-rdma-ndd.$(OBJEXT)
+src_rdma_ndd_OBJECTS = $(am_src_rdma_ndd_OBJECTS)
+am__DEPENDENCIES_1 =
+@ENABLE_RDMA_NDD_TRUE@src_rdma_ndd_DEPENDENCIES = libcommon.a \
+@ENABLE_RDMA_NDD_TRUE@	$(am__DEPENDENCIES_1)
+src_rdma_ndd_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(src_rdma_ndd_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_src_saquery_OBJECTS = saquery.$(OBJEXT)
 src_saquery_OBJECTS = $(am_src_saquery_OBJECTS)
 src_saquery_LDADD = $(LDADD)
@@ -410,9 +418,9 @@ SOURCES = $(libcommon_a_SOURCES) $(src_dump_fts_SOURCES) \
 	$(src_ibsendtrap_SOURCES) $(src_ibstat_SOURCES) \
 	$(src_ibsysstat_SOURCES) $(src_ibtracert_SOURCES) \
 	$(src_mcm_rereg_test_SOURCES) $(src_perfquery_SOURCES) \
-	src/rdma-ndd.c $(src_saquery_SOURCES) $(src_sminfo_SOURCES) \
-	$(src_smpdump_SOURCES) $(src_smpquery_SOURCES) \
-	$(src_vendstat_SOURCES)
+	$(src_rdma_ndd_SOURCES) $(src_saquery_SOURCES) \
+	$(src_sminfo_SOURCES) $(src_smpdump_SOURCES) \
+	$(src_smpquery_SOURCES) $(src_vendstat_SOURCES)
 DIST_SOURCES = $(libcommon_a_SOURCES) $(src_dump_fts_SOURCES) \
 	$(src_ibaddr_SOURCES) $(src_ibcacheedit_SOURCES) \
 	$(src_ibccconfig_SOURCES) $(src_ibccquery_SOURCES) \
@@ -422,9 +430,9 @@ DIST_SOURCES = $(libcommon_a_SOURCES) $(src_dump_fts_SOURCES) \
 	$(src_ibsendtrap_SOURCES) $(src_ibstat_SOURCES) \
 	$(src_ibsysstat_SOURCES) $(src_ibtracert_SOURCES) \
 	$(src_mcm_rereg_test_SOURCES) $(src_perfquery_SOURCES) \
-	src/rdma-ndd.c $(src_saquery_SOURCES) $(src_sminfo_SOURCES) \
-	$(src_smpdump_SOURCES) $(src_smpquery_SOURCES) \
-	$(src_vendstat_SOURCES)
+	$(am__src_rdma_ndd_SOURCES_DIST) $(src_saquery_SOURCES) \
+	$(src_sminfo_SOURCES) $(src_smpdump_SOURCES) \
+	$(src_smpquery_SOURCES) $(src_vendstat_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -763,8 +771,15 @@ RELEASE = @RELEASE@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+SPEC_FILE_RDMA_NDD_INSTALL = @SPEC_FILE_RDMA_NDD_INSTALL@
 STRIP = @STRIP@
+SYSTEMD_BUILD_REQUIRES = @SYSTEMD_BUILD_REQUIRES@
+SYSTEMD_CFLAGS = @SYSTEMD_CFLAGS@
+SYSTEMD_LIBS = @SYSTEMD_LIBS@
+SYSTEMD_SYSTEM_UNIT_DIR = @SYSTEMD_SYSTEM_UNIT_DIR@
 TARBALL = @TARBALL@
+UDEV_CFLAGS = @UDEV_CFLAGS@
+UDEV_LIBS = @UDEV_LIBS@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
@@ -888,6 +903,9 @@ src_ibcacheedit_SOURCES = src/ibcacheedit.c
 src_ibcacheedit_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
 src_dump_fts_SOURCES = src/dump_fts.c
 src_dump_fts_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
+@ENABLE_RDMA_NDD_TRUE@src_rdma_ndd_SOURCES = src/rdma-ndd.c
+@ENABLE_RDMA_NDD_TRUE@src_rdma_ndd_CFLAGS = $(AM_CFLAGS) $(UDEV_CFLAGS)
+@ENABLE_RDMA_NDD_TRUE@src_rdma_ndd_LDADD = libcommon.a $(UDEV_LIBS)
 BUILT_SOURCES = ibdiag_version
 @HAVE_DASH_TRUE@TESTS = tests/check_shells.sh
 EXTRA_DIST = doc scripts include infiniband-diags.spec.in infiniband-diags.spec \
@@ -950,6 +968,8 @@ distclean-hdr:
 doc/man/rdma-ndd.8: $(top_builddir)/config.status $(top_srcdir)/doc/man/rdma-ndd.8.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 etc/rdma-ndd.init: $(top_builddir)/config.status $(top_srcdir)/etc/rdma-ndd.init.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+etc/rdma-ndd.service: $(top_builddir)/config.status $(top_srcdir)/etc/rdma-ndd.service.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 infiniband-diags.spec: $(top_builddir)/config.status $(srcdir)/infiniband-diags.spec.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
@@ -1186,7 +1206,7 @@ src/perfquery$(EXEEXT): $(src_perfquery_OBJECTS) $(src_perfquery_DEPENDENCIES) $
 
 src/rdma-ndd$(EXEEXT): $(src_rdma_ndd_OBJECTS) $(src_rdma_ndd_DEPENDENCIES) $(EXTRA_src_rdma_ndd_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/rdma-ndd$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(src_rdma_ndd_OBJECTS) $(src_rdma_ndd_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(src_rdma_ndd_LINK) $(src_rdma_ndd_OBJECTS) $(src_rdma_ndd_LDADD) $(LIBS)
 
 src/saquery$(EXEEXT): $(src_saquery_OBJECTS) $(src_saquery_DEPENDENCIES) $(EXTRA_src_saquery_DEPENDENCIES) src/$(am__dirstamp)
 	@rm -f src/saquery$(EXEEXT)
@@ -1268,11 +1288,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibtracert.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcm_rereg_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/perfquery.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rdma-ndd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/saquery.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sminfo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smpdump.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smpquery.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/src_rdma_ndd-rdma-ndd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vendstat.Po@am__quote@
 
 .c.o:
@@ -1562,19 +1582,19 @@ perfquery.obj: src/perfquery.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o perfquery.obj `if test -f 'src/perfquery.c'; then $(CYGPATH_W) 'src/perfquery.c'; else $(CYGPATH_W) '$(srcdir)/src/perfquery.c'; fi`
 
-rdma-ndd.o: src/rdma-ndd.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rdma-ndd.o -MD -MP -MF $(DEPDIR)/rdma-ndd.Tpo -c -o rdma-ndd.o `test -f 'src/rdma-ndd.c' || echo '$(srcdir)/'`src/rdma-ndd.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rdma-ndd.Tpo $(DEPDIR)/rdma-ndd.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/rdma-ndd.c' object='rdma-ndd.o' libtool=no @AMDEPBACKSLASH@
+src_rdma_ndd-rdma-ndd.o: src/rdma-ndd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(src_rdma_ndd_CFLAGS) $(CFLAGS) -MT src_rdma_ndd-rdma-ndd.o -MD -MP -MF $(DEPDIR)/src_rdma_ndd-rdma-ndd.Tpo -c -o src_rdma_ndd-rdma-ndd.o `test -f 'src/rdma-ndd.c' || echo '$(srcdir)/'`src/rdma-ndd.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/src_rdma_ndd-rdma-ndd.Tpo $(DEPDIR)/src_rdma_ndd-rdma-ndd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/rdma-ndd.c' object='src_rdma_ndd-rdma-ndd.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rdma-ndd.o `test -f 'src/rdma-ndd.c' || echo '$(srcdir)/'`src/rdma-ndd.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(src_rdma_ndd_CFLAGS) $(CFLAGS) -c -o src_rdma_ndd-rdma-ndd.o `test -f 'src/rdma-ndd.c' || echo '$(srcdir)/'`src/rdma-ndd.c
 
-rdma-ndd.obj: src/rdma-ndd.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rdma-ndd.obj -MD -MP -MF $(DEPDIR)/rdma-ndd.Tpo -c -o rdma-ndd.obj `if test -f 'src/rdma-ndd.c'; then $(CYGPATH_W) 'src/rdma-ndd.c'; else $(CYGPATH_W) '$(srcdir)/src/rdma-ndd.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rdma-ndd.Tpo $(DEPDIR)/rdma-ndd.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/rdma-ndd.c' object='rdma-ndd.obj' libtool=no @AMDEPBACKSLASH@
+src_rdma_ndd-rdma-ndd.obj: src/rdma-ndd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(src_rdma_ndd_CFLAGS) $(CFLAGS) -MT src_rdma_ndd-rdma-ndd.obj -MD -MP -MF $(DEPDIR)/src_rdma_ndd-rdma-ndd.Tpo -c -o src_rdma_ndd-rdma-ndd.obj `if test -f 'src/rdma-ndd.c'; then $(CYGPATH_W) 'src/rdma-ndd.c'; else $(CYGPATH_W) '$(srcdir)/src/rdma-ndd.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/src_rdma_ndd-rdma-ndd.Tpo $(DEPDIR)/src_rdma_ndd-rdma-ndd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/rdma-ndd.c' object='src_rdma_ndd-rdma-ndd.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rdma-ndd.obj `if test -f 'src/rdma-ndd.c'; then $(CYGPATH_W) 'src/rdma-ndd.c'; else $(CYGPATH_W) '$(srcdir)/src/rdma-ndd.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(src_rdma_ndd_CFLAGS) $(CFLAGS) -c -o src_rdma_ndd-rdma-ndd.obj `if test -f 'src/rdma-ndd.c'; then $(CYGPATH_W) 'src/rdma-ndd.c'; else $(CYGPATH_W) '$(srcdir)/src/rdma-ndd.c'; fi`
 
 saquery.o: src/saquery.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT saquery.o -MD -MP -MF $(DEPDIR)/saquery.Tpo -c -o saquery.o `test -f 'src/saquery.c' || echo '$(srcdir)/'`src/saquery.c
@@ -2327,13 +2347,17 @@ install-data-hook:
 	if test ! -d $(DESTDIR)/$(sysconfdir)/infiniband-diags; then \
 		$(top_srcdir)/config/install-sh -m 755 -d $(DESTDIR)/$(sysconfdir)/infiniband-diags; \
 	fi
+	if test ! -d $(DESTDIR)/$(localstatedir)/run; then \
+		mkdir -p $(DESTDIR)/$(localstatedir)/run; \
+	fi
 	$(top_srcdir)/config/install-sh -c -m 444 $(top_srcdir)/scripts/IBswcountlimits.pm $(DESTDIR)/$(PERL_INSTALLDIR)/IBswcountlimits.pm
 	$(top_srcdir)/config/install-sh -c -m 444 $(top_srcdir)/etc/error_thresholds $(DESTDIR)/$(sysconfdir)/infiniband-diags
 	$(top_srcdir)/config/install-sh -c -m 400 $(top_srcdir)/etc/ibdiag.conf $(DESTDIR)/$(sysconfdir)/infiniband-diags
 
 @ENABLE_RDMA_NDD_TRUE@install-exec-hook:
-@ENABLE_RDMA_NDD_TRUE@	$(top_srcdir)/config/install-sh -m 755 -d $(DESTDIR)/$(sysconfdir)/init.d
-@ENABLE_RDMA_NDD_TRUE@	$(top_srcdir)/config/install-sh -m 755 $(top_srcdir)/etc/rdma-ndd.init $(DESTDIR)/$(sysconfdir)/init.d/rdma-ndd
+@ENABLE_RDMA_NDD_TRUE@@SYSTEMD_SYSTEM_TRUE@	$(top_srcdir)/config/install-sh -m 755 $(top_srcdir)/etc/rdma-ndd.service $(DESTDIR)/$(SYSTEMD_SYSTEM_UNIT_DIR)/rdma-ndd.service
+@ENABLE_RDMA_NDD_TRUE@@SYSTEMD_SYSTEM_FALSE@	$(top_srcdir)/config/install-sh -m 755 -d $(DESTDIR)/$(sysconfdir)/init.d
+@ENABLE_RDMA_NDD_TRUE@@SYSTEMD_SYSTEM_FALSE@	$(top_srcdir)/config/install-sh -m 755 $(top_srcdir)/etc/rdma-ndd.init $(DESTDIR)/$(sysconfdir)/init.d/rdma-ndd
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -17,39 +17,29 @@ Dependencies:
 	5) glib2
 
 
-Release notes v1.6.4 => 1.6.5
+Release notes v1.6.6 => 1.6.7
 
    1) bug fixes
-   2) updates for new hardware device IDs
-   3) rdma-ndd daemon
+   2) Add support for systemd
 
-Authors since 1.6.4
 
-Dan Ben Yosef <danby@mellanox.com>
-	ibtracert.c: Remove checking the port 0 state for base switch port 0
-	Add new configure flag to enable/disable the rdma-ndd build
-	New MAD SM:PortInfoExtended and changing PM:PortExtendedSpeedsCounters
-	Fix missing source dir in configure.ac
+Authors since 1.6.6
 
-Hal Rosenstock <hal@dev.mellanox.co.il>
-	Align infiniband-diags MLNX device IDs with OpenSM
-	vendstat.c: Add additional vendor IDs to ext_fw_info_device
-	ibnetdisc.c: Add additional supported device IDs to is_mlnx_ext_port_info_supported
-	ibdiag_common.c: Add more supported device IDs in is_mlnx_ext_port_info_supported
-	ibccconfig.c: Account for enhanced switch port 0 in SwitchPortCongestionSetting handling
-	ibccquery.c: Account for enhanced switch port 0 in SwitchPortCongestionSetting handling
-	saquery.c: Return proper status from query_sa_cpi on bad result status
-	saquery.c: Fix handling of cpi and ClassPortInfo options
-	ibping.c: Fix support of OUIs other than IB_OPENIB_OUI
-	ibportstate.c: Cosmetic changes to MLNX Extended PortInfo
-	saquery.c: In query_sa_cpi, make error message consistent
-	saquery.c: In print_node_record, change LID print format
+Dan Ben Yosef (1):
+  saquery.c: Fix changing qos_class flag value to network order twice
 
-Ira Weiny <ira.weiny@intel.com>
-	infiniband-diags: update for udev changes.
-	infiniband-diags/test-code: remove unused variables
-	infiniband-diags: add rdma-ndd daemon
-	infiniband-diags: update smpquery man page
-	infiniband-diags: If rst2man is available fix missing source dir in configure
+Hal Rosenstock (5):
+  ibcacheedit.c: Eliminate unused parameter passed to
+    update_switchportguids
+  ibqueryerrors.c: Removed unused passed parameters to print_port_config
+    and query_and_dump
+  Remove unused pisize parameter from dump_portinfo in ibdiag_common
+  ibportstate.c: Fix unsigned comparison warnings
+  ibsendtrap.c: Eliminate unused parameter from send_trap
 
+Ira Weiny (1):
+  rdma-ndd: Add systemd support
+
+Vladimir Koushnir (1):
+  infiniband-diags: Add Switch-IB2 support to device white lists
 

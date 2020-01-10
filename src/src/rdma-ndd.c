@@ -58,9 +58,7 @@ struct udev_monitor *mon;
 #include "ibdiag_common.h"
 
 #define SYS_HOSTNAME "/proc/sys/kernel/hostname"
-#define DEF_SYS_DIR "/sys"
-char *sys_dir = DEF_SYS_DIR;
-#define SYS_INFINIBAND "class/infiniband"
+#define SYS_INFINIBAND "/sys/class/infiniband"
 #define DEFAULT_RETRY_RATE 60
 #define DEFAULT_RETRY_COUNT 0
 #define DEFAULT_ND_FORMAT "%h %d"
@@ -68,6 +66,7 @@ char *sys_dir = DEF_SYS_DIR;
 int failure_retry_rate = DEFAULT_RETRY_RATE;
 int set_retry_cnt = DEFAULT_RETRY_COUNT;
 int foreground = 0;
+char *pidfile = NULL;
 
 static void newline_to_null(char *str)
 {
@@ -121,8 +120,8 @@ static int update_node_desc(const char *device, const char *hostname, int force)
 	char nd_file[PATH_MAX];
 	FILE *f;
 
-	snprintf(nd_file, sizeof(nd_file), "%s/%s/%s/node_desc",
-			sys_dir, SYS_INFINIBAND, device);
+	snprintf(nd_file, sizeof(nd_file), SYS_INFINIBAND "/%s/node_desc",
+			device);
 	nd_file[sizeof(nd_file)-1] = '\0';
 
 	f = fopen(nd_file, "r+");
@@ -146,7 +145,7 @@ static int update_node_desc(const char *device, const char *hostname, int force)
 		syslog(LOG_INFO, "%s: change (%s) -> (%s)\n",
 			device, nd, new_nd);
 		rewind(f);
-		fprintf(f, new_nd);
+		fprintf(f, "%s", new_nd);
 	}
 
 	rc = 0;
@@ -159,14 +158,10 @@ static int set_rdma_node_desc(const char *hostname, int force)
 {
 	DIR *class_dir;
 	struct dirent *dent;
-	char dev_dir[PATH_MAX];
 
-	snprintf(dev_dir, sizeof(dev_dir), "%s/%s", sys_dir, SYS_INFINIBAND);
-	dev_dir[sizeof(dev_dir)-1] = '\0';
-
-	class_dir = opendir(dev_dir);
+	class_dir = opendir(SYS_INFINIBAND);
 	if (!class_dir) {
-		syslog(LOG_INFO, "Failed to open %s", dev_dir);
+		syslog(LOG_INFO, "Failed to open " SYS_INFINIBAND);
 		return -ENOSYS;
 	}
 
@@ -205,6 +200,9 @@ static int process_opts(void *context, int ch, char *optarg)
 {
 	unsigned long tmp;
 	switch (ch) {
+	case 0:
+		pidfile = optarg;
+		break;
 	case 'f':
 		foreground = 1;
 		break;
@@ -234,6 +232,7 @@ static int process_opts(void *context, int ch, char *optarg)
 	return 0;
 }
 
+#if HAVE_UDEV_LOGGING
 #define MSG_MAX 2048
 static void udev_log_fn(struct udev *ud, int priority, const char *file, int line,
 		const char *fn, const char *format, va_list args)
@@ -244,8 +243,9 @@ static void udev_log_fn(struct udev *ud, int priority, const char *file, int lin
 			file, line, fn);
 	if (off < MSG_MAX-1)
 		vsnprintf(msg+off, MSG_MAX-off, format, args);
-	syslog(LOG_ERR, msg);
+	syslog(LOG_ERR, "%s", msg);
 }
+#endif
 
 static void setup_udev(void)
 {
@@ -255,10 +255,9 @@ static void setup_udev(void)
 		return;
 	}
 
+#if HAVE_UDEV_LOGGING
 	udev_set_log_fn(udev, udev_log_fn);
 	udev_set_log_priority(udev, LOG_INFO);
-#if HAVE_UDEV_GET_SYS_PATH
-	sys_dir = (char *)udev_get_sys_path(udev);
 #endif
 }
 
@@ -352,6 +351,29 @@ static void monitor(void)
 	}
 }
 
+static void remove_pidfile(void)
+{
+        if (pidfile)
+		unlink(pidfile);
+}
+
+static void write_pidfile(void)
+{
+	FILE *f;
+	if (pidfile) {
+		remove_pidfile();
+		f = fopen(pidfile, "w");
+		if (f) {
+			fprintf(f, "%d\n", getpid());
+			fclose(f);
+		} else {
+			syslog(LOG_ERR, "Failed to write pidfile : %s\n",
+				pidfile);
+			exit(errno);
+		}
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	int fd;
@@ -368,6 +390,7 @@ int main(int argc, char *argv[])
 			"Number of times to attempt to retry setting "
 			"of the node description on failure\n"},
 		{"foreground", 'f', 0, NULL, "run in the foreground instead of as a daemon\n"},
+		{"pidfile", 0, 1, "<pidfile>", "specify a pid file (daemon mode only)\n"},
 		{0}
 	};
 
@@ -377,8 +400,6 @@ int main(int argc, char *argv[])
 	if (!ibd_nd_format)
 		ibd_nd_format = DEFAULT_ND_FORMAT;
 
-	setup_udev();
-
 	if (!foreground) {
 		closelog();
 		openlog("rdma-ndd", LOG_PID, LOG_DAEMON);
@@ -386,7 +407,10 @@ int main(int argc, char *argv[])
 			syslog(LOG_ERR, "Failed to daemonize\n");
 			exit(errno);
 		}
+		write_pidfile();
 	}
+
+	setup_udev();
 
 	syslog(LOG_INFO, "Node Descriptor format (%s)\n", ibd_nd_format);
 
@@ -397,6 +421,8 @@ int main(int argc, char *argv[])
 	close(fd);
 
 	monitor();
+
+	remove_pidfile();
 
 	return 0;
 }

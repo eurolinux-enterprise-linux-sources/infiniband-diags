@@ -1,20 +1,13 @@
 Summary: OpenFabrics Alliance InfiniBand Diagnostic Tools
 Name: infiniband-diags 
-Version: 1.6.5
-Release: 3%{?dist}
+Version: 1.6.7
+Release: 1%{?dist}
 # Upstream allows either license to be used
 License: GPLv2 or BSD
 Group: System Environment/Libraries
 Url: http://openfabrics.org/
 Source0: https://www.openfabrics.org/downloads/management/%{name}-%{version}.tar.gz
-Source1: rdma-ndd.service
-# fixes from upstream git:
-Patch1: 0001-infiniband-diags-rdma-ndd-Fix-issues-with-install.patch
-Patch2: 0002-infiniband-diags-rdma-ndd-add-pidfile-option.patch
-Patch3: 0003-perfquery.c-Change-format-of-capability-mask-in-IBWA.patch
-Patch4: 0004-ibqueryerrors-Resource-leak-in-path_record_query.patch
 # RHEL-specific patches:
-Patch5: 0005-Modify-perfquery-to-be-able-to-loop-through-all-HCAs.patch
 Patch6: 0006-Fix-hostname-usage-in-set_nodedesc.sh.patch
 Patch7: 0007-Fix-ibnodes-h-output.patch
 
@@ -46,28 +39,8 @@ Requires: %{name}-devel = %{version}-%{release}
 %description devel-static
 Static libraries for the infiniband-diags library.
 
-%package -n rdma-ndd
-Summary: Daemon to manage RDMA Node Description
-Group: System Environment/Daemons
-Requires: %{name} = %{version}-%{release}
-# The udev rules in rdma need to be aware of rdma-ndd:
-Conflicts: rdma < 7.2_3.17-2
-Requires(post): systemd
-Requires(preun): systemd
-Requires(postun): systemd
-
-%description -n rdma-ndd
-rdma-ndd is a system daemon which watches for rdma device changes and/or
-hostname changes and updates the Node Description of the rdma devices based
-on those changes.
-
 %prep
 %setup -q
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1 -b .hcas
 %patch6 -p1 -b .hostname
 %patch7 -p1 -b .help
 
@@ -81,27 +54,16 @@ make DESTDIR=$RPM_BUILD_ROOT install
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 rm -f $RPM_BUILD_ROOT%{_sbindir}/*.{pl,sh}
 rm -f $RPM_BUILD_ROOT%{_sysconfdir}/init.d/rdma-ndd
-# systemd unit file
-mkdir -p %{buildroot}%{_unitdir}
-install -m644 %{SOURCE1} $RPM_BUILD_ROOT%{_unitdir}
+rm -f $RPM_BUILD_ROOT%{_sbindir}/rdma-ndd
+rm -f $RPM_BUILD_ROOT%{_mandir}/man8/rdma-ndd.8*
+rm -f $RPM_BUILD_ROOT%{_unitdir}/rdma-ndd.service
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
 
-%post -n rdma-ndd
-%systemd_post rdma-ndd.service
-
-%preun -n rdma-ndd
-%systemd_preun rdma-ndd.service
-
-%postun -n rdma-ndd
-%systemd_postun_with_restart rdma-ndd.service
-
 %files
 %{_sbindir}/*
-%exclude %{_sbindir}/rdma-ndd
 %{_mandir}/man8/*.8*
-%exclude %{_mandir}/man8/rdma-ndd.8*
 %{_libdir}/libibnetdisc.so.*
 %dir %{_sysconfdir}/infiniband-diags
 %config(noreplace) %{_sysconfdir}/infiniband-diags/*
@@ -116,12 +78,13 @@ install -m644 %{SOURCE1} $RPM_BUILD_ROOT%{_unitdir}
 %files devel-static
 %{_libdir}/*.a
 
-%files -n rdma-ndd
-%{_sbindir}/rdma-ndd
-%{_unitdir}/rdma-ndd.service
-%{_mandir}/man8/rdma-ndd.8*
-
 %changelog
+* Mon Mar  6 2017 Honggang Li <honli@redhat.com> - 1.6.7-1
+- Rebase to latest upstream release 1.6.7.
+- Remove patches merged into upstream release.
+- Remove sub-package rdma-ndd as it merged into rdma-core.
+- Resolves: bz1382809
+
 * Mon Jun 22 2015 Michal Schmidt <mschmidt@redhat.com> - 1.6.5-3
 - systemd Requires for scriptlets belong to rdma-ndd too.
 - Related: bz1169968

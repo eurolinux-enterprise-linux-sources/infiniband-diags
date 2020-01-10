@@ -130,6 +130,12 @@ src_ibcacheedit_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
 src_dump_fts_SOURCES = src/dump_fts.c
 src_dump_fts_LDFLAGS = -L$(top_builddir)/libibnetdisc -libnetdisc
 
+if ENABLE_RDMA_NDD
+src_rdma_ndd_SOURCES = src/rdma-ndd.c
+src_rdma_ndd_CFLAGS = $(AM_CFLAGS) $(UDEV_CFLAGS)
+src_rdma_ndd_LDADD = libcommon.a $(UDEV_LIBS)
+endif
+
 BUILT_SOURCES = ibdiag_version
 ibdiag_version:
 	if [ -x $(top_srcdir)/gen_ver.sh ] ; then \
@@ -162,12 +168,19 @@ install-data-hook:
 	if test ! -d $(DESTDIR)/$(sysconfdir)/infiniband-diags; then \
 		$(top_srcdir)/config/install-sh -m 755 -d $(DESTDIR)/$(sysconfdir)/infiniband-diags; \
 	fi
+	if test ! -d $(DESTDIR)/$(localstatedir)/run; then \
+		mkdir -p $(DESTDIR)/$(localstatedir)/run; \
+	fi
 	$(top_srcdir)/config/install-sh -c -m 444 $(top_srcdir)/scripts/IBswcountlimits.pm $(DESTDIR)/$(PERL_INSTALLDIR)/IBswcountlimits.pm
 	$(top_srcdir)/config/install-sh -c -m 444 $(top_srcdir)/etc/error_thresholds $(DESTDIR)/$(sysconfdir)/infiniband-diags
 	$(top_srcdir)/config/install-sh -c -m 400 $(top_srcdir)/etc/ibdiag.conf $(DESTDIR)/$(sysconfdir)/infiniband-diags
 
 if ENABLE_RDMA_NDD
 install-exec-hook:
+if SYSTEMD_SYSTEM
+	$(top_srcdir)/config/install-sh -m 755 $(top_srcdir)/etc/rdma-ndd.service $(DESTDIR)/$(SYSTEMD_SYSTEM_UNIT_DIR)/rdma-ndd.service
+else
 	$(top_srcdir)/config/install-sh -m 755 -d $(DESTDIR)/$(sysconfdir)/init.d
 	$(top_srcdir)/config/install-sh -m 755 $(top_srcdir)/etc/rdma-ndd.init $(DESTDIR)/$(sysconfdir)/init.d/rdma-ndd
+endif
 endif

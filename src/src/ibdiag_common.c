@@ -82,7 +82,7 @@ static const char **prog_examples;
 static struct option *long_opts = NULL;
 static const struct ibdiag_opt *opts_map[256];
 
-const static char *get_build_version(void)
+static const char *get_build_version(void)
 {
 	return "BUILD VERSION: " IBDIAG_VERSION " Build date: " __DATE__ " "
 	    __TIME__;
@@ -507,7 +507,7 @@ int is_port_info_extended_supported(ib_portid_t * dest, int port,
 	uint32_t cap_mask;
 	uint16_t cap_mask2;
 
-	if (smp_query_via(data, dest, IB_ATTR_PORT_INFO, port, 0, srcport) < 0)
+	if (!smp_query_via(data, dest, IB_ATTR_PORT_INFO, port, 0, srcport))
 		IBEXIT("port info query failed");
 
 	mad_decode_field(data, IB_PORT_CAPMASK_F, &cap_mask);
@@ -530,7 +530,7 @@ int is_port_info_extended_supported(ib_portid_t * dest, int port,
 int is_mlnx_ext_port_info_supported(uint32_t devid)
 {
 	if (ibd_ibnetdisc_flags & IBND_CONFIG_MLX_EPI) {
-		if ((devid >= 0xc738 && devid <= 0xc73b) || devid == 0xcb20)
+		if ((devid >= 0xc738 && devid <= 0xc73b) || devid == 0xcb20 || devid == 0xcf08)
 			return 1;
 		if (devid >= 0x1003 && devid <= 0x1016)
 			return 1;
@@ -853,7 +853,7 @@ int snprint_field(char *buf, size_t n, enum MAD_FIELDS f, int spacing,
 	return ret;
 }
 
-void dump_portinfo(void *pi, int pisize, int tabs)
+void dump_portinfo(void *pi, int tabs)
 {
 	int field, i;
 	char val[64];

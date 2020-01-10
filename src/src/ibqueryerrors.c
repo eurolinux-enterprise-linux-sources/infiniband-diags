@@ -173,7 +173,7 @@ static int exceeds_threshold(int field, unsigned val)
 	return (val > thres);
 }
 
-static void print_port_config(char *node_name, ibnd_node_t * node, int portnum)
+static void print_port_config(ibnd_node_t * node, int portnum)
 {
 	char width[64], speed[64], state[64], physstate[64];
 	char remote_str[256];
@@ -326,7 +326,9 @@ static int path_record_query(ib_gid_t sgid,uint64_t dguid)
      uint8_t reversible = 0;
      struct sa_handle * h;
 
-     h = sa_get_handle();
+     if (!(h = sa_get_handle()))
+	return -1;
+
      ibd_timeout = DEFAULT_HALF_WORLD_PR_TIMEOUT;
      memset(&pr, 0, sizeof(pr));
 
@@ -344,6 +346,7 @@ static int path_record_query(ib_gid_t sgid,uint64_t dguid)
                         (uint16_t)IB_SA_ATTR_PATHRECORD,0,cl_ntoh64(comp_mask),ibd_sakey,
                         &pr, sizeof(pr), &result);
      if (ret) {
+             sa_free_handle(h);
              fprintf(stderr, "Query SA failed: %s; sa call path_query failed\n", strerror(ret));
              return ret;
      }
@@ -355,12 +358,13 @@ static int path_record_query(ib_gid_t sgid,uint64_t dguid)
 
      insert_lid2sl_table(&result);
 Exit:
+     sa_free_handle(h);
      sa_free_result_mad(&result);
      return ret;
 }
 
 static int query_and_dump(char *buf, size_t size, ib_portid_t * portid,
-			  ibnd_node_t * node, char *node_name, int portnum,
+			  char *node_name, int portnum,
 			  const char *attr_name, uint16_t attr_id,
 			  int start_field, int end_field)
 {
@@ -414,7 +418,7 @@ static int print_results(ib_portid_t * portid, char *node_name,
 			/* If there are PortXmitDiscards, get details (if supported) */
 			if (i == IB_PC_XMT_DISCARDS_F && details) {
 				n += query_and_dump(str + n, sizeof(buf) - n, portid,
-						    node, node_name, portnum,
+						    node_name, portnum,
 						    "PortXmitDiscardDetails",
 						    IB_GSI_PORT_XMIT_DISCARD_DETAILS,
 						    IB_PC_RCV_LOCAL_PHY_ERR_F,
@@ -422,7 +426,7 @@ static int print_results(ib_portid_t * portid, char *node_name,
 				/* If there are PortRcvErrors, get details (if supported) */
 			} else if (i == IB_PC_ERR_RCV_F && details) {
 				n += query_and_dump(str + n, sizeof(buf) - n, portid,
-						    node, node_name, portnum,
+						    node_name, portnum,
 						    "PortRcvErrorDetails",
 						    IB_GSI_PORT_RCV_ERROR_DETAILS,
 						    IB_PC_XMT_INACT_DISC_F,
@@ -495,7 +499,7 @@ static int print_results(ib_portid_t * portid, char *node_name,
 			printf("   GUID 0x%" PRIx64 " port %d:%s\n",
 			       node->ports[portnum]->guid, portnum, str);
 			if (port_config)
-				print_port_config(node_name, node, portnum);
+				print_port_config(node, portnum);
 			summary.bad_ports++;
 		}
 	}
@@ -592,7 +596,7 @@ static int print_data_cnts(ib_portid_t * portid, uint16_t cap_mask,
 	printf("\n");
 
 	if (portnum != 0xFF && port_config)
-		print_port_config(node_name, node, portnum);
+		print_port_config(node, portnum);
 
 	return (0);
 }
@@ -998,17 +1002,18 @@ int main(int argc, char **argv)
 	config.flags = ibd_ibnetdisc_flags;
 	config.mkey = ibd_mkey;
 
-	node_name_map = open_node_name_map(node_name_map_file);
-
 	if (dr_path && load_cache_file) {
+		mad_rpc_close_port(ibmad_port);
 		fprintf(stderr, "Cannot specify cache and direct route path\n");
 		exit(-1);
 	}
 
 	if (resolve_self(ibd_ca, ibd_ca_port, &self_portid, &port, &self_gid.raw) < 0) {
+		mad_rpc_close_port(ibmad_port);
 		IBEXIT("can't resolve self port %s", argv[0]);
-		goto close_port;
 	}
+
+	node_name_map = open_node_name_map(node_name_map_file);
 
 	/* limit the scan the fabric around the target */
 	if (dr_path) {
@@ -1028,10 +1033,13 @@ int main(int argc, char **argv)
 			lid2sl_table[portid.lid] = portid.sl;
 	}
 
+	mad_rpc_close_port(ibmad_port);
+
 	if (load_cache_file) {
 		if ((fabric = ibnd_load_fabric(load_cache_file, 0)) == NULL) {
 			fprintf(stderr, "loading cached fabric failed\n");
-			exit(-1);
+			rc = -1;
+			goto close_name_map;
 		}
 	} else {
 		if (resolved >= 0) {
@@ -1049,11 +1057,26 @@ int main(int argc, char **argv)
 							       &config))) {
 			fprintf(stderr, "discover failed\n");
 			rc = -1;
-			goto close_port;
+			goto close_name_map;
 		}
 	}
 
 	set_thresholds(threshold_file);
+
+	/* reopen the global ibmad_port */
+	ibmad_port = mad_rpc_open_port(ibd_ca, ibd_ca_port,
+				       mgmt_classes, 4);
+	if (!ibmad_port) {
+		ibnd_destroy_fabric(fabric);
+		close_node_name_map(node_name_map);
+		IBEXIT("Failed to reopen port: %s:%d\n",
+			ibd_ca, ibd_ca_port);
+	}
+
+	smp_mkey_set(ibmad_port, ibd_mkey);
+
+	if (ibd_timeout)
+		mad_rpc_set_timeout(ibmad_port, ibd_timeout);
 
 	if (port_guid_str) {
 		ibnd_port_t *port = ibnd_find_port_guid(fabric, port_guid);
@@ -1063,28 +1086,29 @@ int main(int argc, char **argv)
 			fprintf(stderr, "Failed to find node: %s\n",
 				port_guid_str);
 	} else if (dr_path) {
-		ibnd_port_t *port = ibnd_find_port_dr(fabric, dr_path);
+		ibnd_port_t *port;
 		uint8_t ni[IB_SMP_DATA_SIZE] = { 0 };
-
 		if (!smp_query_via(ni, &portid, IB_ATTR_NODE_INFO, 0,
-				   ibd_timeout, ibmad_port)) {
-			rc = -1;
-			goto destroy_fabric;
+			   ibd_timeout, ibmad_port)) {
+				fprintf(stderr, "Failed to query local Node Info\n");
+				goto close_port;
 		}
+
 		mad_decode_field(ni, IB_NODE_PORT_GUID_F, &(port_guid));
 
 		port = ibnd_find_port_guid(fabric, port_guid);
 		if (port) {
 			if(obtain_sl)
 				if(path_record_query(self_gid,port->guid))
-					goto destroy_fabric;
+					goto close_port;
 			print_node(port->node, NULL);
 		} else
 			fprintf(stderr, "Failed to find node: %s\n", dr_path);
 	} else {
 		if(obtain_sl)
 			if(path_record_query(self_gid,0))
-				goto destroy_fabric;
+				goto close_port;
+
 		ibnd_iter_nodes(fabric, print_node, NULL);
 	}
 
@@ -1092,11 +1116,11 @@ int main(int argc, char **argv)
 	if (rc)
 		rc = 1;
 
-destroy_fabric:
-	ibnd_destroy_fabric(fabric);
-
 close_port:
 	mad_rpc_close_port(ibmad_port);
+	ibnd_destroy_fabric(fabric);
+
+close_name_map:
 	close_node_name_map(node_name_map);
 	exit(rc);
 }

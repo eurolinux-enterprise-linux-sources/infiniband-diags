@@ -41,7 +41,9 @@
 # notice, one of the license notices in the documentation
 # and/or other materials provided with the distribution.
 
-pidfile=/var/run/rdma-ndd.pid
+prefix=/usr/local
+exec_prefix=${prefix}
+pidfile=${prefix}/var/run/rdma-ndd.pid
 
 # Source function library.
 if [[ -s /etc/init.d/functions ]]; then
@@ -73,7 +75,7 @@ start () {
 	return 1
     fi
     echo -n "Starting RDMA Node Description Daemon: "
-    ${exec_prefix}/sbin/rdma-ndd > /dev/null
+    ${exec_prefix}/sbin/rdma-ndd --pidfile $pidfile > /dev/null
     RETVAL=$?
     if [[ $RETVAL -eq 0 ]]; then
         success

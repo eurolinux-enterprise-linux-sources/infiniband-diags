@@ -1,6 +1,171 @@
 
 ** Version: HEAD
 
+Wed Jul 27 00:52:36 2016 -0400 Ira Weiny
+2937cf99350a2e423b705e8b8dd10499796a7b41
+
+	* update README/configure.ac for 1.6.7
+
+Sun May 15 01:40:08 2016 -0400 Ira Weiny
+1f2f062792e79140facec91add31f1f9f0d85f10
+
+	* rdma-ndd: Add systemd support
+
+Fri May 27 17:01:13 2016 -0400 Vladimir Koushnir
+846b31ce7eb93c672d99e389d011245bab58611c
+
+	* infiniband-diags: Add Switch-IB2 support to device white lists
+
+Tue Apr 5 08:53:05 2016 -0400 Dan Ben Yosef
+0005d2a088d10e0ac0c3d9de6c4bd5f7026298e0
+
+	* saquery.c: Fix changing qos_class flag value to network order twice
+
+Tue Nov 10 13:23:39 2015 +0200 Hal Rosenstock
+b2cfed87401983eff35cc4135f5125eb67f60db5
+
+	* ibsendtrap.c: Eliminate unused parameter from send_trap
+
+Tue Nov 10 13:23:01 2015 +0200 Hal Rosenstock
+eb3e44032628df33b69351f880f985f38c85d25b
+
+	* ibportstate.c: Fix unsigned comparison warnings
+
+Tue Nov 10 13:22:51 2015 +0200 Hal Rosenstock
+68f8a250102b16a2b57144984d617dfd0400261f
+
+	* Remove unused pisize parameter from dump_portinfo in ibdiag_common
+
+Tue Oct 13 08:38:20 2015 -0400 Hal Rosenstock
+c17f74b265c0a547f34ef4019dfced74d7a6c0f9
+
+	* ibqueryerrors.c: Removed unused passed parameters to print_port_config and query_and_dump
+
+Tue Oct 13 08:38:02 2015 -0400 Hal Rosenstock
+3552aa5036ccb3edfb618cac81522b229bc97d00
+
+	* ibcacheedit.c: Eliminate unused parameter passed to update_switchportguids
+
+Mon Oct 12 23:27:34 2015 -0400 Ira Weiny
+275cc40ec83956755356eae55ee64dbf85699aec
+
+	* update README/configure.ac for 1.6.6
+
+Wed Sep 30 08:53:51 2015 -0400 Dan Ben Yosef
+d64fcf4a3d0ae20fbf497b5605cb8071e334069d
+
+	* libibnetdisc: Avoid pushing same pointer to the hash table
+
+Mon Oct 12 08:30:31 2015 -0400 Hal Rosenstock
+bcdc2151bad1db24e7d96ac896d57a65c7f40cfc
+
+	* perfquery.c: Fix smp_query_via return value checks
+
+Mon Oct 12 08:31:23 2015 -0400 Hal Rosenstock
+0cd6d05da6a6d3b679535c38a64c9600378de076
+
+	* ibdiag_common.c: Move static to beginning of get_build_version declaration
+
+Thu Sep 10 19:26:08 2015 -0400 Ira Weiny
+14f19aae87a59ef0df30585a7b0c3f6bea7eb274
+
+	* infiniband-diags: rdma-ndd: remove udev logging when not supported
+
+Mon Aug 31 10:49:04 2015 +0300 Dan Ben Yosef
+3f1aed48b0fc27df9615d89399edd0ac623b2017
+
+	* perfquery -T (print Extended Speed Counters) times out on nodes supporting RS_FEC capability.
+
+Wed Sep 9 14:29:38 2015 +0300 Vladimir Koushnir
+1a1565006b2a2996fcac4a117d7ffc9ebc3a1b7d
+
+	* saquery.c: Fix saquery -D option
+
+Wed Jul 22 16:14:03 2015 +0200 Ana Guerrero López
+552063e080c6dde686f961238e019172b3823a42
+
+	* rdma-ndd: fix compiler warnings.
+
+Wed Jul 15 14:08:49 2015 -0400 Hal Rosenstock
+5de1f6de8825ba70d8553be957416ab271716379
+
+	* iblinkinfo.c: Close additional file descriptor in advance
+
+Thu Apr 16 18:27:39 2015 +0300 Vladimir Koushnir
+9912de3d9dbdd31e67f736ea378d429429a81128
+
+	* vendstat: mad_rpc_close_port not called in corner cases
+
+Thu Jun 25 16:12:02 2015 +0200 Michal Schmidt
+efecdfb8219ad3234ea61a349a2f7a28cee76439
+
+	* build-sys: avoid overlinking to libudev
+
+Thu Jun 25 16:12:01 2015 +0200 Michal Schmidt
+01071153c35f18f93b6b19075ffcbc5a7290eaf2
+
+	* rdma-ndd: never use udev_get_sys_path()
+
+Thu May 7 13:54:52 2015 +0300 Hal Rosenstock
+4989004236cb59d281c743a4b91275ef555951d8
+
+	* ibdiag_sa.c: In sa_get_handle, handle umad_open_port and umad_register failures
+
+Sun Apr 26 18:26:16 2015 +0300 Vladimir Koushnir
+f68d857412a4499cdc42ddec1059388d7a94e25d
+
+	* ibqueryerrors: improve code related to DR option
+
+Sun Apr 26 12:24:06 2015 +0300 Vladimir Koushnir
+13e9d76a6af2e66186bd8aa77eab8f811decaee7
+
+	* ibqueryerrors: Close global file descriptor before running ibnd_discover_fabric
+
+Tue Apr 21 17:12:05 2015 +0300 Vladimir Koushnir
+ae4e036450fafaafcf9abee7d2f74bfabd7d5f4a
+
+	* ibqueryerrors: Fix crash when no SM is running
+
+Sun Apr 26 18:29:31 2015 +0300 Vladimir Koushnir
+35c85ad05cff4ca7bc5875320a7a7296cbb16608
+
+	* ibqueryerrors: code improvement
+
+Thu Apr 16 16:56:40 2015 +0300 Vladimir Koushnir
+f427cf58892426d1d9159019b42af94c48d06feb
+
+	* dump_fts: Open global file descriptor after calling ibnd_discover_fabric
+
+Thu Apr 16 14:11:16 2015 +0300 Vladimir Koushnir
+2a8621e70417c2f45e40acefe5ff96d8d85996f3
+
+	* query_smp.c: Avoid busy looping in process_one_recv
+
+Wed Apr 8 12:29:44 2015 +0300 Vladimir Koushnir
+ad743ff6c6e2befa71801bc76bdc5d08d8f41131
+
+	* Remove redundant umad file descriptor from libibnetdisc
+
+Thu Apr 16 16:39:43 2015 +0300 Vladimir Koushnir
+4e6bc81500fecbdece3c16862252a83cdeed3282
+
+	* ibqueryerrors: Resource leak in path_record_query
+
+Thu May 1 10:22:00 2014 -0400 Hal Rosenstock
+1f4e356a5d156cd85d69f3b064bb1b7692778853
+
+	* perfquery.c: Change format of capability mask in IBWARN for consistency
+
+Wed Mar 11 01:41:35 2015 -0400 Ira Weiny
+211eccc0447f4259cbdf9579786865ee8e3657ff
+
+	* infiniband-diags/rdma-ndd: add --pidfile option
+
+Wed Mar 11 01:28:42 2015 -0400 Ira Weiny
+62cbfb4ceb41884cd3563b700af7d46fb99572aa
+
+	* infiniband-diags/rdma-ndd: Fix issues with install
+
 Tue Feb 10 18:45:17 2015 -0500 Ira Weiny
 d5b64231f5c78296bb73724192863f3efe26cefe
 
@@ -3323,6 +3488,287 @@ Sun May 11 15:37:11 2008 +0300 Yevgeny Kliteynik
 34f90df7e623b9eea858dae1171584457074a558
 
 	* infiniband-diags/Makefile.am: fix location of ibdiag_version.h
+
+** Version: 1.6.7
+
+Wed Jul 27 00:52:36 2016 -0400 Ira Weiny
+2937cf99350a2e423b705e8b8dd10499796a7b41
+
+	* update README/configure.ac for 1.6.7
+
+Sun May 15 01:40:08 2016 -0400 Ira Weiny
+1f2f062792e79140facec91add31f1f9f0d85f10
+
+	* rdma-ndd: Add systemd support
+
+Fri May 27 17:01:13 2016 -0400 Vladimir Koushnir
+846b31ce7eb93c672d99e389d011245bab58611c
+
+	* infiniband-diags: Add Switch-IB2 support to device white lists
+
+Tue Apr 5 08:53:05 2016 -0400 Dan Ben Yosef
+0005d2a088d10e0ac0c3d9de6c4bd5f7026298e0
+
+	* saquery.c: Fix changing qos_class flag value to network order twice
+
+Tue Nov 10 13:23:39 2015 +0200 Hal Rosenstock
+b2cfed87401983eff35cc4135f5125eb67f60db5
+
+	* ibsendtrap.c: Eliminate unused parameter from send_trap
+
+Tue Nov 10 13:23:01 2015 +0200 Hal Rosenstock
+eb3e44032628df33b69351f880f985f38c85d25b
+
+	* ibportstate.c: Fix unsigned comparison warnings
+
+Tue Nov 10 13:22:51 2015 +0200 Hal Rosenstock
+68f8a250102b16a2b57144984d617dfd0400261f
+
+	* Remove unused pisize parameter from dump_portinfo in ibdiag_common
+
+Tue Oct 13 08:38:20 2015 -0400 Hal Rosenstock
+c17f74b265c0a547f34ef4019dfced74d7a6c0f9
+
+	* ibqueryerrors.c: Removed unused passed parameters to print_port_config and query_and_dump
+
+Tue Oct 13 08:38:02 2015 -0400 Hal Rosenstock
+3552aa5036ccb3edfb618cac81522b229bc97d00
+
+	* ibcacheedit.c: Eliminate unused parameter passed to update_switchportguids
+
+** Version: 1.6.6
+
+Mon Oct 12 23:27:34 2015 -0400 Ira Weiny
+275cc40ec83956755356eae55ee64dbf85699aec
+
+	* update README/configure.ac for 1.6.6
+
+Wed Sep 30 08:53:51 2015 -0400 Dan Ben Yosef
+d64fcf4a3d0ae20fbf497b5605cb8071e334069d
+
+	* libibnetdisc: Avoid pushing same pointer to the hash table
+
+Mon Oct 12 08:30:31 2015 -0400 Hal Rosenstock
+bcdc2151bad1db24e7d96ac896d57a65c7f40cfc
+
+	* perfquery.c: Fix smp_query_via return value checks
+
+Mon Oct 12 08:31:23 2015 -0400 Hal Rosenstock
+0cd6d05da6a6d3b679535c38a64c9600378de076
+
+	* ibdiag_common.c: Move static to beginning of get_build_version declaration
+
+Thu Sep 10 19:26:08 2015 -0400 Ira Weiny
+14f19aae87a59ef0df30585a7b0c3f6bea7eb274
+
+	* infiniband-diags: rdma-ndd: remove udev logging when not supported
+
+Mon Aug 31 10:49:04 2015 +0300 Dan Ben Yosef
+3f1aed48b0fc27df9615d89399edd0ac623b2017
+
+	* perfquery -T (print Extended Speed Counters) times out on nodes supporting RS_FEC capability.
+
+Wed Sep 9 14:29:38 2015 +0300 Vladimir Koushnir
+1a1565006b2a2996fcac4a117d7ffc9ebc3a1b7d
+
+	* saquery.c: Fix saquery -D option
+
+Wed Jul 22 16:14:03 2015 +0200 Ana Guerrero López
+552063e080c6dde686f961238e019172b3823a42
+
+	* rdma-ndd: fix compiler warnings.
+
+Wed Jul 15 14:08:49 2015 -0400 Hal Rosenstock
+5de1f6de8825ba70d8553be957416ab271716379
+
+	* iblinkinfo.c: Close additional file descriptor in advance
+
+Thu Apr 16 18:27:39 2015 +0300 Vladimir Koushnir
+9912de3d9dbdd31e67f736ea378d429429a81128
+
+	* vendstat: mad_rpc_close_port not called in corner cases
+
+Thu Jun 25 16:12:02 2015 +0200 Michal Schmidt
+efecdfb8219ad3234ea61a349a2f7a28cee76439
+
+	* build-sys: avoid overlinking to libudev
+
+Thu Jun 25 16:12:01 2015 +0200 Michal Schmidt
+01071153c35f18f93b6b19075ffcbc5a7290eaf2
+
+	* rdma-ndd: never use udev_get_sys_path()
+
+Thu May 7 13:54:52 2015 +0300 Hal Rosenstock
+4989004236cb59d281c743a4b91275ef555951d8
+
+	* ibdiag_sa.c: In sa_get_handle, handle umad_open_port and umad_register failures
+
+Sun Apr 26 18:26:16 2015 +0300 Vladimir Koushnir
+f68d857412a4499cdc42ddec1059388d7a94e25d
+
+	* ibqueryerrors: improve code related to DR option
+
+Sun Apr 26 12:24:06 2015 +0300 Vladimir Koushnir
+13e9d76a6af2e66186bd8aa77eab8f811decaee7
+
+	* ibqueryerrors: Close global file descriptor before running ibnd_discover_fabric
+
+Tue Apr 21 17:12:05 2015 +0300 Vladimir Koushnir
+ae4e036450fafaafcf9abee7d2f74bfabd7d5f4a
+
+	* ibqueryerrors: Fix crash when no SM is running
+
+Sun Apr 26 18:29:31 2015 +0300 Vladimir Koushnir
+35c85ad05cff4ca7bc5875320a7a7296cbb16608
+
+	* ibqueryerrors: code improvement
+
+Thu Apr 16 16:56:40 2015 +0300 Vladimir Koushnir
+f427cf58892426d1d9159019b42af94c48d06feb
+
+	* dump_fts: Open global file descriptor after calling ibnd_discover_fabric
+
+Thu Apr 16 14:11:16 2015 +0300 Vladimir Koushnir
+2a8621e70417c2f45e40acefe5ff96d8d85996f3
+
+	* query_smp.c: Avoid busy looping in process_one_recv
+
+Wed Apr 8 12:29:44 2015 +0300 Vladimir Koushnir
+ad743ff6c6e2befa71801bc76bdc5d08d8f41131
+
+	* Remove redundant umad file descriptor from libibnetdisc
+
+Thu Apr 16 16:39:43 2015 +0300 Vladimir Koushnir
+4e6bc81500fecbdece3c16862252a83cdeed3282
+
+	* ibqueryerrors: Resource leak in path_record_query
+
+Thu May 1 10:22:00 2014 -0400 Hal Rosenstock
+1f4e356a5d156cd85d69f3b064bb1b7692778853
+
+	* perfquery.c: Change format of capability mask in IBWARN for consistency
+
+Wed Mar 11 01:41:35 2015 -0400 Ira Weiny
+211eccc0447f4259cbdf9579786865ee8e3657ff
+
+	* infiniband-diags/rdma-ndd: add --pidfile option
+
+Wed Mar 11 01:28:42 2015 -0400 Ira Weiny
+62cbfb4ceb41884cd3563b700af7d46fb99572aa
+
+	* infiniband-diags/rdma-ndd: Fix issues with install
+
+** Version: 1.6.5
+
+Tue Feb 10 18:45:17 2015 -0500 Ira Weiny
+d5b64231f5c78296bb73724192863f3efe26cefe
+
+	* update README for 1.6.5
+
+Wed Jan 28 17:58:29 2015 -0500 Dan Ben Yosef
+9d3fcc8179850cf8c86da1567764b6b4762c27a9
+
+	* ibtracert.c: Remove checking the port 0 state for base switch port 0
+
+Thu Feb 5 07:19:15 2015 -0500 Dan Ben Yosef
+03d75bf07463a9f155ef41a5138d3f159d875e08
+
+	* Add new configure flag to enable/disable the rdma-ndd build
+
+Wed Jan 28 16:54:07 2015 -0500 Hal Rosenstock
+10f9628178378fa92d20379d22fb4d93044f06dd
+
+	* Align infiniband-diags MLNX device IDs with OpenSM
+
+Wed Jan 28 11:45:15 2015 -0500 Ira Weiny
+b0a54c1a03d55fb530dd188b6c0e1b5339756c8c
+
+	* infiniband-diags: update for udev changes.
+
+Wed Jan 28 11:23:53 2015 -0500 Ira Weiny
+109b79f9c90fc6a6c573ba91076fa547be6faf60
+
+	* infiniband-diags/test-code: remove unused variables
+
+Wed Jan 14 09:07:10 2015 -0500 Hal Rosenstock
+8c0ec71b83c532a2b7c8d24455798e56b267539f
+
+	* vendstat.c: Add additional vendor IDs to ext_fw_info_device
+
+Wed Jan 14 09:07:03 2015 -0500 Hal Rosenstock
+4b47135d15cec632ebbec28b61a526600e79dfc9
+
+	* ibnetdisc.c: Add additional supported device IDs to is_mlnx_ext_port_info_supported
+
+Wed Jan 14 09:06:54 2015 -0500 Hal Rosenstock
+24c62b083d4f2dbff45a996f472e5ad74db20b5c
+
+	* ibdiag_common.c: Add more supported device IDs in is_mlnx_ext_port_info_supported
+
+Fri Oct 24 19:57:38 2014 -0400 Ira Weiny
+ae505415dabc34caba7e82ed93950823baf1f747
+
+	* infiniband-diags: add rdma-ndd daemon
+
+Fri Jan 9 10:17:36 2015 -0500 Hal Rosenstock
+18f1a0f973cc5cff7328e4576149b26334441c15
+
+	* ibccconfig.c: Account for enhanced switch port 0 in SwitchPortCongestionSetting handling
+
+Fri Jan 9 10:17:30 2015 -0500 Hal Rosenstock
+202382751b5ac01e32573c5ed122214ee0fa9295
+
+	* ibccquery.c: Account for enhanced switch port 0 in SwitchPortCongestionSetting handling
+
+Tue Nov 18 12:35:04 2014 -0500 Ira Weiny
+0e96e79cfe01b82ab1b7e987a0148738d1fe9dfd
+
+	* infiniband-diags: update smpquery man page
+
+Mon Nov 17 16:57:29 2014 +0200 Dan Ben Yosef
+6393c5f7bf32cdf77c679a9abd9be577f9620b65
+
+	* New MAD SM:PortInfoExtended and changing PM:PortExtendedSpeedsCounters
+
+Wed Nov 5 15:22:05 2014 -0500 Hal Rosenstock
+34a5d92f9387ce8d59b19f449e5095ab0fe11f34
+
+	* saquery.c: Return proper status from query_sa_cpi on bad result status
+
+Wed Nov 5 15:21:55 2014 -0500 Hal Rosenstock
+0741d402601c6636e6e3a1f63016b7c860c29044
+
+	* saquery.c: Fix handling of cpi and ClassPortInfo options
+
+Fri Oct 17 17:09:54 2014 -0400 Hal Rosenstock
+c7643611e3b0a05df79fc3126b34bed99aff3849
+
+	* ibping.c: Fix support of OUIs other than IB_OPENIB_OUI
+
+Tue Jun 10 14:23:13 2014 -0400 Hal Rosenstock
+17a8d6db8cee297b9b66b91f36e20c8413b5aa8b
+
+	* ibportstate.c: Cosmetic changes to MLNX Extended PortInfo
+
+Sat Apr 19 15:14:08 2014 -0700 Ira Weiny
+6364d06406a95d1fed2397691ddd012493b0bdf6
+
+	* infiniband-diags: If rst2man is available fix missing source dir in configure
+
+Mon Mar 31 10:03:19 2014 +0300 Dan Ben Yosef
+4549d891c11458b299e94751ef62d9f076dc5b49
+
+	* Fix missing source dir in configure.ac
+
+Wed Feb 26 10:25:43 2014 -0500 Hal Rosenstock
+018c7f43f03a20b45bb4cecfa23063bbf37ae7f4
+
+	* saquery.c: In query_sa_cpi, make error message consistent
+
+Wed Feb 26 10:25:06 2014 -0500 Hal Rosenstock
+b3d11492b5633b214e1843bf46a03f1a6c1288c9
+
+	* saquery.c: In print_node_record, change LID print format
 
 ** Version: 1.6.4
 

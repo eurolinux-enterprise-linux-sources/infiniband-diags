@@ -24,9 +24,6 @@
 /* Define to 1 if you have the `osmcomp' library (-losmcomp). */
 #undef HAVE_LIBOSMCOMP
 
-/* Define to 1 if you have the `udev' library (-ludev). */
-#undef HAVE_LIBUDEV
-
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -72,8 +69,8 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
-/* Define to 1 if you have the `udev_get_sys_path' function. */
-#undef HAVE_UDEV_GET_SYS_PATH
+/* whether libudev logging can be used */
+#undef HAVE_UDEV_LOGGING
 
 /* Define to 1 if struct umad_port has link_layer member */
 #undef HAVE_UMAD_PORT_LINK_LAYER

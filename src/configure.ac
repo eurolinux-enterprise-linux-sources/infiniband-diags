@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(infiniband-diags, 1.6.5, linux-rdma@vger.kernel.org)
+AC_INIT(infiniband-diags, 1.6.7, linux-rdma@vger.kernel.org)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
 AM_CONFIG_HEADER(config.h)
@@ -180,6 +180,27 @@ fi
 AC_SUBST(ibnetdisc_api_version)
 dnl End libibnetdisc stuff
 
+dnl Begin determine the systemd use and location
+PKG_CHECK_MODULES([SYSTEMD], [systemd], use_systemd=yes, use_systemd=no)
+
+specfile_install="%{_sysconfdir}/init.d/rdma-ndd"
+if test "x$use_systemd" == xyes; then
+	dir=""
+	AC_ARG_WITH([systemdsystemunitdir], AS_HELP_STRING([--with-systemdsystemunitdir=DIR],
+			[Directory for systemd service files default from pkg-config variable systemdsystemunitdir)]),
+			[dir=${withval}],
+			[dir="$($PKG_CONFIG --variable=systemdsystemunitdir systemd)"])
+	systemdsystemunitdir=${dir}
+	AC_SUBST(SYSTEMD_SYSTEM_UNIT_DIR, [$systemdsystemunitdir])
+	AC_SUBST(SYSTEMD_BUILD_REQUIRES, "BuildRequires: systemd")
+	specfile_install="$systemdsystemunitdir/rdma-ndd.service"
+fi
+AM_CONDITIONAL(SYSTEMD_SYSTEM, test "x$use_systemd" == xyes)
+AC_SUBST(SPEC_FILE_RDMA_NDD_INSTALL, $specfile_install)
+
+dnl End systemd stuff
+
+
 dnl with or with rdma-ndd
 AC_MSG_CHECKING(for --enable-rdma-ndd)
 AC_ARG_ENABLE(rdma-ndd,
@@ -210,12 +231,22 @@ default_start="null"
 AC_SUBST(DEFAULT_START, $default_start)
 AC_SUBST(DEFAULT_STOP, $default_stop)
 
-if test x$rdmandd = xyes; then
-    AC_CHECK_HEADER(libudev.h, with_udev="yes", with_udev="no")
-    AC_CHECK_LIB(udev, udev_monitor_ref, [], AC_MSG_ERROR(libudev is required for rdma-ndd...))
-    AC_CONFIG_FILES([doc/man/rdma-ndd.8 etc/rdma-ndd.init])
-    AC_CHECK_FUNCS_ONCE(udev_get_sys_path)
-fi
+AS_IF([test x$rdmandd = xyes], [
+    PKG_CHECK_MODULES([UDEV], [libudev])
+    AC_CONFIG_FILES([doc/man/rdma-ndd.8 \
+			etc/rdma-ndd.init \
+			etc/rdma-ndd.service])
+    AC_SUBST([UDEV_CFLAGS])
+    AC_SUBST([UDEV_LIBS])
+    if test "$with_udev" = "yes"; then
+	PKG_CHECK_EXISTS(libudev >= 218, [with_dev_logging=no],
+			[with_udev_logging=yes])
+	if test "$with_udev_logging" = "yes"; then
+		AC_DEFINE_UNQUOTED([HAVE_UDEV_LOGGING], 1,
+				[whether libudev logging can be used])
+	fi
+    fi
+])
 
 dnl Generate doc/man/*.in files if possible
 DOC_DATE="`date +%Y-%m-%d`"

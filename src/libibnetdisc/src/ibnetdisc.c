@@ -127,12 +127,6 @@ static int extend_dpath(smp_engine_t * engine, ib_portid_t * portid,
 
 	if (portid->lid) {
 		/* If we were LID routed we need to set up the drslid */
-		if (!scan->selfportid.lid)
-			if (ib_resolve_self_via(&scan->selfportid, NULL, NULL,
-						scan->ibmad_port) < 0) {
-				IBND_ERROR("Failed to resolve self\n");
-				return -1;
-			}
 		portid->drpath.drslid = (uint16_t) scan->selfportid.lid;
 		portid->drpath.drdlid = 0xFFFF;
 	}
@@ -203,7 +197,7 @@ static int is_mlnx_ext_port_info_supported(ibnd_port_t * port)
 {
 	uint16_t devid = (uint16_t) mad_get_field(port->node->info, 0, IB_NODE_DEVID_F);
 
-	if ((devid >= 0xc738 && devid <= 0xc73b) || devid == 0xcb20)
+	if ((devid >= 0xc738 && devid <= 0xc73b) || devid == 0xcb20 || devid == 0xcf08)
 		return 1;
 	if (devid >= 0x1003 && devid <= 0x1016)
 		return 1;
@@ -359,7 +353,12 @@ static int recv_port_info(smp_engine_t * engine, ibnd_smp_t * smp,
 		port->lmc = node->smalmc;
 	}
 
-	add_to_portguid_hash(port, f_int->fabric.portstbl);
+	int rc1 = add_to_portguid_hash(port, f_int->fabric.portstbl);
+	if (rc1)
+		IBND_ERROR("Error Occurred when trying"
+			   " to insert new port guid 0x%016" PRIx64 " to DB\n",
+			   port->guid);
+
 	add_to_portlid_hash(port, f_int->lid2guid);
 
 	if ((scan->cfg->flags & IBND_CONFIG_MLX_EPI)
@@ -464,7 +463,11 @@ static ibnd_node_t *create_node(smp_engine_t * engine, ib_portid_t * path,
 	rc->path_portid = *path;
 	memcpy(rc->info, node_info, sizeof(rc->info));
 
-	add_to_nodeguid_hash(rc, f_int->fabric.nodestbl);
+	int rc1 = add_to_nodeguid_hash(rc, f_int->fabric.nodestbl);
+	if (rc1)
+		IBND_ERROR("Error Occurred when trying"
+			   " to insert new node guid 0x%016" PRIx64 " to DB\n",
+			   rc->guid);
 
 	/* add this to the all nodes list */
 	rc->next = f_int->fabric.nodes;
@@ -613,20 +616,42 @@ ibnd_node_t *ibnd_find_node_dr(ibnd_fabric_t * fabric, char *dr_str)
 	return rc->node;
 }
 
-void add_to_nodeguid_hash(ibnd_node_t * node, ibnd_node_t * hash[])
+int add_to_nodeguid_hash(ibnd_node_t * node, ibnd_node_t * hash[])
 {
+	int rc = 0;
+	ibnd_node_t *tblnode;
 	int hash_idx = HASHGUID(node->guid) % HTSZ;
 
+	for (tblnode = hash[hash_idx]; tblnode; tblnode = tblnode->htnext) {
+		if (tblnode == node) {
+			IBND_ERROR("Duplicate Node: Node with guid 0x%016"
+				   PRIx64 " already exists in nodes DB\n",
+				   node->guid);
+			return 1;
+		}
+	}
 	node->htnext = hash[hash_idx];
 	hash[hash_idx] = node;
+	return rc;
 }
 
-void add_to_portguid_hash(ibnd_port_t * port, ibnd_port_t * hash[])
+int add_to_portguid_hash(ibnd_port_t * port, ibnd_port_t * hash[])
 {
+	int rc = 0;
+	ibnd_port_t *tblport;
 	int hash_idx = HASHGUID(port->guid) % HTSZ;
 
+	for (tblport = hash[hash_idx]; tblport; tblport = tblport->htnext) {
+		if (tblport == port) {
+			IBND_ERROR("Duplicate Port: Port with guid 0x%016"
+				   PRIx64 " already exists in ports DB\n",
+				   port->guid);
+			return 1;
+		}
+	}
 	port->htnext = hash[hash_idx];
 	hash[hash_idx] = port;
+	return rc;
 }
 
 void create_lid2guid(f_internal_t *f_int)
@@ -712,6 +737,7 @@ ibnd_fabric_t *ibnd_discover_fabric(char * ca_name, int ca_port,
 	ib_portid_t my_portid = { 0 };
 	smp_engine_t engine;
 	ibnd_scan_t scan;
+	struct ibmad_port *ibmad_port;
 	int nc = 2;
 	int mc[2] = { IB_SMI_CLASS, IB_SMI_DIRECT_CLASS };
 
@@ -735,20 +761,27 @@ ibnd_fabric_t *ibnd_discover_fabric(char * ca_name, int ca_port,
 	scan.cfg = &config;
 	scan.initial_hops = from->drpath.cnt;
 
+	ibmad_port = mad_rpc_open_port(ca_name, ca_port, mc, nc);
+	if (!ibmad_port) {
+		IBND_ERROR("can't open MAD port (%s:%d)\n", ca_name, ca_port);
+		return (NULL);
+	}
+	mad_rpc_set_timeout(ibmad_port, cfg->timeout_ms);
+	mad_rpc_set_retries(ibmad_port, cfg->retries);
+	smp_mkey_set(ibmad_port, cfg->mkey);
+
+	if (ib_resolve_self_via(&scan.selfportid,
+				NULL, NULL, ibmad_port) < 0) {
+		IBND_ERROR("Failed to resolve self\n");
+		mad_rpc_close_port(ibmad_port);
+		return NULL;
+	}
+	mad_rpc_close_port(ibmad_port);
+
 	if (smp_engine_init(&engine, ca_name, ca_port, &scan, &config)) {
 		free(f_int);
 		return (NULL);
 	}
-
-	scan.ibmad_port = mad_rpc_open_port(ca_name, ca_port, mc, nc);
-	if (!scan.ibmad_port) {
-		IBND_ERROR("can't open MAD port (%s:%d)\n", ca_name, ca_port);
-		smp_engine_destroy(&engine);
-		return (NULL);
-	}
-	mad_rpc_set_timeout(scan.ibmad_port, cfg->timeout_ms);
-	mad_rpc_set_retries(scan.ibmad_port, cfg->retries);
-	smp_mkey_set(scan.ibmad_port, cfg->mkey);
 
 	IBND_DEBUG("from %s\n", portid2str(from));
 
@@ -763,11 +796,9 @@ ibnd_fabric_t *ibnd_discover_fabric(char * ca_name, int ca_port,
 		goto error;
 
 	smp_engine_destroy(&engine);
-	mad_rpc_close_port(scan.ibmad_port);
 	return (ibnd_fabric_t *)f_int;
 error:
 	smp_engine_destroy(&engine);
-	mad_rpc_close_port(scan.ibmad_port);
 	ibnd_destroy_fabric(&f_int->fabric);
 	return NULL;
 }
